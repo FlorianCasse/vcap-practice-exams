@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Automation 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Automation 9.0 <span>(3V0-21.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "What is the maximum number of Zones that a single Supervisor can span?", "options": ["1 Zone only", "2 Zones", "3 Zones", "Unlimited"], "correct": 2, "explanation": "Correct answer: C. A Supervisor can span up to 3 Zones for high availability and resource distribution.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "Which component of the Supervisor Control Plane is responsible for persisting all cluster state?", "options": ["API Server", "etcd database", "Scheduler", "Controller Manager"], "correct": 1, "explanation": "Correct answer: B. etcd is a distributed key-value store that persists all Kubernetes cluster state.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "In a Supervisor Namespace with a 100 vCPU quota, which statement is TRUE?", "options": ["VMs can request up to 100 vCPU total across all Zones", "Each Zone can allocate up to 100 vCPU", "Pods cannot share quota with VMs", "The quota is per-VM-Class only"], "correct": 0, "explanation": "Correct answer: A. Namespace quotas apply to total resource requests across all Zones.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "What is the relationship between VM Classes and Supervisor Namespaces?", "options": ["VM Classes are global; all Namespaces can use all Classes", "VM Classes are assigned to Namespaces; Namespaces can only use their assigned Classes", "VM Classes are per-Zone, not per-Namespace", "VM Classes have no relationship to Namespaces"], "correct": 1, "explanation": "Correct answer: B. VM Classes are associated with Namespaces to control which sizes tenants can deploy.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "Which networking component is required for Supervisor operation in VCF 9.0?", "options": ["Standard vSphere Distributed Switch (VDS) only", "NSX with workload segments and management network", "vCenter standard switch", "No special networking required"], "correct": 1, "explanation": "Correct answer: B. VCF 9.0 Supervisor requires NSX for overlay networking and multi-tenancy.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "A Supervisor Control Plane is sized as 'Medium'. What are the specifications?", "options": ["2 vCPU / 8 GB RAM", "4 vCPU / 16 GB RAM", "8 vCPU / 32 GB RAM", "16 vCPU / 64 GB RAM"], "correct": 2, "explanation": "Correct answer: C. Medium = 8 vCPU / 32 GB RAM, suitable for standard production deployments.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 2.1 \u2013 vSphere Supervisor", "question": "Storage Classes in a Supervisor map to which vSAN feature?", "options": ["vSAN compression", "vSAN storage policies", "vSAN encryption", "vSAN capacity pools"], "correct": 1, "explanation": "Correct answer: B. Storage Classes wrap vSAN storage policies for persistent volume provisioning.", "priority": true, "sectionClean": "Objective 2.1 \u2013 vSphere Supervisor"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "In a Single-Organization VCFA design, where are user roles (Project Owner, Developer) defined?", "options": ["In each Project separately", "At the Organization level; all projects inherit roles", "In Identity Broker only", "In NSX VPC configuration"], "correct": 1, "explanation": "Correct answer: B. Roles are defined at the Organization level and inherited by all Projects.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What is the relationship between Cloud Zones and Flavor Mappings?", "options": ["Cloud Zones define which flavors are available; Flavor Mappings specify the size per Cloud Zone", "Flavors must be the same across all Cloud Zones", "Flavor Mappings are optional", "Cloud Zones and Flavors are unrelated"], "correct": 0, "explanation": "Correct answer: A. Flavor Mappings translate T-shirt sizes for each Cloud Zone.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "A VCFA Organization requires network isolation. Which component provides this isolation?", "options": ["vSphere VLAN tagging", "NSX VPC with dedicated subnets", "Supervisor Namespace isolation", "Firewall rules only"], "correct": 1, "explanation": "Correct answer: B. NSX VPC provides network isolation, firewall policies, and IPAM per Organization.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "How are Identity Provider groups (e.g., 'Engineering-Team' from Active Directory) mapped to VCFA?", "options": ["Manually via UI for each user", "Through Identity Broker group membership to VCFA role assignment", "Only LDAP groups are supported", "No mapping; only individual users"], "correct": 1, "explanation": "Correct answer: B. Groups from Identity Provider map to VCFA roles via Identity Broker.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "Which extensibility mechanism allows custom provisioning scripts to run post-deployment?", "options": ["ABX (Action-Based eXtensibility)", "vRO (vRealize Orchestrator) workflows", "Custom Resource Actions", "All of the above"], "correct": 3, "explanation": "Correct answer: D. All three mechanisms support post-deployment customization.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What is the minimum number of VCFA pods required for HA across multiple Supervisor Zones?", "options": ["1 pod", "2 pods", "3 pods", "5 pods"], "correct": 2, "explanation": "Correct answer: C. Minimum 3 pods (1 per Zone) for HA with quorum-based consensus.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "In a VCFA design, how many VCFA instances are required for a Multi-Tenant deployment with 5 organizations?", "options": ["1 instance shared by all orgs", "5 instances (1 per org recommended for isolation)", "3 instances minimum", "Depends on org size and workload"], "correct": 1, "explanation": "Correct answer: B. Best practice: 1 VCFA instance per Organization for maximum isolation and independent scaling.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "Which of the following is NOT a VCFA Organization role?", "options": ["Project Owner", "Organization Owner", "Cluster Administrator", "Developer"], "correct": 2, "explanation": "Correct answer: C. Cluster Administrator is not a VCFA role. VCFA roles are: Provider Admin, Org Owner, Project Owner, Developer, Consumer.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What advantage does using VCFA Terraform provider provide over manual UI provisioning?", "options": ["Faster VM deployment", "Version control, reproducibility, CI/CD integration, drift detection", "Lower licensing cost", "Simpler user interface"], "correct": 1, "explanation": "Correct answer: B. Terraform provides IaC benefits: Git control, automation, consistency.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What is the advantage of using Terraform provider for VCFA provisioning?", "options": ["Faster VM deployment", "Version control, reproducibility, CI/CD integration, drift detection", "Lower licensing cost", "Simpler user interface"], "correct": 1, "explanation": "Correct answer: B. Terraform provides IaC benefits: Git control, automation, consistency.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "In a VCFA design with NSX VPC multi-tenancy, each Organization should map to which NSX construct?", "options": ["NSX Segment", "NSX VPC", "NSX firewall rule", "NSX Load Balancer"], "correct": 1, "explanation": "Correct answer: B. Each VCFA Organization maps to 1 NSX VPC for network isolation and firewall policies.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "Organization 'Engineering' has a quota of 200 vCPU. What happens if they attempt to deploy 5 VMs at 50 vCPU each?", "options": ["Request approved; total 250 vCPU", "Request approved but VMs get less CPU", "Request denied: 250 > 200 quota", "Approval pending from provider"], "correct": 2, "explanation": "Correct answer: C. Quota is enforced: 5 \u00d7 50 = 250 vCPU > 200 vCPU quota. Request denied.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What is the primary benefit of NSX IPAM integration with VCFA?", "options": ["Faster network deployment", "Automatic IP subnet allocation per Organization, preventing IP conflicts", "Lower NSX licensing costs", "Simplified firewall rules"], "correct": 1, "explanation": "Correct answer: B. NSX IPAM automatically allocates non-overlapping subnets to organizations.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "In a VCFA Organization with subnet exhaustion (no free IPs in IPAM), what would provisioning requests fail with?", "options": ["'Insufficient Capacity'", "'IP Address Allocation Failed'", "'Cloud Zone Unavailable'", "'Quota Exceeded'"], "correct": 1, "explanation": "Correct answer: B. NSX IPAM exhaustion manifests as IP allocation failure.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "Which VCFA chargeback model allocates cost based on CPU hours + memory hours + storage GB consumed?", "options": ["Fixed cost per VM", "Usage-based pricing", "Tiered pricing", "No cost allocation"], "correct": 1, "explanation": "Correct answer: B. Usage-based pricing tracks actual consumption metrics.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 3.1 \u2013 Design a VCF Automation Deployment", "question": "What is the recommended minimum HA configuration for VCFA in production?", "options": ["Single VCFA pod in 1 Zone", "2 VCFA pods across 2 Zones", "3 VCFA pods across 3 Zones for quorum", "No HA required"], "correct": 2, "explanation": "Correct answer: C. HA requires minimum 3 pods across 3 Zones for fault tolerance and quorum consensus.", "priority": true, "sectionClean": "Objective 3.1 \u2013 Design a VCF Automation Deployment"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "Which component in VCFA Provider Management defines the mapping between abstract 'large' flavor and actual vSphere VM specs?", "options": ["Cloud Account", "Cloud Zone", "Flavor Mapping", "vSphere DRS pool"], "correct": 2, "explanation": "Correct answer: C. Flavor Mapping translates friendly names to VM resource specifications per Cloud Zone.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "If a Cloud Zone is missing an Image Mapping for a requested OS, what happens during VM provisioning?", "options": ["VM is provisioned with default image", "Provisioning fails with 'image not found' error", "User is prompted to select an image", "VM deploys without OS"], "correct": 1, "explanation": "Correct answer: B. Missing Image Mappings cause provisioning to fail.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "In VCFA, which NSX feature provides automatic IP subnet allocation to Organizations?", "options": ["NSX Segments", "NSX IPAM", "NSX DFW", "NSX Load Balancer"], "correct": 1, "explanation": "Correct answer: B. NSX IPAM automatically allocates IP ranges to VCFA Organizations.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "What is the primary purpose of a Cloud Zone in VCFA Provider Management?", "options": ["To control user access", "To group related infrastructure (cluster, NSX VPC, storage) for provisioning", "To define VM sizing", "To manage backup policies"], "correct": 1, "explanation": "Correct answer: B. Cloud Zones group vSphere clusters, NSX VPCs, and storage together.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "When deploying a Cloud Template to multiple Cloud Zones with different hardware, which Provider Management config handles capacity differences?", "options": ["Cloud Account", "Flavor Mapping", "NSX VPC", "Organization Quota"], "correct": 1, "explanation": "Correct answer: B. Flavor Mappings allow different vCPU/memory specs per Cloud Zone.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "In multi-region VCFA deployment (multiple Supervisors), what prevents IP address overlap between regions?", "options": ["Firewall rules", "Separate NSX IPAM IP spaces per region", "Manual IP planning", "Not possible"], "correct": 1, "explanation": "Correct answer: B. Each region uses distinct IP space in NSX IPAM to prevent conflicts.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.1 \u2013 Provider Management", "question": "Which VCFA component enforces that a Developer can only see Catalog items from their Project?", "options": ["RBAC (Role-Based Access Control) + Entitlements", "Cloud Zones", "Approval Policies", "Cost allocation"], "correct": 0, "explanation": "Correct answer: A. RBAC filters Catalog visibility per project; Entitlements further restrict access.", "priority": true, "sectionClean": "Objective 4.1 \u2013 Provider Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "A developer requests an expensive VM (high-cost Catalog item). What determines if approval is required?", "options": ["Developer role always bypasses approval", "Cost threshold policy + user group + resource quota", "Only Finance team can set approval", "No approval needed in VCFA"], "correct": 1, "explanation": "Correct answer: B. Approval Policies are multi-dimensional: cost, group, quota.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "How is a Catalog template version controlled in VCFA?", "options": ["No versioning; templates are always live", "Manual versioning by administrators; rollback manual", "Automatic versioning with rollback capability", "Versions deleted after 30 days"], "correct": 2, "explanation": "Correct answer: C. Templates are automatically versioned; rollback to previous versions is supported.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "A Catalog item has a 60-day lease policy. What should happen at day 55?", "options": ["VM is immediately deleted", "Notification sent; user can request renewal", "Auto-extend by 60 days", "Email sent but no action required"], "correct": 1, "explanation": "Correct answer: B. Notifications sent before expiration; users can request renewal.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "Which Approval Policy feature allows different approval thresholds based on cost?", "options": ["Role-based approval", "Manager approval for <$100, Finance for >$100", "Group-based approval", "Time-based approval"], "correct": 1, "explanation": "Correct answer: B. Cost threshold approval automatically routes expensive requests to Finance.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "In VCFA Catalog version management, what happens when a developer uses an older version of a template?", "options": ["Automatic upgrade to latest version", "Template frozen at that version; updates don't affect current deployments", "Previous deployments break", "Version control not supported"], "correct": 1, "explanation": "Correct answer: B. Each template version is immutable; previous deployments stay on their version.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.2 \u2013 Organization Management", "question": "A Project Owner needs to restrict catalog visibility to only 'Finance Team' users. Which VCFA feature enables this?", "options": ["Approval Policies", "Entitlement Policies", "Resource Quotas", "Notification Settings"], "correct": 1, "explanation": "Correct answer: B. Entitlement Policies control which users/groups can see specific Catalog items.", "priority": true, "sectionClean": "Objective 4.2 \u2013 Organization Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "In a VCFA Cloud Template, how are user inputs from the custom form injected into the template?", "options": ["Direct variable substitution ${varname}", "Environment variables only", "Hard-coded values", "No injection; template is static"], "correct": 0, "explanation": "Correct answer: A. Custom form inputs become template variables using ${varname} syntax.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "A Resource Action 'Add NIC' is defined as Async. What is the difference from Sync?", "options": ["Async completes immediately; user can close browser", "Sync is faster than Async", "Async is not supported in VCFA", "No functional difference"], "correct": 0, "explanation": "Correct answer: A. Async operations execute in background; user is notified on completion.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "Which can implement Day 2 Resource Actions in VCFA? (Select 2)", "options": ["ABX (Action-Based eXtensibility) scripts", "vRO (vRealize Orchestrator) workflows", "Direct vSphere API calls only", "Shell scripts"], "correct": 2, "explanation": "Correct answer: A and B (ABX and vRO). Shell scripts can also be used via custom provisioning.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "A Cloud Template uses ${environment} variable from the custom form. How is this variable substituted?", "options": ["Hardcoded into the template", "Populated from form input when user submits request", "Randomly generated", "Not substituted"], "correct": 1, "explanation": "Correct answer: B. Custom form inputs populate variables during request submission.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "Which resource action type completes in the background without blocking the user?", "options": ["Sync", "Async", "Both sync and async", "Neither; all are blocking"], "correct": 1, "explanation": "Correct answer: B. Async actions execute in background; user is notified on completion.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 4.3 \u2013 Consumption Management", "question": "A Cloud Template outputs the deployed VM's IP address. Where can the user view this output?", "options": ["In the vSphere UI", "In VCFA Catalog request details (Outputs tab)", "In NSX Manager", "Not accessible"], "correct": 1, "explanation": "Correct answer: B. Template Outputs are displayed in the request details UI.", "priority": true, "sectionClean": "Objective 4.3 \u2013 Consumption Management"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "A provisioning request fails with 'Image not found' error. What should be verified first?", "options": ["Cloud Zone connectivity", "Image Mapping for the selected Cloud Zone", "Approval policy configuration", "NSX VPC availability"], "correct": 1, "explanation": "Correct answer: B. Image Mappings associate templates with Cloud Zones; missing mapping causes 'Image not found'.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Organization 'Finance' has a 100 vCPU quota. Current usage: 85 vCPU. A user requests a 20 vCPU VM. What happens?", "options": ["Request is approved immediately", "Request is approved but placed in queue", "Request fails: insufficient quota", "Request is held pending admin approval"], "correct": 2, "explanation": "Correct answer: C. 85 + 20 = 105 > 100 quota. Request is rejected.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "How can you diagnose why a provisioning request failed?", "options": ["Check VCFA UI request logs", "Review vRO logs if custom workflows used", "Check Supervisor Pod logs", "All of the above"], "correct": 3, "explanation": "Correct answer: D. Comprehensive diagnosis requires checking all three: UI logs, vRO logs, and Supervisor pod logs.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "What is the primary benefit of using VCFA Terraform provider?", "options": ["Faster provisioning of VMs", "Version control of infrastructure configuration via Git", "Better security than UI", "Lower licensing costs"], "correct": 1, "explanation": "Correct answer: B. Terraform enables IaC with Git version control and CI/CD integration.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Which metric should be monitored to detect provisioning performance degradation?", "options": ["Average provisioning time (trend over 7-30 days)", "Total number of VMs deployed", "Storage space used", "Network bandwidth"], "correct": 0, "explanation": "Correct answer: A. Average provisioning time trend reveals capacity/performance issues.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "A provisioning request fails with 'Cloud Zone Unavailable'. What is the first diagnostic step?", "options": ["Check if vSphere cluster is reachable from VCFA", "Restart VCFA pods", "Delete the failed request", "Wait 10 minutes and retry"], "correct": 0, "explanation": "Correct answer: A. Verify connectivity to vSphere cluster, NSX Manager, and storage.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "NSX IPAM has exhausted available subnets in the IP space. Which error would users see?", "options": ["'Cloud Zone Unavailable'", "'Insufficient Storage'", "'IP Address Allocation Failed'", "'Quota Exceeded'"], "correct": 2, "explanation": "Correct answer: C. NSX IPAM exhaustion manifests as IP allocation failure during networking setup.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Where should you check logs if a vRO workflow in a Resource Action fails?", "options": ["VCFA UI > Requests > Logs", "vRO UI > Executions tab", "Both VCFA logs AND vRO logs", "Supervisor pod logs only"], "correct": 2, "explanation": "Correct answer: C. vRO logs show workflow execution details; VCFA shows integration errors.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Provisioning success rate has dropped from 98% to 75% in the last 24 hours. What should be checked first?", "options": ["User permissions", "Cloud Zone capacity and health", "Blueprint syntax", "VCFA pod CPU usage"], "correct": 1, "explanation": "Correct answer: B. Sudden drops usually indicate infrastructure issues, not template/policy changes.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Organization 'Marketing' has 500 vCPU quota. Current usage: 495 vCPU. A user requests 20 vCPU VM. What should be recommended?", "options": ["Request additional quota increase", "User deletes existing VMs to free quota", "Request smaller VM size", "Contact provider to add capacity"], "correct": 0, "explanation": "Correct answer: A. 495 + 20 > 500. Organization-level quota increase is needed; may also indicate workload growth.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Which ABX (Action-Based eXtensibility) event fires BEFORE provisioning starts?", "options": ["AfterProvisioningEvent", "BeforeProvisioningEvent", "ResourceDeleteEvent", "CustomEvent"], "correct": 1, "explanation": "Correct answer: B. BeforeProvisioningEvent allows compliance checks and approval/rejection logic.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "A Cloud Template outputs 'vm_ip_address'. Where will the user see this output?", "options": ["In vSphere console", "In VCFA request details under Outputs tab", "In NSX Manager", "User cannot access outputs"], "correct": 1, "explanation": "Correct answer: B. Template outputs are displayed in the request details UI after deployment.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "What is the purpose of Flavor Mappings in a multi-Cloud-Zone VCFA design?", "options": ["Translate user-friendly size names (small, large) to Zone-specific VM specs", "Approve requests", "Define approval thresholds", "Manage Cloud Zone quotas"], "correct": 0, "explanation": "Correct answer: A. Flavors differ per Zone: 'large' = 4 CPU in Zone-1, 8 CPU in Zone-2.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "In VCFA, which component manages audit logging of all user actions?", "options": ["vSphere vCenter", "NSX Manager", "VCFA Organization settings + audit database", "vRealize Operations"], "correct": 2, "explanation": "Correct answer: C. VCFA tracks request submissions, approvals, deployments, and deletions.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "A VCFA Organization provisioning success rate drops from 97% to 82% over 48 hours. What is the FIRST diagnostic action?", "options": ["Restart VCFA pods", "Check Cloud Zone health: vSphere/NSX connectivity, storage capacity", "Review approval policies", "Reset user credentials"], "correct": 1, "explanation": "Correct answer: B. Sudden drops indicate infrastructure issues, not configuration changes.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "Which VCFA security feature prevents one Organization from accessing another's Catalog items?", "options": ["VPC firewall only", "RBAC + Entitlement policies + VPC isolation", "Cloud Zone assignment", "NSX segment isolation only"], "correct": 1, "explanation": "Correct answer: B. Multi-layer isolation: RBAC controls visibility, VPC prevents network access.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "In a high-traffic VCFA deployment, what metrics should be monitored for the Provisioning Engine?", "options": ["Average provisioning latency, success rate, failed requests per cause, queue depth", "VM uptime only", "Storage usage only", "Network bandwidth only"], "correct": 0, "explanation": "Correct answer: A. Comprehensive monitoring: latency trends, failure rates, queue depth.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}, {"section": "Objective 5.1 \u2013 Operation Management & Troubleshooting", "question": "How does VCFA handle a duplicate request submission (user clicks 'Deploy' twice quickly)?", "options": ["Both requests proceed; 2 VMs deployed", "VCFA deduplicates via request ID; only 1 VM deployed", "Error message; no VMs deployed", "User must wait for first request to complete"], "correct": 1, "explanation": "Correct answer: B. Request deduplication prevents accidental duplicate provisioning.", "priority": true, "sectionClean": "Objective 5.1 \u2013 Operation Management & Troubleshooting"}];
+
+const SECTION_CATEGORIES = {
+  "General": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (!matched) SECTION_CATEGORIES["General"].push(s);
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>

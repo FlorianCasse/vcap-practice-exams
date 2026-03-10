@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Storage 9.0 Practice Exam — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Storage 9.0 Practice Exam <span>(3V0-23.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Objective 1.1 \u2014 Differentiate Between HCI & Traditional Storage Architectures", "sectionClean": "Objective 1.1 \u2014 Differentiate Between HCI & Traditional Storage Architectures", "question": "A customer currently uses Fibre Channel SAN with dedicated storage controllers. They want to reduce CapEx and operational complexity while maintaining shared storage. Which architecture best meets these goals?", "options": ["Upgrade to a higher-tier FC array", "Deploy vSAN HCI to replace dedicated SAN", "Add more FC switches", "Implement NFS appliance only"], "correct": 1, "explanation": "Correct answer: B. vSAN HCI eliminates dedicated storage infrastructure and simplifies operations via distributed, policy-driven storage.", "priority": true}, {"section": "Objective 1.1 \u2014 Differentiate Between HCI & Traditional Storage Architectures", "sectionClean": "Objective 1.1 \u2014 Differentiate Between HCI & Traditional Storage Architectures", "question": "What is the primary architectural difference between vSAN ESA and vSAN OSA?", "options": ["ESA uses disk groups; OSA is single-tier", "OSA uses disk groups; ESA is single-tier object-native", "ESA supports RAID-5/6; OSA only RAID-1", "No architectural difference; ESA is just a license tier"], "correct": 1, "explanation": "Correct answer: B. vSAN ESA (Express) eliminated disk groups and implements object-native single-tier architecture.", "priority": true}, {"section": "Objective 1.2 \u2014 Identify Use Cases for Different Storage Types", "sectionClean": "Objective 1.2 \u2014 Identify Use Cases for Different Storage Types", "question": "Which of the following is NOT a typical vSAN HCI use case?", "options": ["VDI environments with 500+ desktops", "Remote branch office with 2 hosts and witness appliance", "High-frequency trading database requiring dedicated array controllers", "Kubernetes persistent volume storage"], "correct": 2, "explanation": "Correct answer: C. High-frequency trading requires dedicated array controllers for optimization; vSAN is not ideal for this use case.", "priority": true}, {"section": "Objective 1.2 \u2014 Identify Use Cases for Different Storage Types", "sectionClean": "Objective 1.2 \u2014 Identify Use Cases for Different Storage Types", "question": "An organization plans to deploy a hybrid infrastructure with both HCI (vSAN) and legacy FC SAN arrays. What VCF feature enables consolidation of supplemental storage?", "options": ["vSAN Stretched Clusters", "Cross-Cluster Capacity Sharing", "vSAN File Service", "iSCSI Target Service"], "correct": 1, "explanation": "Correct answer: B. Cross-Cluster Capacity Sharing centralizes supplemental storage via a vSAN storage cluster.", "priority": true}, {"section": "Objective 1.3 \u2014 Identify Storage Types (Block, File, Object)", "sectionClean": "Objective 1.3 \u2014 Identify Storage Types (Block, File, Object)", "question": "vSAN presents storage as block storage to VMs, but internally uses which storage model?", "options": ["File storage with hierarchical directories", "Object-based distributed architecture with policy-driven replication", "Pure block with no deduplication", "S3 object store"], "correct": 1, "explanation": "Correct answer: B. vSAN uses object-native architecture internally while presenting VMFS block storage to VMs.", "priority": true}, {"section": "Objective 1.3 \u2014 Identify Storage Types (Block, File, Object)", "sectionClean": "Objective 1.3 \u2014 Identify Storage Types (Block, File, Object)", "question": "What is the primary advantage of vSAN File Service over a traditional external NFS appliance?", "options": ["Higher performance due to SSD tier", "Automatic failover across hosts and vSAN deduplication benefits", "Support for SMB protocol", "No VM provisioning needed"], "correct": 1, "explanation": "Correct answer: B. vSAN File Service leverages distributed cluster hosts for HA and benefits from vSAN deduplication/compression.", "priority": true}, {"section": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "sectionClean": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "question": "Which architectural feature distinguishes vSAN ESA from vSAN OSA?", "options": ["ESA uses disk groups; OSA eliminates them", "OSA eliminates disk groups; ESA requires them", "ESA is single-tier without cache/capacity separation", "No significant architectural difference"], "correct": 2, "explanation": "Correct answer: C. vSAN ESA uses single-tier all-SSD architecture without cache/capacity separation.", "priority": true}, {"section": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "sectionClean": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "question": "What is the typical latency range for vSAN ESA (all-SSD) vs. OSA with cache tier?", "options": ["ESA: 10-50ms, OSA: 0.5-2ms", "OSA: 10-50ms, ESA: 0.5-2ms", "Both: ~5-10ms", "No measurable difference"], "correct": 1, "explanation": "Correct answer: B. ESA provides lower latency (~0.5-2ms) due to all-SSD design.", "priority": true}, {"section": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "sectionClean": "Objective 2.1 \u2014 Compare vSAN OSA and ESA Architectures", "question": "In vSAN 9.0, which deduplication feature is available in limited availability for ESA?", "options": ["Per-policy deduplication", "Global deduplication", "VASA-based dedup", "Inline compression only"], "correct": 1, "explanation": "Correct answer: B. Global deduplication for ESA is limited availability in v9.0, expected unlimited in v9.1.", "priority": true}, {"section": "Objective 2.2 \u2014 Understand vSAN Cluster Architecture and Fault Domains", "sectionClean": "Objective 2.2 \u2014 Understand vSAN Cluster Architecture and Fault Domains", "question": "In a vSAN cluster with RAID-5 (FTT=1) erasure coding policy, what is the minimum number of hosts required for object placement?", "options": ["3 hosts", "4 hosts", "5 hosts", "6 hosts"], "correct": 1, "explanation": "Correct answer: B. RAID-5 (FTT=1) uses 3 data blocks + 1 parity block, requiring minimum 4 hosts.", "priority": true}, {"section": "Objective 2.2 \u2014 Understand vSAN Cluster Architecture and Fault Domains", "sectionClean": "Objective 2.2 \u2014 Understand vSAN Cluster Architecture and Fault Domains", "question": "What is the role of the Cluster Level Object Manager (CLOM) in vSAN?", "options": ["Manages per-host local storage objects", "Maintains cluster-wide object inventory and consensus", "Manages network overlays", "Provides external replication"], "correct": 1, "explanation": "Correct answer: B. CLOM maintains cluster-wide consensus on object state and membership.", "priority": true}, {"section": "Objective 2.3 \u2014 Principal vs. Supplemental Storage Roles", "sectionClean": "Objective 2.3 \u2014 Principal vs. Supplemental Storage Roles", "question": "What is the primary purpose of supplemental storage in a VCF cluster?", "options": ["Replace the principal vSAN cluster", "Support specialized workloads, legacy arrays, or independent storage scaling", "Provide cache for vSAN performance", "Eliminate vSAN license requirements"], "correct": 1, "explanation": "Correct answer: B. Supplemental storage supports legacy workloads, external array features, or independent scaling via CCCS.", "priority": true}, {"section": "Objective 2.3 \u2014 Principal vs. Supplemental Storage Roles", "sectionClean": "Objective 2.3 \u2014 Principal vs. Supplemental Storage Roles", "question": "Which storage type can be configured as supplemental via Cross-Cluster Capacity Sharing (CCCS)?", "options": ["External FC arrays only", "vSAN storage clusters only", "NFS appliances only", "Any external storage"], "correct": 1, "explanation": "Correct answer: B. CCCS is vSAN-to-vSAN only; external storage cannot use CCCS.", "priority": true}, {"section": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "sectionClean": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "question": "What is the key management protocol used by vSAN Encryption at Rest for external key servers?", "options": ["RADIUS", "LDAP", "KMIP (Key Management Interoperability Protocol)", "OAuth 2.0"], "correct": 2, "explanation": "Correct answer: C. vSAN uses KMIP for integration with external Key Management Servers.", "priority": true}, {"section": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "sectionClean": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "question": "What is the typical compression ratio achieved by vSAN inline compression in general workloads?", "options": ["1.5\u20132x", "2\u20133x", "4\u20135x", "10x+"], "correct": 1, "explanation": "Correct answer: B. Typical compression ratio is 2\u20133x for general workloads; backup/archive may achieve 4\u20135x.", "priority": true}, {"section": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "sectionClean": "Objective 2.4 \u2014 vSAN Advanced Features (Encryption, Compression, Snapshots)", "question": "How many snapshots per VM are supported in vSAN 9.0?", "options": ["32", "64", "128", "256"], "correct": 3, "explanation": "Correct answer: D. vSAN 9.0 supports up to 256 snapshots per VM.", "priority": true}, {"section": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "sectionClean": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "question": "What is the recommended maximum latency (round-trip) between sites in a vSAN Stretched Cluster?", "options": ["<2ms", "<5ms", "<10ms", "<20ms"], "correct": 1, "explanation": "Correct answer: B. <5ms round-trip latency is recommended for stretched cluster synchronous replication.", "priority": true}, {"section": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "sectionClean": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "question": "In a vSAN 2-Node cluster with witness appliance, what is the maximum number of VMs supported?", "options": ["25 VMs", "50 VMs", "100 VMs", "200 VMs"], "correct": 2, "explanation": "Correct answer: C. vSAN 2-Node clusters support up to 100 VMs.", "priority": true}, {"section": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "sectionClean": "Objective 2.5 \u2014 vSAN Storage Solutions (Stretched, 2-Node, Storage Clusters)", "question": "What is the primary use case for vSAN Storage Clusters in VCF architecture?", "options": ["Replace principal cluster compute", "Provide dedicated storage tier with independent scaling", "Act as backup site", "Reduce license costs"], "correct": 1, "explanation": "Correct answer: B. Storage clusters enable independent storage scaling via CCCS without adding compute.", "priority": true}, {"section": "Objective 2.6 \u2014 Storage in Supervisor (vSAN Persistent Volumes for Kubernetes)", "sectionClean": "Objective 2.6 \u2014 Storage in Supervisor (vSAN Persistent Volumes for Kubernetes)", "question": "How are Kubernetes persistent volumes provisioned in Supervisor running on vSAN?", "options": ["Direct NFS mount from vSAN", "StorageClass references vSAN storage policies", "Manual LUN allocation", "No persistent storage support"], "correct": 1, "explanation": "Correct answer: B. StorageClass definitions map Kubernetes requests to vSAN storage policies.", "priority": true}, {"section": "Objective 2.6 \u2014 Storage in Supervisor (vSAN Persistent Volumes for Kubernetes)", "sectionClean": "Objective 2.6 \u2014 Storage in Supervisor (vSAN Persistent Volumes for Kubernetes)", "question": "What vSAN feature enables multi-tier container storage differentiation in Supervisor?", "options": ["RAID-1 only", "RAID-5/6 only", "Multi-tier storage policies per StorageClass", "No differentiation available"], "correct": 2, "explanation": "Correct answer: C. Multiple StorageClasses can target different vSAN policies for tiered performance.", "priority": true}, {"section": "Objective 3.1 \u2014 Design vSAN for VCF Infrastructure", "sectionClean": "Objective 3.1 \u2014 Design vSAN for VCF Infrastructure", "question": "When designing vSAN for VDI workload (1000 desktops, 500 GB each), which replication policy is most appropriate for capacity efficiency?", "options": ["RAID-6 (FTT=2)", "RAID-5 (FTT=1) with compression and deduplication", "RAID-1 (FTT=1) mirroring only", "No replication, single copy only"], "correct": 1, "explanation": "Correct answer: B. VDI workloads (read-heavy, highly deduplicable) benefit from RAID-5 erasure coding for capacity efficiency combined with compression and deduplication (2-4x savings).", "priority": true}, {"section": "Objective 3.1 \u2014 Design vSAN for VCF Infrastructure", "sectionClean": "Objective 3.1 \u2014 Design vSAN for VCF Infrastructure", "question": "In a RAID-5 storage policy, what does stripe width=4 mean?", "options": ["4 total blocks (3 data + 1 parity)", "4 parity blocks", "4 hosts required", "4 TB stripe unit"], "correct": 0, "explanation": "Correct answer: A. Stripe width=4 means 3 data blocks + 1 parity block = 4-way stripe.", "priority": true}, {"section": "Objective 3.2 \u2014 Size a vSAN Storage Solution", "sectionClean": "Objective 3.2 \u2014 Size a vSAN Storage Solution", "question": "A customer has 200 TB of logical VM data with expected 2:1 deduplication and 2:1 compression. They require FTT=1 (RAID-1). What is the approximate physical capacity needed (without rebuild buffer)?", "options": ["50 TB", "100 TB", "200 TB", "400 TB"], "correct": 2, "explanation": "Correct answer: C. 200 TB logical \u00f7 (2 dedup \u00d7 2 compression) = 50 TB raw; 50 TB \u00d7 2 (RAID-1 overhead) = 100 TB usable \u2248 200 TB physical (with buffer).", "priority": true}, {"section": "Objective 3.2 \u2014 Size a vSAN Storage Solution", "sectionClean": "Objective 3.2 \u2014 Size a vSAN Storage Solution", "question": "What is the typical per-host IOPS performance for a vSAN ESA cluster?", "options": ["10k IOPS", "25k IOPS", "50k IOPS", "100k IOPS"], "correct": 2, "explanation": "Correct answer: C. vSAN ESA provides ~50k IOPS per host in typical deployments.", "priority": true}, {"section": "Objective 3.3 \u2014 Design Non-vSAN Storage Integration", "sectionClean": "Objective 3.3 \u2014 Design Non-vSAN Storage Integration", "question": "When should a customer use supplemental storage (external SAN) rather than expanding principal vSAN cluster?", "options": ["Always expand vSAN for cost savings", "When specialized array features (replication, WORM) are required", "Never use external storage with vSAN", "When vSAN reaches 80% capacity"], "correct": 1, "explanation": "Correct answer: B. External storage is justified when specific array features not in vSAN are needed.", "priority": true}, {"section": "Objective 3.3 \u2014 Design Non-vSAN Storage Integration", "sectionClean": "Objective 3.3 \u2014 Design Non-vSAN Storage Integration", "question": "What is the minimum vSAN version required for Cross-Cluster Capacity Sharing (CCCS)?", "options": ["vSAN 6.0", "vSAN 6.7", "vSAN 7.0", "vSAN 8.0"], "correct": 2, "explanation": "Correct answer: C. CCCS requires vSAN 7.0 or later.", "priority": true}, {"section": "Objective 4.1 \u2014 Deploy vSAN Cluster", "sectionClean": "Objective 4.1 \u2014 Deploy vSAN Cluster", "question": "What is the minimum number of hosts required to create a vSAN cluster?", "options": ["1 host", "2 hosts", "3 hosts", "4 hosts"], "correct": 2, "explanation": "Correct answer: C. Minimum 3 hosts required (or 2 + witness for ROBO).", "priority": true}, {"section": "Objective 4.1 \u2014 Deploy vSAN Cluster", "sectionClean": "Objective 4.1 \u2014 Deploy vSAN Cluster", "question": "What is the recommended minimum vSAN kernel port bandwidth?", "options": ["100 Mbps", "1 Gbps", "1.5 Gbps", "10 Gbps"], "correct": 2, "explanation": "Correct answer: C. Minimum 1.5 Gbps dedicated vSAN kernel port recommended.", "priority": true}, {"section": "Objective 4.1 \u2014 Deploy vSAN Cluster", "sectionClean": "Objective 4.1 \u2014 Deploy vSAN Cluster", "question": "What happens when an ESXi host in vSAN 9.0 cluster has unsupported disks (not on HCL)?", "options": ["Disks are automatically added to vSAN", "Cluster formation is prevented", "Disks are excluded from vSAN but used for VMFS", "Warning issued, disks can be added manually"], "correct": 2, "explanation": "Correct answer: C. vSAN 9.0 strictly enforces HCL; unsupported disks are excluded from vSAN pool.", "priority": true}, {"section": "Objective 4.2 \u2014 Stretched Cluster Configuration", "sectionClean": "Objective 4.2 \u2014 Stretched Cluster Configuration", "question": "In a vSAN Stretched Cluster, what role does the witness site play?", "options": ["Synchronously replicate data", "Provide HA quorum and tie-breaking votes", "Serve VM workloads", "Cache hot data only"], "correct": 1, "explanation": "Correct answer: B. Witness provides quorum and breaks site ties without holding data.", "priority": true}, {"section": "Objective 4.2 \u2014 Stretched Cluster Configuration", "sectionClean": "Objective 4.2 \u2014 Stretched Cluster Configuration", "question": "What is the maximum supported RTT latency between the witness host and each data site in a vSAN stretched cluster?", "options": ["<5ms RTT", "<100ms RTT", "<200ms RTT", "<500ms RTT"], "correct": 2, "explanation": "Correct answer: C. Witness-to-data-site latency supports up to 200ms RTT. Note: data-site-to-data-site latency must be \u22645ms RTT.", "priority": true}, {"section": "Objective 4.3 \u2014 2-Node Cluster with Witness Appliance", "sectionClean": "Objective 4.3 \u2014 2-Node Cluster with Witness Appliance", "question": "What is the maximum VM capacity for a vSAN 2-Node cluster?", "options": ["25 VMs", "50 VMs", "100 VMs", "200 VMs"], "correct": 2, "explanation": "Correct answer: C. vSAN 2-Node clusters support up to 100 VMs.", "priority": true}, {"section": "Objective 4.3 \u2014 2-Node Cluster with Witness Appliance", "sectionClean": "Objective 4.3 \u2014 2-Node Cluster with Witness Appliance", "question": "In a 2-node vSAN cluster, where is the witness appliance typically deployed?", "options": ["On one of the two ESXi hosts", "On a separate, third compute resource", "On external NAS", "Not required for 2-node"], "correct": 1, "explanation": "Correct answer: B. Witness is deployed separately to break quorum ties.", "priority": true}, {"section": "Objective 4.4 \u2014 Data Protection (Snapshots, Live Recovery)", "sectionClean": "Objective 4.4 \u2014 Data Protection (Snapshots, Live Recovery)", "question": "How many snapshots per VM are supported in vSAN 9.0?", "options": ["32", "64", "128", "256"], "correct": 3, "explanation": "Correct answer: D. vSAN 9.0 supports 256 snapshots per VM.", "priority": true}, {"section": "Objective 4.4 \u2014 Data Protection (Snapshots, Live Recovery)", "sectionClean": "Objective 4.4 \u2014 Data Protection (Snapshots, Live Recovery)", "question": "What is the performance impact of creating a vSAN snapshot?", "options": ["5-10% performance decrease", "No performance impact; copy-on-write", "50% throughput loss", "VM must be powered off"], "correct": 1, "explanation": "Correct answer: B. Snapshots are copy-on-write; creation has no performance impact.", "priority": true}, {"section": "Objective 4.5 \u2014 Non-vSAN Storage Configuration", "sectionClean": "Objective 4.5 \u2014 Non-vSAN Storage Configuration", "question": "What is the primary advantage of using supplemental FC SAN with vSAN?", "options": ["Lower cost than vSAN", "Specialized array features (replication, WORM) for specific workloads", "Better performance", "Eliminates vSAN license"], "correct": 1, "explanation": "Correct answer: B. Supplemental SAN provides specialized features not in vSAN.", "priority": true}, {"section": "Objective 4.5 \u2014 Non-vSAN Storage Configuration", "sectionClean": "Objective 4.5 \u2014 Non-vSAN Storage Configuration", "question": "Which external storage protocol requires NAS appliance (vs. SAN array)?", "options": ["Fibre Channel", "iSCSI", "NFS (Network File System)", "Both FC and iSCSI"], "correct": 2, "explanation": "Correct answer: C. NFS requires NAS appliance; FC and iSCSI are block-level.", "priority": true}, {"section": "Objective 4.6 \u2014 Cross-Cluster Capacity Sharing (CCCS)", "sectionClean": "Objective 4.6 \u2014 Cross-Cluster Capacity Sharing (CCCS)", "question": "What is required to establish Cross-Cluster Capacity Sharing?", "options": ["Both clusters in same vSAN cluster", "Both clusters on VCF 5.0+, vSAN 7.0+, same networking", "External SAN required", "Witness appliance required"], "correct": 1, "explanation": "Correct answer: B. CCCS requires VCF 5.0+, vSAN 7.0+, and same cluster networking.", "priority": true}, {"section": "Objective 4.6 \u2014 Cross-Cluster Capacity Sharing (CCCS)", "sectionClean": "Objective 4.6 \u2014 Cross-Cluster Capacity Sharing (CCCS)", "question": "What type of storage is used for CCCS between two vSAN clusters?", "options": ["External FC array", "External NFS NAS", "vSAN datastore mounted as NFS", "iSCSI LUN"], "correct": 2, "explanation": "Correct answer: C. CCCS mounts storage cluster vSAN datastore as NFS on workload cluster.", "priority": true}, {"section": "Objective 4.7 \u2014 Encryption Configuration", "sectionClean": "Objective 4.7 \u2014 Encryption Configuration", "question": "What is the encryption algorithm used by vSAN Encryption at Rest?", "options": ["AES-128", "AES-192", "AES-256", "RSA-2048"], "correct": 2, "explanation": "Correct answer: C. vSAN uses AES-256 encryption at rest.", "priority": true}, {"section": "Objective 4.7 \u2014 Encryption Configuration", "sectionClean": "Objective 4.7 \u2014 Encryption Configuration", "question": "Which external protocol does vSAN use for Key Management Server integration?", "options": ["RADIUS", "LDAP", "KMIP (Key Management Interoperability Protocol)", "OAuth 2.0"], "correct": 2, "explanation": "Correct answer: C. vSAN uses KMIP for KMS integration.", "priority": true}, {"section": "Objective 4.8 \u2014 File Service Configuration", "sectionClean": "Objective 4.8 \u2014 File Service Configuration", "question": "Which authentication method is supported by vSAN File Service in v9.0?", "options": ["None required", "LDAP only", "NFSv3 AUTH_SYS only", "Kerberos (NFSv4.1)"], "correct": 3, "explanation": "Correct answer: D. vSAN File Service v9.0 supports NFSv4.1 with Kerberos authentication.", "priority": true}, {"section": "Objective 4.8 \u2014 File Service Configuration", "sectionClean": "Objective 4.8 \u2014 File Service Configuration", "question": "What is the key advantage of vSAN File Service vs. traditional NFS appliance?", "options": ["Lower latency", "Benefits from vSAN dedup/compression, automatic failover, no external appliance", "Larger capacity", "More clients supported"], "correct": 1, "explanation": "Correct answer: B. File Service is part of vSAN cluster, benefits from dedup/compression, and failover is automatic.", "priority": true}, {"section": "Objective 4.9 \u2014 iSCSI Target Service", "sectionClean": "Objective 4.9 \u2014 iSCSI Target Service", "question": "How are iSCSI LUNs in vSAN protected against host failure?", "options": ["No protection; single copy", "Replicated per vSAN storage policy (RAID-1/5/6)", "Manual backup required", "External array replication"], "correct": 1, "explanation": "Correct answer: B. iSCSI LUNs are protected via vSAN storage policies like any vSAN object.", "priority": true}, {"section": "Objective 4.9 \u2014 iSCSI Target Service", "sectionClean": "Objective 4.9 \u2014 iSCSI Target Service", "question": "What authentication is supported for iSCSI Target Service in vSAN?", "options": ["No authentication", "Simple password", "CHAP (Challenge-Handshake Auth Protocol)", "Kerberos only"], "correct": 2, "explanation": "Correct answer: C. vSAN iSCSI Target Service supports mutual CHAP authentication.", "priority": true}, {"section": "Objective 4.10 \u2014 vSAN Network & Cluster Extensions", "sectionClean": "Objective 4.10 \u2014 vSAN Network & Cluster Extensions", "question": "What is the minimum dedicated bandwidth for vSAN kernel port on an all-flash vSAN OSA cluster?", "options": ["1 Gbps", "10 Gbps", "25 Gbps", "100 Gbps"], "correct": 1, "explanation": "Correct answer: B. All-flash vSAN OSA requires minimum 10 Gbps dedicated vSAN network. Hybrid OSA requires 1 Gbps minimum. ESA requires 25 Gbps minimum.", "priority": true}, {"section": "Objective 4.10 \u2014 vSAN Network & Cluster Extensions", "sectionClean": "Objective 4.10 \u2014 vSAN Network & Cluster Extensions", "question": "Which default multicast address and port does vSAN use for cluster heartbeat (if multicast enabled)?", "options": ["224.1.1.1:12321", "224.1.1.1:23451", "239.255.255.255:5404", "224.0.0.1:5353"], "correct": 1, "explanation": "Correct answer: B. vSAN uses multicast 224.1.1.1:23451 for cluster discovery (if multicast enabled).", "priority": true}, {"section": "Objective 4.11 \u2014 Policy Management & Tier Definition", "sectionClean": "Objective 4.11 \u2014 Policy Management & Tier Definition", "question": "Which tool is used to create and manage vSAN storage policies in vCenter?", "options": ["ESXi Host Client", "vSAN UI plugin", "Storage Policy Based Management (SPBM)", "DCUI (Direct Console)"], "correct": 2, "explanation": "Correct answer: C. SPBM is the standard tool for policy creation and management.", "priority": true}, {"section": "Objective 4.11 \u2014 Policy Management & Tier Definition", "sectionClean": "Objective 4.11 \u2014 Policy Management & Tier Definition", "question": "What does Failures to Tolerate (FTT) = 2 mean in a vSAN storage policy?", "options": ["Cluster can tolerate 2 failed disks", "Cluster can tolerate 2 failed hosts", "Objects replicated 2 times", "2 RAID-5 parity blocks"], "correct": 1, "explanation": "Correct answer: B. FTT=2 means cluster can tolerate simultaneous failure of up to 2 hosts.", "priority": true}, {"section": "Objective 4.12 \u2014 Persistent Volumes in Supervisor", "sectionClean": "Objective 4.12 \u2014 Persistent Volumes in Supervisor", "question": "How do Kubernetes pods request persistent storage from vSAN in Supervisor?", "options": ["Direct vSAN API calls", "StorageClass referencing vSAN policies", "NFS mount only", "No persistent storage"], "correct": 1, "explanation": "Correct answer: B. StorageClass definitions map pod requests to vSAN policies.", "priority": true}, {"section": "Objective 4.12 \u2014 Persistent Volumes in Supervisor", "sectionClean": "Objective 4.12 \u2014 Persistent Volumes in Supervisor", "question": "What vSAN feature enables differentiated storage tiers in Supervisor?", "options": ["RAID-1 only", "RAID-5/6 only", "Multiple StorageClasses referencing different vSAN policies", "No tiering available"], "correct": 2, "explanation": "Correct answer: C. Multiple StorageClasses can target different vSAN policies (RAID-1, RAID-5, RAID-6).", "priority": true}, {"section": "Objective 5.1 \u2014 Troubleshoot vSAN Health Issues", "sectionClean": "Objective 5.1 \u2014 Troubleshoot vSAN Health Issues", "question": "What happens when vSAN cluster loses CLOM quorum?", "options": ["Cluster continues normally", "All objects become inaccessible immediately", "Cluster detaches from vCenter but continues I/O", "Cluster enters safe mode; new objects rejected"], "correct": 3, "explanation": "Correct answer: D. Without CLOM quorum, cluster enters safe mode; no new objects can be created.", "priority": true}, {"section": "Objective 5.1 \u2014 Troubleshoot vSAN Health Issues", "sectionClean": "Objective 5.1 \u2014 Troubleshoot vSAN Health Issues", "question": "An object becomes inaccessible (red health). What is the likely cause?", "options": ["One host failure (FTT=1)", "Multiple hosts down exceeding FTT tolerance", "Disk full", "Network latency >10ms"], "correct": 1, "explanation": "Correct answer: B. Objects inaccessible when failures exceed FTT tolerance.", "priority": true}, {"section": "Objective 5.2 \u2014 Resync Operations & Object Rebuilding", "sectionClean": "Objective 5.2 \u2014 Resync Operations & Object Rebuilding", "question": "What is the default delay before vSAN initiates automatic object repair/resync after host failure (VSAN.ClomRepairDelay)?", "options": ["15 minutes", "30 minutes", "60 minutes", "120 minutes"], "correct": 2, "explanation": "Correct answer: C. Default VSAN.ClomRepairDelay is 60 minutes. vSAN waits this period before assuming the host is permanently absent and starting component rebuild.", "priority": true}, {"section": "Objective 5.2 \u2014 Resync Operations & Object Rebuilding", "sectionClean": "Objective 5.2 \u2014 Resync Operations & Object Rebuilding", "question": "During vSAN resync, what percentage of cluster IOPS is typically reserved?", "options": ["10%", "20%", "30%", "50%"], "correct": 2, "explanation": "Correct answer: C. Default resync uses ~30% cluster IOPS to minimize workload impact.", "priority": true}, {"section": "Objective 5.3 \u2014 Network & Latency Troubleshooting", "sectionClean": "Objective 5.3 \u2014 Network & Latency Troubleshooting", "question": "What is the recommended latency threshold for vSAN synchronous replication?", "options": ["<2ms", "<5ms", "<10ms", "<20ms"], "correct": 1, "explanation": "Correct answer: B. <5ms latency recommended for vSAN stretched clusters.", "priority": true}, {"section": "Objective 5.4 \u2014 Performance Optimization", "sectionClean": "Objective 5.4 \u2014 Performance Optimization", "question": "What vSAN metric indicates that storage is congested and I/O is slowing?", "options": ["CPU utilization >80%", "vSAN Congestion >85%", "Memory balloon >50%", "Network packet loss >1%"], "correct": 1, "explanation": "Correct answer: B. vSAN Congestion >85% indicates storage I/O bottleneck.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "Which vSAN manager is responsible for cluster-wide consensus and membership?", "options": ["LSOM", "DOM", "CLOM", "VMX"], "correct": 2, "explanation": "Correct answer: C. CLOM maintains cluster-wide consensus and enforces policies.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "What does a missing DOM owner indicate?", "options": ["Cluster is healthy", "Object owner host is down; new owner will be elected", "vSAN is corrupted", "Disk failure"], "correct": 1, "explanation": "Correct answer: B. Missing DOM owner means the host holding the owner component is down.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "In a stretched cluster, what happens when one site becomes isolated from the witness?", "options": ["Both sites continue normally", "Isolated site becomes read-only; witness+other site active", "All data lost", "Automatic failover occurs"], "correct": 1, "explanation": "Correct answer: B. Witness breaks tie; isolated site enters read-only mode.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "A vSAN cluster with FTT=1 experiences failure of 2 hosts simultaneously. What occurs?", "options": ["VMs continue running normally", "Inaccessible objects appear; VMs may pause or fail", "Automatic scaling adds new hosts", "Cluster heals automatically"], "correct": 1, "explanation": "Correct answer: B. When failures exceed FTT, objects become inaccessible; VMs may stop.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "After host failure, resync progress stalls at 80% for 4+ hours. What is the likely bottleneck?", "options": ["Disk I/O saturation", "Network bandwidth (resync is bandwidth-limited)", "vSAN CLOM delay", "Memory exhaustion"], "correct": 1, "explanation": "Correct answer: B. Resync defaults to 30% cluster IOPS; network or disk I/O may be limiting factor.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "You detect high latency (>100ms) between vSAN kernel ports. What is the likely impact?", "options": ["No impact; vSAN adapts", "Cluster heartbeat may timeout; potential split-brain risk", "RAID-5 parity recalc slow", "Only affects stretched clusters"], "correct": 1, "explanation": "Correct answer: B. High latency >100ms can trigger heartbeat timeouts and cluster instability.", "priority": true}, {"section": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "sectionClean": "Objective 5.5 \u2014 Advanced Troubleshooting (CLOM, DOM, LSOM)", "question": "A VM's checkpoint file size exceeds vSAN free capacity. What happens?", "options": ["LSOM reservation failure; VM cannot checkpoint/snapshot", "Automatic cleanup of old snapshots", "Data stored on supplemental SAN", "Silent truncation"], "correct": 0, "explanation": "Correct answer: A. LSOM reservation failure prevents VM operations; requires capacity expansion.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "A colleague configured a 4-node ESA cluster: 32 cores, 96GB RAM, dual 10GbE, 2x 4TB NVMe on single controller per host. Performance is suboptimal. What should be improved?", "options": ["Increase RAM to 128GB to improve compression ratio", "Place NVMe drives on separate controllers and add dedicated vSAN NICs", "Upgrade to 25GbE NICs only", "Remove one NVMe per host to reduce I/O bottleneck"], "correct": 1, "explanation": "Correct answer: B. ESA performance requires dedicated NVMe controllers (avoid single-point failure) and separate vSAN network. More memory also improves caching performance.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "ESA cluster with 2:1 compression, 40TB raw capacity. Must account for Host Rebuild Reserve and Operations Reserve. Approximate usable capacity after all reserves?", "options": ["40TB (no overhead in ESA)", "30TB (after compression and reserves)", "43TB (compression benefit exceeds reserves)", "28TB (worst-case with all reserves)"], "correct": 1, "explanation": "Correct answer: B. 40TB raw \u00d7 2 compression = 80TB logical; subtract Host Rebuild Reserve (~15%) and Operations Reserve (~10%) = ~28\u201332TB usable. Calculation depends on exact policies.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "A 3-node vSAN cluster (RAID-1 FTT=1) has Host A in maintenance 'Ensure Accessibility' mode. During maintenance, Host B crashes unexpectedly. What happens?", "options": ["All VMs remain protected; vSAN rebuilds on Host C", "Some VMs are lost because only 1 copy remains (Host C) and Host B is down", "All VMs are paused until Host B recovers", "vSAN automatically fails over to stretched cluster mode"], "correct": 1, "explanation": "Correct answer: B. During Host A maintenance, objects are copied to Host C. When Host B fails, those objects on Host B become lost (Host C has copy, but Host B is down). VMs with replicas only on Host B are lost.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "An OSA cluster experiences cache disk failure. What is the correct recovery procedure?", "options": ["Hot-swap cache disk with replacement and wait for rebuild", "Remove entire disk group, recreate with new cache disk, rebalance capacity", "Replace cache disk via vCenter UI; data automatically migrates", "Mark cache disk offline; continue operations with degraded cache"], "correct": 1, "explanation": "Correct answer: B. OSA cache disk is NOT hot-swappable. Entire disk group must be removed and recreated with new cache disk.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "Live Cyber Recovery appliance cannot connect to vCenter. Credentials are correct. What should be checked next?", "options": ["Verify vCenter IP address is reachable", "Verify DNS resolution and vCenter FQDN configuration", "Reinstall appliance OVA", "Check vCenter firewall rules only"], "correct": 1, "explanation": "Correct answer: B. Appliance requires resolvable vCenter FQDN (not IP address) and proper DNS configuration. If credentials are correct, DNS is the likely culprit.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "Live Cyber Recovery deployment includes immutable snapshots. Maximum number of immutable snapshots allowed per VM?", "options": ["3 snapshots maximum", "7 snapshots maximum", "Unlimited (immutability is enforced at storage tier)", "15 snapshots (doubled from regular snapshots)"], "correct": 1, "explanation": "Correct answer: B. Maximum 7 immutable snapshots per VM. Immutable snapshots prevent deletion (ransomware defense) but limit snapshot count.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "A management domain in VCF 5.0 needs a new principal storage option. Which of these can be used?", "options": ["NFS v4.1 (most advanced NFS version)", "iSCSI (flexible block storage)", "Fibre Channel (robust SAN infrastructure)", "NVMe/TCP (fastest protocol)"], "correct": 2, "explanation": "Correct answer: C. Management domain only accepts vSAN, Fibre Channel, and NFS v3 as principal storage. NFS v4.1, iSCSI, and NVMe protocols are supplemental only.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "Some VMs in ESA cluster show stripe width 2; others show default stripe width 1. Why?", "options": ["Stripe width is dynamically assigned based on VM I/O pattern", "VMs with stripe width 2 have a custom storage policy assigned", "Stripe width 2 indicates compression ratio of 2:1", "Changing default policy retroactively updates all VMs to new stripe width"], "correct": 1, "explanation": "Correct answer: B. Custom storage policies can specify stripe width 2 or 3. Changing the default policy does NOT update existing VMs' policies.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "vSAN File Services deployment: which feature is available on NFS shares?", "options": ["ABE (Access Based Enumeration)", "Quotas (space limit per user/group)", "SMB encryption", "Kerberos authentication only"], "correct": 1, "explanation": "Correct answer: B. NFS shares support quotas. ABE is SMB-only feature.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "ESXi host cannot see newly installed FC LUNs. HBA firmware is current. What should be checked first?", "options": ["FC switch port speed (must be 32Gbps)", "Fibre Channel zoning (host WWN must be in zone)", "SAN array reboot", "ESXi host memory available"], "correct": 1, "explanation": "Correct answer: B. LUN visibility depends on zoning and LUN masking. If HBA firmware is current, verify host WWN is in FC zone.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "NFS datastore showing high read latency (3ms) but fast write latency (0.5ms). Where should you check performance metrics?", "options": ["esxcli storage vmfs info on each ESXi host", "vCenter > Datastores > Select NFS datastore > Performance tab", "vSAN Health > Performance Service metrics", "vCenter > Clusters > Performance tab"], "correct": 1, "explanation": "Correct answer: B. Datastore-level performance metrics are in vCenter Datastores > Performance tab, NOT esxcli or cluster-level views.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "ESA cluster with slow I/O. Backend write latency is 8ms while read latency is 1ms. What is the most likely cause?", "options": ["Stripe width is too low; increase from 1 to 2", "Cache buffer is too small for workload; disable compression or change RAID", "Network latency is high; add 25GbE NICs", "ESA does not support stripe width changes"], "correct": 1, "explanation": "Correct answer: B. Large gap between read and write latency indicates cache is handling reads efficiently but backend is slow. Disabling compression or changing RAID improves backend performance.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "What is minimum number of hosts for ESA RAID-6 with FTT=2?", "options": ["4 hosts", "5 hosts", "6 hosts", "7 hosts"], "correct": 3, "explanation": "Correct answer: D. ESA RAID-6 FTT=2 requires minimum 7 hosts (4 data + 2 parity + 1 additional).", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "Organization wants to encrypt all vSAN VMDKs at rest. No external KMS available. Which option is valid?", "options": ["Transport encryption is sufficient; data-at-rest encryption is optional", "Use native KMS provider in vSphere Client Admin interface", "Data-at-rest encryption is impossible without external KMS server", "Deploy vSAN File Services to enable encryption"], "correct": 1, "explanation": "Correct answer: B. vSphere 9.0 includes native KMS provider accessible via vSphere Client > Administration > Key Management.", "priority": true}, {"section": "Practice Questions: Real Exam Scenarios", "sectionClean": "Practice Questions: Real Exam Scenarios", "question": "Kubernetes persistent volumes will use NFS datastore. Is a storage policy required?", "options": ["No; NFS datastores provide performance automatically", "Yes; storage policies are required for container images and PVCs", "Optional; policy is recommended but not mandatory", "Required only if compression is enabled"], "correct": 1, "explanation": "Correct answer: B. Storage policies are REQUIRED for Kubernetes storage on NFS. Multiple policies can target the same NFS datastore.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "For 1000 VDI desktops (500 GB each) with 3:1 dedup and 2:1 compression, using RAID-1 ESA, approximately how many hosts with 1.6 TB SSDs are needed?", "options": ["50 hosts", "90 hosts", "135 hosts", "200 hosts"], "correct": 2, "explanation": "Correct answer: C. 500TB \u00f7 6 (dedup+compression) \u00f7 2 (RAID-1 overhead) \u00f7 1.6TB per host \u2248 130-135 hosts.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "In a stretched cluster with Sites A/B and witness Site C, if Site A is isolated (network cut), what is the expected outcome?", "options": ["Site A continues, Site B pauses", "Site B+witness continue, Site A read-only", "All data lost", "Manual failover required"], "correct": 1, "explanation": "Correct answer: B. Witness votes with Site B; Site A becomes isolated/read-only.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "In a CCCS architecture with compute and storage clusters, which tier should store hot database workloads?", "options": ["Supplemental storage cluster via CCCS", "Compute cluster principal vSAN (RAID-1)", "External FC SAN", "NFS archive only"], "correct": 1, "explanation": "Correct answer: B. Hot workloads on compute cluster principal vSAN for optimal performance.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "When performing vSAN encryption key rotation via re-keying operation, what is the expected impact?", "options": ["Immediate VM pause", "No impact to VMs", "CPU/network overhead but no pause", "All data briefly unencrypted"], "correct": 2, "explanation": "Correct answer: C. Re-keying adds CPU/network overhead but VMs continue running.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "A backup appliance uses vSAN iSCSI target service for capacity. During backup spike (high IOPS), how can backup impact on production VMs be mitigated?", "options": ["Pause VMs during backup", "Disable compression on backup LUNs", "Apply IOPS throttling to backup LUN policy", "Use supplemental SAN instead"], "correct": 2, "explanation": "Correct answer: C. IOPS throttling in storage policy limits backup impact on production.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "In vSAN ESA, what is global deduplication (as of v9.0) and what is its availability status?", "options": ["Dedup across all vSAN clusters", "Dedup within cluster of identical data blocks", "Not available; removed in v9.0", "ESA-only feature in limited availability"], "correct": 3, "explanation": "Correct answer: D. Global deduplication is available in vSAN 9.0 ESA in limited availability; expected unlimited in v9.1.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "A vSAN cluster requires minimum how many dedicated Gigabit network ports for cluster heartbeat and replication?", "options": ["1 \u00d7 1 Gbps", "2 \u00d7 1 Gbps", "1 \u00d7 10 Gbps", "Variable based on host count"], "correct": 0, "explanation": "Correct answer: A. Minimum 1 dedicated vSAN kernel port at 1.5+ Gbps recommended.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "What is the maximum number of hosts supported in a single vSAN cluster?", "options": ["32 hosts", "64 hosts", "128 hosts", "No hard limit (design-dependent)"], "correct": 1, "explanation": "Correct answer: B. vSAN supports a maximum of 64 hosts per cluster. This applies to both OSA and ESA architectures.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "When a vSAN object policy changes from RAID-1 to RAID-5, what operation occurs?", "options": ["No changes; policy is informational only", "Objects immediately converted; metadata resync", "New objects use RAID-5; existing stay RAID-1", "VM downtime required"], "correct": 1, "explanation": "Correct answer: B. Policy change triggers object re-protection; existing objects converted to new policy via background resync.", "priority": true}, {"section": "Scenario-Based Practice Scenarios", "sectionClean": "Scenario-Based Practice Scenarios", "question": "What does vSAN 'Object Inaccessible' health state indicate vs. 'Degraded'?", "options": ["Degraded = 1 copy lost, Inaccessible = all copies lost", "Inaccessible = 1 copy lost, Degraded = undergoing repair", "Inaccessible = object partially read-only, Degraded = slow", "Both mean same condition"], "correct": 0, "explanation": "Correct answer: A. Degraded = some redundancy lost but readable; Inaccessible = no readable copies (FTT exceeded).", "priority": true}];
+
+const SECTION_CATEGORIES = {
+  "General": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (!matched) SECTION_CATEGORIES["General"].push(s);
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>

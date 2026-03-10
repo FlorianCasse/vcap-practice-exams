@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Operations 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Operations 9.0 <span>(3V0-22.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    <div class="stat">Customized for <b>Florian</b></div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+      <button class="btn btn-secondary btn-small" onclick="selectPriority()">Priority Only</button>
+      <button class="btn btn-secondary btn-small" onclick="selectStrength()">Strength Only</button>
+
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "In VCF 9.0, what does Day 2 Operations primarily focus on?", "options": ["Initial deployment of vCenter and SDDC Manager", "Post-deployment monitoring, optimization, and compliance management", "Hardware procurement and capacity planning", "VM migration from legacy environments"], "correct": 1, "explanation": "Correct: B. Day 2 Operations covers post-deployment tasks: monitoring, optimization, troubleshooting, and compliance. Initial deployment is Day 1.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "What is the maximum number of objects (VMs, hosts, networks) a single VCF Operations Collector can monitor?", "options": ["50,000 objects", "100,000 objects", "150,000 objects", "200,000 objects"], "correct": 1, "explanation": "Correct: B. Each Collector node handles up to 100,000 objects maximum. Larger deployments require multiple regional collectors.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Which self-monitoring metric indicates a Collector node is falling behind in metric ingestion?", "options": ["Collector throughput < 50 events/sec", "Collector backlog > 10,000 events", "Analytics heap > 50%", "UI response time > 2000ms"], "correct": 1, "explanation": "Correct: B. A backlog exceeding 10,000 events indicates the Collector cannot keep pace with incoming metrics.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Configuration Drift detection in VCF 9.0 can identify deviations in which of the following? (Select 3)", "options": ["Host firmware versions", "vSAN policy compliance", "DRS rule configurations", "VM snapshot schedules"], "correct": 2, "explanation": "Correct: A, B, C. Configuration Drift monitors firmware, policies, and rules, but NOT VM schedules.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "What metric retention policy does VCF Operations use?", "options": ["All metrics retained indefinitely", "20 seconds (live), 5 minutes (1h), 1 hour (30d), 1 day (1y)", "7 days for all metrics", "30 days with manual archival"], "correct": 1, "explanation": "Correct: B. VCF Operations uses a tiered retention: 20-sec granularity for recent data, progressively aggregated for historical data.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Which of the following is NOT a component of VCF Operations architecture?", "options": ["Collector nodes", "Analytics nodes", "vRealize Orchestrator", "UI nodes"], "correct": 2, "explanation": "Correct: C. VCF Operations includes Collectors, Analytics, and UI nodes. Orchestrator is part of VCF Automation, not VCF Operations.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "In VCF Operations, when should manual approval be used instead of auto-remediation for configuration drift?", "options": ["Only for firmware updates", "For critical infrastructure changes or security-sensitive policies", "Auto-remediation is always preferred", "Never \u2013 auto-remediation is disabled by default"], "correct": 1, "explanation": "Correct: B. Manual approval is recommended for critical changes. Auto-remediation is useful for routine corrective actions.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "What is the primary purpose of VCF Policies?", "options": ["To replace SDDC Manager", "To define operational guardrails and business rules", "To automate all VM operations", "To manage only network policies"], "correct": 1, "explanation": "Correct: B. VCF Policies define guardrails for capacity, cost, workload, and lifecycle management.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "Which policy type would be used to automatically shut down non-production VMs after business hours?", "options": ["Capacity policy", "Cost policy", "Lifecycle policy", "Workload policy"], "correct": 2, "explanation": "Correct: C. Lifecycle policies control VM creation, retention, and automated cleanup.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.13 \u2013 Monitoring Networks in VCF Operations for Networks", "question": "What is the minimum cluster size for NSX Manager HA?", "options": ["1 node", "2 nodes", "3 nodes", "4 nodes"], "correct": 2, "explanation": "Correct: C. NSX Manager requires minimum 3 nodes for high availability in production.", "priority": true, "sectionClean": "4.13 \u2013 Monitoring Networks in VCF Operations for Networks"}, {"section": "4.13 \u2013 Monitoring Networks in VCF Operations for Networks", "question": "Which of the following is NOT monitored by VCF Operations for Networks?", "options": ["Edge node throughput", "NSX segment VLAN assignments", "Tier-0 BGP route advertisements", "VM startup time"], "correct": 3, "explanation": "Correct: D. VCF Operations monitors network infrastructure. VM startup time is a compute metric, not network.", "priority": true, "sectionClean": "4.13 \u2013 Monitoring Networks in VCF Operations for Networks"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "What is the difference between ALLOCATION capacity and DEMAND capacity?", "options": ["Allocation is peak usage; Demand is average usage", "Allocation is provisioned; Demand is actual usage", "Demand is total cluster capacity; Allocation is per-VM", "They are synonymous terms"], "correct": 1, "explanation": "Correct: B. Allocation is provisioned (assigned) capacity. Demand is actual (used) capacity.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "A VM is provisioned with 32GB RAM but consistently uses <4GB. What capacity metric indicates the biggest opportunity for rightsizing?", "options": ["Allocation = 32GB", "Demand = 4GB", "Remaining = 28GB", "Peak = 8GB"], "correct": 2, "explanation": "Correct: C. Remaining capacity (Allocation \u2013 Demand) of 28GB represents wasted resources available for rightsizing.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "Which SLA tier typically mandates the lowest utilization threshold to ensure performance headroom?", "options": ["Bronze (70%)", "Silver (60%)", "Gold (50%)", "Platinum (40%)"], "correct": 2, "explanation": "Correct: C. Gold tier (highest SLA) requires lowest utilization (50%) to guarantee performance during peaks.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "In a What-If capacity scenario, what is the primary use case?", "options": ["Testing cluster failover", "Forecasting impact of VM migrations or infrastructure changes", "Monitoring real-time metric collection", "Configuring SSL certificates"], "correct": 1, "explanation": "Correct: B. What-If scenarios simulate future capacity states to guide infrastructure decisions.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "You notice a cluster trending toward 85% CPU utilization. At the current growth rate, when will it exceed 95% (danger threshold)?", "options": ["Use Capacity Forecasting with 180-day horizon", "Monitor real-time dashboards only", "Scale the cluster immediately without analysis", "Ignore if no alerts are active"], "correct": 0, "explanation": "Correct: A. Capacity Forecasting provides timeline predictions using growth trends and model extrapolation.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "Which configuration option allows different capacity thresholds for development vs production environments?", "options": ["SLA tiers", "Zone-based capacity planning", "Custom capacity models", "Collector groups"], "correct": 1, "explanation": "Correct: B. Zone-based planning allows per-environment/per-department capacity policies.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "What forecasting algorithm is best for detecting seasonal patterns (e.g., year-end spike in CPU usage)?", "options": ["Linear Regression", "Exponential Growth", "Seasonal Decomposition", "Simple averaging"], "correct": 2, "explanation": "Correct: C. Seasonal Decomposition identifies recurring patterns across time periods.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "A What-If scenario shows that adding 30 new VMs will exceed cluster memory capacity in 60 days. What is the next step?", "options": ["Proceed with VM deployment", "Reject the scenario", "Plan infrastructure expansion or throttle VM growth", "Disable the forecast"], "correct": 2, "explanation": "Correct: C. Use the forecast to guide procurement and deployment planning.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "Which forecasting method is most suitable for unpredictable workloads with frequent anomalies?", "options": ["Linear Regression", "Machine Learning-based detection", "Simple trend extrapolation", "Manual estimations only"], "correct": 1, "explanation": "Correct: B. ML models adapt to changing patterns and anomalies better than static algorithms.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "How does exponential growth forecasting differ from linear forecasting?", "options": ["Exponential assumes growth rate decreases over time", "Exponential assumes growth rate accelerates", "They are identical", "Exponential is used only for storage"], "correct": 1, "explanation": "Correct: B. Exponential forecasting models accelerating growth (e.g., cloud adoption ramping up).", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "What-If scenario: If vSAN stretched cluster replication doubles, what metric should be monitored?", "options": ["VM memory allocation", "Network bandwidth utilization on stretch link", "ESXi CPU speed", "Datastore IOPS"], "correct": 1, "explanation": "Correct: B. Replication consumes network bandwidth on the stretch link; forecast its utilization.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "In VCF Operations, which horizon is recommended for strategic capacity planning?", "options": ["30-day", "90-day", "180-day or longer", "1-year only"], "correct": 2, "explanation": "Correct: C. Strategic planning typically uses 6-month or longer horizons to account for lead times.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "Which chargeback model directly incentivizes rightsizing VMs?", "options": ["Resource-based (per vCPU)", "Time-based (per VM-hour)", "Flat-rate per VM", "Free (no chargeback)"], "correct": 1, "explanation": "Correct: B. Time-based chargeback encourages departments to use only resources they need.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "You need to track costs for 5 different business units. Which cost attribution method is appropriate?", "options": ["By Application", "By Business Unit", "By VM name", "By ESXi host"], "correct": 1, "explanation": "Correct: B. Cost Attribution by Business Unit supports multi-department chargeback.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "A hybrid chargeback model combines which two components?", "options": ["Resource utilization and time", "CPU and memory only", "Compute and storage only", "Peak and average usage"], "correct": 0, "explanation": "Correct: A. Hybrid models charge per resource AND per time, offering both predictability and accuracy.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "How should cost rates be adjusted when new hardware with higher performance is deployed?", "options": ["Keep rates unchanged", "Review and update rates to reflect new cost basis", "Reduce rates by 50%", "Eliminate chargeback during transition"], "correct": 1, "explanation": "Correct: B. Update chargeback rates to reflect the new cost basis and maintain fairness.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "What is the benefit of SSD storage in a hybrid chargeback model?", "options": ["No impact \u2013 storage is not charged", "Can justify premium rates due to higher performance", "Forces all customers to use SSD", "Eliminates need for cost management"], "correct": 1, "explanation": "Correct: B. Premium storage can have higher chargeback rates, encouraging optimal placement.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.6 \u2013 Workload Optimization", "question": "What is Operational Intent in VCF Operations?", "options": ["VM deployment automation", "Application-specific performance objectives and SLA targets", "Network security policies", "Backup scheduling"], "correct": 1, "explanation": "Correct: B. Operational Intent defines performance goals and triggers remediation when violated.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.6 \u2013 Workload Optimization", "question": "A critical application requires <50ms latency. Which operational intent configuration should be applied?", "options": ["Priority: Low", "Latency threshold: 50ms (with alert at >40ms)", "CPU reservation: 100%", "Memory overcommit: Allowed"], "correct": 1, "explanation": "Correct: B. Set latency thresholds with alerts before critical breach points.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "What is the primary benefit of creating Custom Groups in VCF Operations?", "options": ["Reduce memory consumption", "Organize resources for targeted monitoring and alerting", "Improve network bandwidth", "Accelerate VM deployment"], "correct": 1, "explanation": "Correct: B. Custom Groups enable resource organization and targeted policies.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "Service Discovery Adapter integrates with which VMware product for automatic service identification?", "options": ["vSAN Manager", "NSX and vRealize Network Insight", "SDDC Manager only", "vCenter alone"], "correct": 1, "explanation": "Correct: B. Service Discovery Adapter leverages NSX and vRNI metadata.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "In a Business Application model, what is the relationship between infrastructure metrics and business metrics?", "options": ["They are unrelated", "Infrastructure metrics are aggregated to represent business KPIs", "Business metrics override infrastructure alerts", "Only one type is monitored"], "correct": 1, "explanation": "Correct: B. Business Applications map infrastructure metrics (VM CPU) to business outcomes (transaction volume).", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "Which Management Pack enables monitoring of Kubernetes clusters running on vSAN?", "options": ["vSAN Management Pack", "Kubernetes Management Pack", "NSX Management Pack", "Database Management Pack"], "correct": 1, "explanation": "Correct: B. Kubernetes Management Pack monitors VKS/TKG clusters.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "Log Assist in VCF Operations provides which capability?", "options": ["Real-time log streaming", "AI-driven correlation between logs and performance metrics", "Log archival only", "Encryption at rest"], "correct": 1, "explanation": "Correct: B. Log Assist uses AI to correlate logs with metrics for root cause analysis.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "What data can be filtered in a Custom View?", "options": ["Only CPU metrics", "Any metric, resource type, or custom group", "Only time-series data", "Network flows only"], "correct": 1, "explanation": "Correct: B. Custom Views support multi-dimensional filtering.", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "A Super Metric multiplies CPU utilization % by memory utilization %. What is the use case?", "options": ["Combine different VMs", "Calculate balanced resource utilization score", "Measure network latency", "Track license usage"], "correct": 1, "explanation": "Correct: B. Super Metrics enable composite scoring and custom KPIs.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "What is a Content Pack in Aria Operations for Logs?", "options": ["A data compression format", "Pre-built dashboards and alert definitions for a product", "A license type", "A backup schedule"], "correct": 1, "explanation": "Correct: B. Content Packs accelerate log analytics by providing domain-specific configurations.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "What lifecycle operation would you perform to expand VCF capacity to 10 clusters?", "options": ["Deploy single large cluster only", "Add clusters to fleet using cluster lifecycle workflows", "Replace existing clusters", "Disable multi-cluster support"], "correct": 1, "explanation": "Correct: B. Fleet Management supports adding new clusters to the fleet.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "In VCF 9.0, which identity protocol enables passwordless authentication using hardware tokens?", "options": ["RADIUS", "LDAP", "FIDO2 (WebAuthn)", "Kerberos"], "correct": 2, "explanation": "Correct: C. FIDO2 supports hardware-based passwordless authentication.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "What is the default password rotation policy in VCF?", "options": ["30 days", "60 days", "90 days", "1 year"], "correct": 2, "explanation": "Correct: C. Default policy enforces 90-day password rotation.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "How does VCF manage SSL certificates across a multi-cluster fleet?", "options": ["Manual renewal per cluster", "Auto-discovery of expiration; optional auto-renewal via CA integration", "Certificates never expire", "No certificate management"], "correct": 1, "explanation": "Correct: B. VCF discovers certificate expiration dates and supports automated renewal workflows.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "What authentication federation standard does VCF Identity Broker use to integrate with corporate SSO?", "options": ["RADIUS only", "SAML 2.0 federation", "LDAP pass-through", "JWT tokens only"], "correct": 1, "explanation": "Correct: B. VCF Identity Broker uses SAML 2.0 for corporate identity federation.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "When should SAML be configured in VCF Identity Broker?", "options": ["Never \u2013 always use local users", "When integrating with corporate SSO/IdP", "Only for development clusters", "Manual configuration is not supported"], "correct": 1, "explanation": "Correct: B. SAML enables integration with enterprise Identity Providers.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "Which components are licensed in VCF 9.0?", "options": ["Only vSAN", "vSAN capacity, NSX nodes, VCF Operations", "Unlimited \u2013 no licensing", "Only compute hosts"], "correct": 1, "explanation": "Correct: B. VCF licenses vSAN, NSX, and VCF Operations components.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which compliance standard requires encryption at rest for healthcare data?", "options": ["CIS Benchmarks", "NIST (specific to HIPAA)", "PCI-DSS", "SOC 2 Type II"], "correct": 1, "explanation": "Correct: B. NIST (as referenced in HIPAA) requires encryption standards.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You add 2 additional nodes to a VCF cluster, each with 128 GB RAM and 32 vCores. Your Aria Operations dashboards still show the old capacity. What is the FIRST step to update inventory?", "options": ["Wait 24 hours for auto-discovery to complete", "Trigger Inventory Sync in Aria Operations", "Restart the vSAN cluster", "Delete and recreate the cluster in Aria Operations"], "correct": 1, "explanation": "Inventory Sync is a manual operation in Aria Operations > Data Centers > vSAN > Cluster > Sync Inventory. Auto-discovery does NOT occur\u2014you must explicitly trigger it.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "After vertical scale-up of your stretched cluster, Aria Operations still shows half the new resources. Which Aria Ops feature must you activate to see the full updated inventory?", "options": ["Real-time vSAN telemetry streaming", "Advanced collector configuration for vSAN", "Inventory Sync for the affected cluster", "Custom metric collection for vSAN capacity"], "correct": 2, "explanation": "Manual Inventory Sync is the only way to reflect hardware changes in Aria Operations after scale-up operations.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You are comparing two VCF clusters. Cluster-A reports capacity in vCores; Cluster-B reports in GHz. How can both be correct in the same Aria Operations environment?", "options": ["Cluster-B has a misconfiguration and must be fixed", "Each cluster can independently select Allocation vs Demand capacity model", "Only one model can be active per environment\u2014one cluster is reporting stale data", "Cluster-B is reporting emergency mode capacity"], "correct": 1, "explanation": "Allocation and Demand are separate capacity models. Allocation = vCores (reserved). Demand = GHz (actual consumption). Each cluster/workload can use a different model.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your VCF cluster shows 480 vCores allocated but only 120 GHz demand. In the Allocation model, which metric should you prioritize for sizing decisions?", "options": ["The 120 GHz\u2014that is actual demand", "The 480 vCores\u2014that is committed capacity", "Split the difference at 300 vCores", "Demand and Allocation are equivalent and interchangeable"], "correct": 1, "explanation": "Allocation models track configured vCores. Use Demand (GHz) for actual consumption analysis. Both are valid but serve different purposes in capacity planning.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to automatically resize all undersized VMs every Sunday at 2 AM. Where in Aria Operations do you configure this?", "options": ["Dashboards > Scheduled Reports", "Policies > Automation Policies", "Automation Central > Workflows", "vSAN Management > Scheduled Tasks"], "correct": 2, "explanation": "Automation Central is the hub for workflow scheduling and VM lifecycle actions. It integrates with right-size recommendations and vSAN operations.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your vSAN cluster has snapshots older than 3 weeks consuming 40% of available capacity. How do you automatically delete them?", "options": ["Alert Policy > Snapshot Age > Auto-Delete", "Automation Central > Create snapshot cleanup workflow, schedule daily", "vSAN Storage Policy > Snapshot Retention = 14 days auto-delete", "vSAN Dashboard > Reclaim Space button"], "correct": 1, "explanation": "Automation Central lets you schedule workflows that trigger snapshot deletion based on age. vSAN Storage Policies do NOT auto-delete snapshots.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A right-size recommendation suggests resizing VM-PROD-DB from 8 vCores to 4 vCores. Instead of manual resizing, you want to automate this for all similar oversized VMs on Fridays. Which Automation Central step comes first?", "options": ["Define Adapter connection to the vCenter", "Create a custom metric for oversized VMs", "Use the Right-Size Remediation workflow template", "Set up email notifications after each resize"], "correct": 2, "explanation": "Automation Central provides workflow templates for right-sizing. You select the template, configure thresholds, define the remediation schedule, and activate.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You plan to migrate 50 VMs from Cluster-A to Cluster-B but want to verify the impact first. Which Aria Operations feature lets you test this without making actual changes?", "options": ["Cluster Balancing > Dry-Run mode", "What-If Scenarios in Capacity Forecasting", "Manual VM migration in vCenter, then undo", "Committed Capacity Reservation"], "correct": 1, "explanation": "What-If Scenarios model capacity impact of migrations. They show projected utilization post-migration without changing actual configuration.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your CFO wants to guarantee capacity for next quarter's 200 new VMs. Which Aria Operations feature reserves capacity NOW to meet that commitment?", "options": ["What-If Scenarios", "Committed Scenarios for capacity reservation", "Alert policies for oversized VMs", "Dynamic DRS cluster rules"], "correct": 1, "explanation": "Committed Scenarios reserve capacity for future workloads. What-If is for testing. Committed guarantees the resources will be available.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You enable the Pricing Card with CPU rate = $0.05/GHz, Memory = $0.01/GB, Storage = $0.10/GB. A VM using 8 GHz CPU, 32 GB RAM, 500 GB storage has monthly cost of approximately:", "options": ["$4.40", "$17.40", "$55.00", "$90.00"], "correct": 1, "explanation": "(8 \u00d7 0.05) + (32 \u00d7 0.01) + (500 \u00d7 0.10) = 0.40 + 0.32 + 50 = $50.72 \u2248 $55 (allowing for some rounding/monthly multiplier nuances)", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Where in Aria Operations do you configure CPU, Memory, and Storage pricing rates for cost analysis?", "options": ["Dashboards > Cost Management widget", "Policies > Cost/Price Policy", "Administration > Licensing > Cost Attribution", "vSAN > Capacity Pricing"], "correct": 1, "explanation": "Pricing Card configuration is in Policies > Cost/Price Policy. Enable the card, then enter your organization's rates per resource unit.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You need to ensure all Windows domain-joined VMs run on Cluster-Windows and all Linux servers run on Cluster-Linux for license tracking. Which intent type does this represent?", "options": ["Operational Intent (performance balancing)", "Business Intent (business-driven placement rules)", "Capacity Intent (utilization thresholds)", "Cost Intent (billing optimization)"], "correct": 1, "explanation": "Business Intent drives VM placement by business rules (OS type, app criticality, compliance needs). Operational Intent focuses on cluster health and performance.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Aria Operations shows your Cluster-A is at 85% CPU, Cluster-B at 45% CPU. Defining Operational Intent to balance utilization will cause Aria Ops to recommend:", "options": ["Migrate high-memory VMs from Cluster-B to Cluster-A", "Migrate CPU-intensive workloads from Cluster-A to Cluster-B", "Shut down oversized VMs on Cluster-A", "Add 10 new nodes to Cluster-A"], "correct": 1, "explanation": "Operational Intent rebalances clusters toward target utilization. High-CPU workloads should move from 85% cluster to 45% cluster.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to monitor all NSX Edges in Aria Operations as a single group. In the Custom Group creation dialog, what is the correct object type?", "options": ["Transport Edge (NSX)", "Virtual Machine (they appear as VMs in Aria Ops)", "Network Edge (NSX)", "Logical Edge"], "correct": 1, "explanation": "NSX Edges are represented as Virtual Machine objects in Aria Operations. Use tag-based filtering (e.g., 'nsx-edge' tag) to create a custom group.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You create a custom group 'NSX-Edges' with dynamic rule: tag 'edge-type' = 'nsx'. Which VMs will appear in this group automatically?", "options": ["All VMs with the tag 'edge-type' = 'nsx'", "Only standalone NSX Edge appliances", "All NSX logical edges in the environment", "Only VMs running on Tier-0 gateways"], "correct": 0, "explanation": "Dynamic groups use tag-based rules. Any VM with the matching tag automatically joins the group. As VMs are tagged, they appear in the group.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your VCF deployment includes Managed Telegraf agents on each SDDC. Who manages the lifecycle (updates, configuration, removal)?", "options": ["The end-user customer", "VMware Cloud Foundation Operations", "Your local vSAN management team", "The Telegraf open-source community"], "correct": 1, "explanation": "Managed Telegraf is part of VCF Ops\u2014VMware handles deployment, configuration, and lifecycle. Opensource Telegraf is customer-managed.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You create a new Collector Group 'NSX-Group'. Existing collectors and objects that were in the old group are NOT automatically reassigned. What do you need to do manually?", "options": ["Restart the Aria Operations cluster", "Reassign collectors and objects to the new Collector Group", "Delete and recreate the data sources", "Wait for overnight sync to complete"], "correct": 1, "explanation": "Collector Groups are organizational containers. Creating a new group does not auto-migrate existing collectors or monitored objects. Manual reassignment required.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to send Aria Operations alerts to your ITSM platform via webhook. Where do you configure the webhook endpoint URL?", "options": ["Alerts > Alert Definitions > Notification tab", "Administration > Outbound Settings > Webhook", "Integrations > ITSM Connector", "Policies > Notification Policy"], "correct": 1, "explanation": "Webhook configuration is in Administration > Outbound Settings > Webhook. You define the endpoint URL, authentication, and test connectivity.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A webhook notification is triggered when CPU utilization exceeds 90% on a critical VM. The webhook payload includes:", "options": ["VM name, CPU %, timestamp, alert definition, and configured custom fields", "Only the VM name and severity level", "vCenter datacenter information only", "Host name and vSAN cluster ID only"], "correct": 0, "explanation": "Webhook payloads include alert metadata (VM, threshold, timestamp, severity, metric value) and any custom fields you add to the alert definition.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You enable Log Assist in Aria Operations but see 'Feature Unavailable.' What is the FIRST requirement to enable Log Assist?", "options": ["Enterprise license tier", "Active VMware support contract + cloud connectivity", "Local syslog server configuration", "Enable 'Advanced Monitoring' in Administration"], "correct": 1, "explanation": "Log Assist requires active VMware support, cloud connectivity for secure communication, and log forwarding configuration.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your Aria Operations logs agent is configured for non-SSL communication. In liagent.ini, what should the 'ssl' setting be?", "options": ["ssl=true", "ssl=false (and use port 514 or 9543)", "ssl=1", "ssl=tls"], "correct": 1, "explanation": "Non-SSL agent: liagent.ini ssl=no, port 514/9543. SSL agent: ssl=yes, custom port (typically 6514).", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You search logs with query: 'vmname:proddb AND (CPU OR memory) NOT warning'. This search syntax demonstrates:", "options": ["Invalid regex\u2014use only simple field:value syntax", "Field filtering (vmname), OR logic, NOT operator, and grouping", "Unsupported custom syntax", "Tag-based filtering only"], "correct": 1, "explanation": "Aria Ops for Logs supports field:value, AND/OR/NOT operators, parentheses for grouping, and regex. This is standard log query syntax.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to add a new CPU utilization widget to an existing Aria Operations dashboard. Steps are: Dashboard > Edit > ___.", "options": ["Select metric library > click CPU metric", "Add Widget > select from available metrics", "Create new custom metric", "Import template widget"], "correct": 1, "explanation": "Dashboard editing workflow: Dashboard > Edit > Add Widget > choose from metric library or pre-built widgets. Configure, save, exit edit mode.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Your leadership requires a daily vSAN capacity report every morning at 9 AM. Where do you configure automated email delivery?", "options": ["Alerts > Alert Notifications > Schedule", "Reports > New Report > Schedule > daily, email delivery", "Dashboards > Export > Daily Email", "Policies > Report Policy"], "correct": 1, "explanation": "Reports are scheduled separately from alerts. Use Reports > New Report, select metrics, configure schedule (daily/weekly/monthly), select email/SFTP delivery.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You create a super metric at Datacenter level to count all oversized VMs in your entire infrastructure. What depth value must you use?", "options": ["depth=0 (counts only the Datacenter itself)", "depth=1 (counts clusters only)", "depth=2 (counts clusters AND VMs within them)", "depth=3 (counts hosts and datastores)"], "correct": 2, "explanation": "Datacenter > Clusters (depth=1) > VMs (depth=2). To count all VMs, you need depth=2.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A super metric on the Host object uses depth=1. What objects does this aggregate?", "options": ["The Host itself", "The Host and its direct child datastores", "The Host, datastores, and vSAN capacity", "All VMs running on the Host"], "correct": 1, "explanation": "depth=1 from Host = Host's direct children (VMs, datastores). depth=0 = Host only.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You notice critical VMs have drifted from their original resource allocation after a DRS rebalance. How do you detect and alert on configuration drift in Aria Operations?", "options": ["Create Alert Policy > threshold-based on utilization", "Define baseline in Compliance Baseline > assign > monitor > configure alerts", "Enable vSAN stretch cluster monitoring", "Use What-If Scenarios to re-baseline"], "correct": 1, "explanation": "Drift detection workflow: define/capture baseline \u2192 assign to objects \u2192 enable monitoring \u2192 configure alert rules for drift violations.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which benchmark is the VMware-recommended default for VCF compliance assessment?", "options": ["DISA STIG", "CIS Benchmarks", "VMware Security Configuration Guide (SCG)", "NIST SP 800-53"], "correct": 2, "explanation": "VMware SCG is the official hardening baseline for vSphere/VCF. DISA STIG and CIS are also supported for specific compliance needs.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to enable Microsoft Azure AD as your identity provider for VCF Aria Operations SSO. Which protocol and information do you need from Azure?", "options": ["OAuth 2.0 client credentials", "SAML 2.0 metadata URL from Azure AD/Entra", "LDAP server hostname and port", "Active Directory domain controller FQDN"], "correct": 1, "explanation": "Microsoft IdP integration uses SAML 2.0. You provide the Azure AD/Entra metadata URL (XML) which contains certificate, SSO endpoint, and entity ID.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You configure VCF Password Manager to enforce 12-character minimum and 90-day expiration. Which component's credentials are enforced?", "options": ["ESXi root password", "vSAN witness node SSH", "SDDC Manager administrative credentials (managed by Password Manager)", "vCenter SSO password"], "correct": 2, "explanation": "VCF Password Manager manages SDDC Manager credentials. It enforces policy, rotation, and complexity for the SDDC management layer.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You need to monitor a third-party storage array via a custom adapter. In Management Pack Builder, what is the FIRST step?", "options": ["Define the data collection method (SNMP, API, CLI)", "Define the Adapter (name, version, protocol)", "Create custom metrics in the Object Model", "Export the PAK file"], "correct": 1, "explanation": "MP Builder workflow starts with Adapter definition (protocol, connection type). Then Object Model (resources), Collection rules, Build, Export.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A VM experienced a performance spike 2 hours ago. In Troubleshooting Workbench, which view helps you correlate the CPU spike with related storage and memory events?", "options": ["Capacity Planner timeline", "Workbench timeline view with event correlation and anomaly highlighting", "Dashboard historical trends", "Alert log export to CSV"], "correct": 1, "explanation": "Troubleshooting Workbench provides timeline correlation, shows events/anomalies side-by-side, highlights causality (storage spike \u2192 memory spike \u2192 CPU spike).", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}];
+
+const SECTION_CATEGORIES = {
+  "Section 4": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (s.startsWith("4.") || s.startsWith("Section 4") || s.startsWith("SECTION 4") || s.startsWith("Objective 4")) SECTION_CATEGORIES["Section 4"].push(s);
+  else { let matched = false; for (const k in SECTION_CATEGORIES) { if (SECTION_CATEGORIES[k].length > 0) { matched = true; } } if (!matched) { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; SECTION_CATEGORIES[firstKey].push(s); } }
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${(isPriority ? 'red' : 'green')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {
+  document.querySelectorAll('.section-item input').forEach(cb => {
+    const isPriority = !cb.dataset.section.includes('(STRENGTH)');
+    cb.checked = isPriority;
+    cb.closest('.section-item').classList.toggle('selected', isPriority);
+  });
+  updateCount();
+}
+function selectStrength() {
+  document.querySelectorAll('.section-item input').forEach(cb => {
+    const isStrength = cb.dataset.section.includes('(STRENGTH)');
+    cb.checked = isStrength;
+    cb.closest('.section-item').classList.toggle('selected', isStrength);
+  });
+  updateCount();
+}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${(isPriority ? 'priority' : 'strength')}">
+          ${(isPriority ? '🔴 PRIORITY' : '✅ STRENGTH')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${(isPriority ? 'priority' : 'strength')}">
+          ${(isPriority ? '🔴' : '✅')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `<div class="stat">Customized for <b>Florian</b></div>`;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Networking 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Networking 9.0 <span>(3V0-25.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "3.2 NSX Architecture and Components", "question": "In NSX 9.0, which plane is responsible for managing configuration and providing the UI/API?", "options": ["Control Plane", "Management Plane", "Data Plane", "Service Plane"], "correct": 1, "explanation": "The Management Plane (NSX Manager cluster) handles all configuration, policy, and API requests.", "priority": true, "sectionClean": "3.2 NSX Architecture and Components"}, {"section": "3.2 NSX Architecture and Components", "question": "What is the default encapsulation protocol used in NSX 9.0 for overlay segments?", "options": ["VXLAN (UDP 4789)", "Geneve (UDP 6081)", "STT", "MPLS"], "correct": 1, "explanation": "NSX 9.0 uses Geneve by default, which has lower overhead and supports inline services compared to legacy VXLAN.", "priority": true, "sectionClean": "3.2 NSX Architecture and Components"}, {"section": "3.2 NSX Architecture and Components", "question": "How many Host Transport Node Profiles can be applied to a single ESXi host?", "options": ["Only one N-VDS profile per host", "Up to 4 N-VDS profiles", "Unlimited profiles", "One profile per physical NIC"], "correct": 0, "explanation": "Each ESXi host can have only one HTNP applied, defining a single N-VDS. Multiple N-VDS require edge nodes.", "priority": true, "sectionClean": "3.2 NSX Architecture and Components"}, {"section": "3.2 NSX Architecture and Components", "question": "What is the minimum recommended number of nodes in an NSX Manager cluster for production?", "options": ["1", "2", "3", "5"], "correct": 2, "explanation": "Production deployments require minimum 3 NSX Manager nodes for high availability and quorum.", "priority": true, "sectionClean": "3.2 NSX Architecture and Components"}, {"section": "3.2 NSX Architecture and Components", "question": "If physical network MTU is 1500 and Geneve encapsulation is used, what is the maximum logical segment MTU?", "options": ["1500", "1450", "1472", "1524"], "correct": 1, "explanation": "Geneve adds 50 bytes of overhead (MAC + IP + UDP + Geneve header). 1500 - 50 = 1450.", "priority": true, "sectionClean": "3.2 NSX Architecture and Components"}, {"section": "3.3 Design NSX Connectivity", "question": "In a multi-tier NSX design with distributed T1s, where does T1-to-T1 east-west traffic route?", "options": ["Always through the T0 on edge cluster", "Directly between source and destination T1 DLR on ESXi", "Through a service gateway", "Through vSAN network"], "correct": 1, "explanation": "Distributed T1 instances route T1-to-T1 traffic locally on the hypervisor without hitting the T0 edge, reducing edge load.", "priority": true, "sectionClean": "3.3 Design NSX Connectivity"}, {"section": "3.3 Design NSX Connectivity", "question": "What is the hash algorithm used by ECMP to ensure per-flow consistency?", "options": ["Round-robin", "5-tuple (SRC/DST IP, ports, protocol)", "Destination IP only", "Random"], "correct": 1, "explanation": "ECMP uses 5-tuple hashing to ensure the same flow always traverses the same path for consistency.", "priority": true, "sectionClean": "3.3 Design NSX Connectivity"}, {"section": "3.3 Design NSX Connectivity", "question": "When is Active-Standby HA mode preferred over Active-Active ECMP?", "options": ["Always", "When subnet design cannot ensure symmetric paths", "Only in Federation", "Never, ECMP is always better"], "correct": 1, "explanation": "Active-Standby is simpler and preferred when asymmetric return paths would break stateful services.", "priority": true, "sectionClean": "3.3 Design NSX Connectivity"}, {"section": "3.3 Design NSX Connectivity", "question": "What does BFD preemption do in an ECMP T0?", "options": ["Automatically removes dead edges from ECMP group", "When primary edge recovers, fails back to it", "Prevents edge from participating in ECMP", "Monitors edge cluster status"], "correct": 1, "explanation": "Preemption enabled causes traffic to revert to the primary edge when it recovers, reducing asymmetry.", "priority": true, "sectionClean": "3.3 Design NSX Connectivity"}, {"section": "3.3 Design NSX Connectivity", "question": "Which component detects Tier-1 gateway failure faster: BGP reconvergence or BFD?", "options": ["BGP (3-9 seconds typical)", "BFD (<1 second typical)", "Both equally fast", "Depends on ECMP group size"], "correct": 1, "explanation": "BFD provides sub-second failure detection, much faster than BGP's typical 3-9 second reconvergence timer.", "priority": true, "sectionClean": "3.3 Design NSX Connectivity"}, {"section": "3.4 Design NSX Multisite", "question": "What is the minimum number of nodes required for an NSX Federation Global Manager cluster?", "options": ["1", "2", "3", "5"], "correct": 2, "explanation": "NSX Federation Global Manager requires minimum 3 nodes for quorum and high availability.", "priority": true, "sectionClean": "3.4 Design NSX Multisite"}, {"section": "3.4 Design NSX Multisite", "question": "In NSX Federation, if the Global Manager is offline, how long can Local Managers operate with cached policy?", "options": ["5 minutes", "1 hour", "Up to 30 days", "They immediately fail over"], "correct": 2, "explanation": "Local Managers can operate independently with cached policy from GM for up to 30 days.", "priority": true, "sectionClean": "3.4 Design NSX Multisite"}, {"section": "3.4 Design NSX Multisite", "question": "What is the primary benefit of Location-Based Routing in Federation?", "options": ["Eliminates need for BGP", "Reduces WAN traffic by preferring local exits", "Prevents VM migration", "Disables stretched segments"], "correct": 1, "explanation": "LBR ensures VMs exit through their local site's T0, minimizing WAN traffic and latency.", "priority": true, "sectionClean": "3.4 Design NSX Multisite"}, {"section": "3.4 Design NSX Multisite", "question": "Can a Tier-1 gateway be replicated across sites in NSX Federation?", "options": ["No, T1 must be local to each site", "Yes, replicated T1 spans sites like stretched segments", "Only if in Active-Active mode", "Only with separate Global Managers"], "correct": 1, "explanation": "T1 gateways can be replicated across Federation sites, allowing tenants to span regions.", "priority": true, "sectionClean": "3.4 Design NSX Multisite"}, {"section": "3.4 Design NSX Multisite", "question": "What synchronization direction exists between Global Manager and Local Manager?", "options": ["Bi-directional sync", "Only Local Manager sends to Global Manager", "Only Global Manager pushes policy to Local Manager", "No sync, independent operation"], "correct": 2, "explanation": "Policy flows one-way from Global Manager to Local Managers, ensuring centralized governance.", "priority": true, "sectionClean": "3.4 Design NSX Multisite"}, {"section": "3.5 NSX Fleet Design", "question": "In NSX VPC, what is the top-level container for a tenant?", "options": ["Project", "Organization", "VPC", "Subnet"], "correct": 1, "explanation": "Organization is the top-level tenant container; projects and VPCs reside within it.", "priority": true, "sectionClean": "3.5 NSX Fleet Design"}, {"section": "3.5 NSX Fleet Design", "question": "What is an IP Block in NSX VPC?", "options": ["A range of physical network IPs", "A CIDR range NSX uses to auto-allocate subnet IPs", "A reserved pool for static IPs only", "A security group"], "correct": 1, "explanation": "IP Block is a CIDR range (e.g., 10.0.0.0/8) from which NSX automatically carves subnets for VPCs.", "priority": true, "sectionClean": "3.5 NSX Fleet Design"}, {"section": "3.5 NSX Fleet Design", "question": "How many Tier-0 gateways can a single VPC attach to?", "options": ["One", "Two (for HA)", "Multiple (one per project)", "Unlimited"], "correct": 0, "explanation": "A VPC connects to exactly one T0 for external connectivity. Multiple VPCs can share the same T0.", "priority": true, "sectionClean": "3.5 NSX Fleet Design"}, {"section": "3.5 NSX Fleet Design", "question": "What does 'short egress path' mean in VPC context?", "options": ["Direct exit through local T0 gateway", "Routing through central VPC gateway", "Using edge cluster for all traffic", "Asymmetric routing"], "correct": 0, "explanation": "Short egress path allows local exit to T0 without routing through a central gateway, improving performance.", "priority": true, "sectionClean": "3.5 NSX Fleet Design"}, {"section": "3.5 NSX Fleet Design", "question": "What RBAC level can a Project Administrator have in NSX VPC?", "options": ["Can manage all orgs", "Can manage VPCs and policies within their project only", "Can see all projects", "Can modify org-level policies"], "correct": 1, "explanation": "Project admin is scoped to their project: can manage VPCs, subnets, and policies within it.", "priority": true, "sectionClean": "3.5 NSX Fleet Design"}, {"section": "3.6 NSX Optimization and Acceleration", "question": "What does EDP Enhanced do compared to EDP Standard?", "options": ["Adds software buffering", "Offloads encapsulation to hardware (SmartNIC)", "Disables Geneve", "Requires edge cluster"], "correct": 1, "explanation": "EDP Enhanced uses hardware acceleration (SmartNIC) to offload packet encapsulation, freeing up CPU.", "priority": true, "sectionClean": "3.6 NSX Optimization and Acceleration"}, {"section": "3.6 NSX Optimization and Acceleration", "question": "If physical network MTU is 9000 (jumbo frames), what should logical segment MTU be?", "options": ["9000", "8950", "8192", "1500"], "correct": 1, "explanation": "Geneve overhead is 50 bytes. 9000 - 50 = 8950 for logical segment MTU.", "priority": true, "sectionClean": "3.6 NSX Optimization and Acceleration"}, {"section": "3.6 NSX Optimization and Acceleration", "question": "Which teaming policy is recommended for N-VDS LAG to ensure per-flow consistency?", "options": ["Round-robin", "Source IP hash", "Random", "MAC only"], "correct": 1, "explanation": "Source IP hash (or 5-tuple) ensures the same flow always uses the same LAG member.", "priority": true, "sectionClean": "3.6 NSX Optimization and Acceleration"}, {"section": "3.6 NSX Optimization and Acceleration", "question": "What is the primary benefit of using LACP vs static LAG?", "options": ["Higher throughput", "Automatic detection of link failures and renegotiation", "Reduced CPU", "Lower latency"], "correct": 1, "explanation": "LACP provides dynamic link detection and failover, vs static LAG which requires manual intervention.", "priority": true, "sectionClean": "3.6 NSX Optimization and Acceleration"}, {"section": "3.6 NSX Optimization and Acceleration", "question": "Typical throughput difference between EDP Standard and EDP Enhanced per host?", "options": ["10% difference", "2-3x increase with Enhanced", "10-20x increase with Enhanced", "No significant difference"], "correct": 1, "explanation": "Hardware offload (Enhanced) can provide 2-10x throughput improvement depending on NIC and CPU baseline.", "priority": true, "sectionClean": "3.6 NSX Optimization and Acceleration"}, {"section": "4.1 Deploy NSX Federation", "question": "What is the minimum recommended cluster size for NSX Federation Global Manager?", "options": ["1 VM", "2 VMs", "3 VMs", "5 VMs"], "correct": 2, "explanation": "Global Manager requires minimum 3 VMs for quorum and HA.", "priority": true, "sectionClean": "4.1 Deploy NSX Federation"}, {"section": "4.1 Deploy NSX Federation", "question": "In NSX Federation, who pushes policy: Global Manager or Local Manager?", "options": ["Local Manager pushes to Global Manager", "Global Manager pushes to Local Manager", "Bi-directional sync", "Only Local Manager manages policy"], "correct": 1, "explanation": "Global Manager is the policy authority; it pushes policy to Local Managers one-way.", "priority": true, "sectionClean": "4.1 Deploy NSX Federation"}, {"section": "4.1 Deploy NSX Federation", "question": "What is required to validate Global Manager and Local Manager trust during registration?", "options": ["Username/password only", "API key exchange", "Certificate thumbprint verification", "Firewall rule approval"], "correct": 2, "explanation": "Admins must verify and compare certificate thumbprints to ensure secure registration.", "priority": true, "sectionClean": "4.1 Deploy NSX Federation"}, {"section": "4.1 Deploy NSX Federation", "question": "Can a Local Manager continue operating if the Global Manager cluster becomes unavailable?", "options": ["No, it immediately stops", "Yes, with cached policy for limited time", "Only if no stretched segments exist", "Only if registration is re-done"], "correct": 1, "explanation": "LM can operate with cached policy from GM for up to 30 days if GM is offline.", "priority": true, "sectionClean": "4.1 Deploy NSX Federation"}, {"section": "4.1 Deploy NSX Federation", "question": "Where should the Global Manager cluster be deployed to ensure isolation?", "options": ["Same vSAN as NSX Manager", "On NSX managed cluster", "Dedicated cluster, separate from NSX data plane", "On VLAN segment"], "correct": 2, "explanation": "GM should be on dedicated infrastructure to prevent NSX component failures from impacting federation.", "priority": true, "sectionClean": "4.1 Deploy NSX Federation"}, {"section": "4.2 Configure NSX Components", "question": "What is the purpose of an IP pool in NSX component configuration?", "options": ["To allocate public IPs for VMs", "To allocate VTEP IPs, service IPs, or BGP AS numbers", "To configure firewall rules", "To manage VLAN tagging"], "correct": 1, "explanation": "IP pools are used to allocate IPs for VTEPs, service appliances, and NSX functions.", "priority": true, "sectionClean": "4.2 Configure NSX Components"}, {"section": "4.2 Configure NSX Components", "question": "How many VTEP IPs does NSX allocate to a single ESXi host in a transport zone?", "options": ["One per physical NIC", "One per N-VDS", "Multiple per host", "Dynamically allocated per VM"], "correct": 1, "explanation": "One VTEP IP is allocated per host in the transport zone for TEP tunneling.", "priority": true, "sectionClean": "4.2 Configure NSX Components"}, {"section": "4.2 Configure NSX Components", "question": "What does an Uplink Profile specify?", "options": ["VLANs for segments", "Physical NIC mapping, MTU, teaming policy, LLDP settings", "Tier-0 configuration", "BGP neighbors"], "correct": 1, "explanation": "Uplink Profile defines physical NIC details (mapping, MTU, teaming, LLDP) for the N-VDS.", "priority": true, "sectionClean": "4.2 Configure NSX Components"}, {"section": "4.2 Configure NSX Components", "question": "Can you apply multiple Host Transport Node Profiles to a single ESXi host?", "options": ["Yes, one per physical NIC", "No, only one HTNP per host", "Yes, unlimited profiles", "Only in Federation mode"], "correct": 1, "explanation": "One HTNP per host creates one N-VDS. Multiple N-VDS require multiple profiles (not typical for standard hosts).", "priority": true, "sectionClean": "4.2 Configure NSX Components"}, {"section": "4.2 Configure NSX Components", "question": "What is created when a Host Transport Node Profile is applied to an ESXi host?", "options": ["A vDS switch", "An NSX-managed N-VDS virtual switch", "A segment", "A Tier-1 gateway"], "correct": 1, "explanation": "Applying HTNP creates the nsxvds (N-VDS) virtual switch with configured uplinks on the host.", "priority": true, "sectionClean": "4.2 Configure NSX Components"}, {"section": "4.3 Deploy NSX Edge Cluster", "question": "What is the minimum number of edges required to form an NSX Edge Cluster?", "options": ["1", "2", "3", "4"], "correct": 1, "explanation": "Minimum 2 edges are required for a functional edge cluster with HA.", "priority": true, "sectionClean": "4.3 Deploy NSX Edge Cluster"}, {"section": "4.3 Deploy NSX Edge Cluster", "question": "Which NSX Edge VM size is recommended for ~30 Gbps north-south throughput?", "options": ["Small", "Medium", "Large", "Bare-metal only"], "correct": 2, "explanation": "Large edge VMs support 50Gbps+; medium supports ~20Gbps. For 30Gbps, use Large or bare-metal.", "priority": true, "sectionClean": "4.3 Deploy NSX Edge Cluster"}, {"section": "4.3 Deploy NSX Edge Cluster", "question": "How many N-VDS can be deployed on a single NSX Edge node?", "options": ["Exactly one", "One per transport zone", "Multiple per zone", "Determined by vCPU count"], "correct": 1, "explanation": "Each transport zone typically gets one N-VDS per edge; multiple edges in cluster each have their own N-VDS.", "priority": true, "sectionClean": "4.3 Deploy NSX Edge Cluster"}, {"section": "4.3 Deploy NSX Edge Cluster", "question": "What is the recommended uplink redundancy for edge nodes?", "options": ["Single uplink is sufficient", "2+ uplinks to physical network", "All edges must share one uplink", "Redundancy not needed"], "correct": 1, "explanation": "Each edge should have 2+ uplinks for NIC-level redundancy and bandwidth aggregation.", "priority": true, "sectionClean": "4.3 Deploy NSX Edge Cluster"}, {"section": "4.3 Deploy NSX Edge Cluster", "question": "If an NSX Edge cluster has 3 edges and one edge fails, what happens to traffic?", "options": ["All traffic is dropped", "Traffic continues on remaining 2 edges", "Automatic failover to spare edge", "Manual intervention required"], "correct": 1, "explanation": "Edge cluster failover is automatic; remaining healthy edges continue forwarding north-south traffic.", "priority": true, "sectionClean": "4.3 Deploy NSX Edge Cluster"}, {"section": "4.4 Create Tier-0 Gateway", "question": "What is the recommended HA mode for a Tier-0 gateway to maximize throughput?", "options": ["Active-Standby", "Active-Active ECMP", "Standalone (no HA)", "Manual failover"], "correct": 1, "explanation": "Active-Active ECMP allows all edges to forward traffic simultaneously, maximizing throughput.", "priority": true, "sectionClean": "4.4 Create Tier-0 Gateway"}, {"section": "4.4 Create Tier-0 Gateway", "question": "In Active-Active ECMP mode, what mechanism detects T0 edge failure fastest?", "options": ["BGP convergence timer", "OSPF hello timer", "BFD detection (<1 second)", "Manual health check"], "correct": 2, "explanation": "BFD provides sub-second failure detection, much faster than BGP or OSPF timers.", "priority": true, "sectionClean": "4.4 Create Tier-0 Gateway"}, {"section": "4.4 Create Tier-0 Gateway", "question": "How many BGP neighbors should a T0 typically have for redundancy?", "options": ["One", "Two (one per edge)", "Multiple (one per uplink/exit path)", "Depends on ASN"], "correct": 2, "explanation": "Typically 2+ BGP neighbors (physical routers) for redundant exit paths.", "priority": true, "sectionClean": "4.4 Create Tier-0 Gateway"}, {"section": "4.4 Create Tier-0 Gateway", "question": "What does route redistribution do on a Tier-0 gateway?", "options": ["Copies routes between multiple T0s", "Advertises NSX routes (learned from T1s) to external network via BGP", "Configures BGP AS number", "Prevents route loops"], "correct": 1, "explanation": "Route redistribution exports NSX-learned routes to the physical network so external routers learn NSX segments.", "priority": true, "sectionClean": "4.4 Create Tier-0 Gateway"}, {"section": "4.4 Create Tier-0 Gateway", "question": "What is a key disadvantage of Active-Standby HA for Tier-0?", "options": ["Slower failover time", "Higher CPU usage", "Cannot use BGP", "Requires more edges"], "correct": 0, "explanation": "Active-Standby HA has slower failover (1-5 seconds) compared to Active-Active ECMP with BFD (<1 second).", "priority": true, "sectionClean": "4.4 Create Tier-0 Gateway"}, {"section": "4.5 Create NSX Logical Segment", "question": "What is the key difference between an overlay segment and a VLAN segment?", "options": ["Overlay = no encryption; VLAN = encrypted", "Overlay = VXLAN/Geneve encapsulation; VLAN = direct tagging", "VLAN is for hypervisors only", "Overlay cannot use QoS"], "correct": 1, "explanation": "Overlay segments use Geneve/VXLAN encapsulation; VLAN segments use direct physical VLAN tagging.", "priority": true, "sectionClean": "4.5 Create NSX Logical Segment"}, {"section": "4.5 Create NSX Logical Segment", "question": "In an overlay segment, what gets created in vSphere to allow VMs to connect?", "options": ["A standard vDS switch", "A port group on vDS", "An NSX-internal DVS port group", "A physical VLAN"], "correct": 2, "explanation": "Overlay segments auto-create internal NSX port groups; no manual vDS configuration needed.", "priority": true, "sectionClean": "4.5 Create NSX Logical Segment"}, {"section": "4.5 Create NSX Logical Segment", "question": "What does a Segment Discovery Profile enable?", "options": ["Inter-segment routing only", "Geneve header options, MAC relearning, and telemetry (IPFIX/sFlow)", "BGP route distribution", "Encryption on segment"], "correct": 1, "explanation": "Discovery profiles enable advanced features like Geneve options, MAC learning, and IPFIX telemetry.", "priority": true, "sectionClean": "4.5 Create NSX Logical Segment"}, {"section": "4.5 Create NSX Logical Segment", "question": "What QoS rate parameters can you configure on a segment?", "options": ["BGP weight only", "Committed rate and burst size", "Only ingress, not egress", "CPU affinity"], "correct": 1, "explanation": "Segment QoS supports committed rate (e.g., 1 Gbps) and burst size (e.g., 2 Gbps) per direction.", "priority": true, "sectionClean": "4.5 Create NSX Logical Segment"}, {"section": "4.5 Create NSX Logical Segment", "question": "What happens when a logical segment is set to Admin State DOWN?", "options": ["It is deleted", "VMs can still communicate", "All traffic on segment is blocked", "It reverts to UP automatically"], "correct": 2, "explanation": "When a segment is DOWN, VMs cannot send or receive traffic on it.", "priority": true, "sectionClean": "4.5 Create NSX Logical Segment"}, {"section": "4.6 Create Tier-1 Gateway", "question": "What is the relationship between Tier-1 and Tier-0 gateways?", "options": ["Independent, no connection", "T1 uplinks to T0 for north-south routing", "T0 uplinks to T1", "T1 and T0 are the same"], "correct": 1, "explanation": "T1 provides tenant isolation and connects via service port uplink to T0 for north-south traffic.", "priority": true, "sectionClean": "4.6 Create Tier-1 Gateway"}, {"section": "4.6 Create Tier-1 Gateway", "question": "Can a Tier-1 gateway run on ESXi hosts without an edge cluster?", "options": ["No, always requires edge cluster", "Yes, as distributed DLR on hosts", "Only in Federation mode", "Only with BGP enabled"], "correct": 1, "explanation": "Distributed T1 runs directly on ESXi hosts without requiring an edge cluster.", "priority": true, "sectionClean": "4.6 Create Tier-1 Gateway"}, {"section": "4.6 Create Tier-1 Gateway", "question": "In multi-tenant NSX, what is the typical scaling model?", "options": ["One T0, one T1 for all tenants", "One T0, multiple T1s (one per tenant)", "One T0, one T1 per segment", "Multiple T0s and T1s per tenant"], "correct": 1, "explanation": "Best practice: shared T0, separate T1 per tenant for isolation and per-tenant routing.", "priority": true, "sectionClean": "4.6 Create Tier-1 Gateway"}, {"section": "4.6 Create Tier-1 Gateway", "question": "What do service ports on a Tier-1 gateway do?", "options": ["Connect T1 to segments", "Connect T1 to T0 for uplink and route advertisement", "Define QoS policy", "Configure BGP"], "correct": 1, "explanation": "Service ports connect T1 uplinks to T0, enabling route propagation and north-south traffic.", "priority": true, "sectionClean": "4.6 Create Tier-1 Gateway"}, {"section": "4.6 Create Tier-1 Gateway", "question": "What is the benefit of using a distributed (ESXi-based) Tier-1?", "options": ["Simplicity only", "East-west traffic routed locally, reducing edge load", "Required for overlay segments", "Mandatory in Federation"], "correct": 1, "explanation": "Distributed T1 routes east-west traffic locally on hosts, improving performance and scalability.", "priority": true, "sectionClean": "4.6 Create Tier-1 Gateway"}, {"section": "4.7 Deploy and Manage VPC", "question": "What is the primary benefit of NSX VPC for multi-tenancy?", "options": ["Combines all tenants on one network", "Provides isolated VPCs per tenant with automatic IP allocation and project-level RBAC", "Replaces Tier-1 gateways", "Only for security"], "correct": 1, "explanation": "VPC provides tenant isolation, automatic IP allocation from IP blocks, and granular RBAC.", "priority": true, "sectionClean": "4.7 Deploy and Manage VPC"}, {"section": "4.7 Deploy and Manage VPC", "question": "When would you use 'long egress path' vs 'short egress path' in VPC?", "options": ["Always short path", "Long path for centralized inspection; short path for efficiency", "Long path is deprecated", "Same performance either way"], "correct": 1, "explanation": "Long egress path routes through central gateway for centralized policies; short path is more efficient.", "priority": true, "sectionClean": "4.7 Deploy and Manage VPC"}, {"section": "4.8 Configure Stateful Services", "question": "Where does Distributed Firewall (DFW) enforcement occur?", "options": ["On T0 gateway", "On T1 gateway", "On each ESXi host, per-VM", "On edge cluster"], "correct": 2, "explanation": "DFW is implemented as kernel-level filters on each ESXi host for per-VM enforcement.", "priority": true, "sectionClean": "4.8 Configure Stateful Services"}, {"section": "4.9 Configure Projects and Tenancy", "question": "Can a Project Admin modify policies in a different project?", "options": ["Yes, if connected via service port", "No, restricted to their project", "Only with org admin approval", "Only in Federation"], "correct": 1, "explanation": "Project admin is scoped to their project; cannot see or modify other projects.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy"}, {"section": "4.10 Configure Advanced NSX Integrations", "question": "What is the primary advantage of Avi integration with NSX?", "options": ["Replaces NSX routing", "Provides centralized east-west load balancing of VMs", "Eliminates segments", "Requires BGP"], "correct": 1, "explanation": "Avi provides advanced load balancing features for VM-to-VM traffic in NSX.", "priority": true, "sectionClean": "4.10 Configure Advanced NSX Integrations"}, {"section": "4.11 Perform Operational Tasks", "question": "What is the recommended certificate rotation frequency for NSX Manager?", "options": ["Every year", "Before expiration (depends on cert lifetime, typically 90-365 days)", "Only after upgrade", "Never needed"], "correct": 1, "explanation": "NSX certificates should be rotated before expiration to avoid service interruption.", "priority": true, "sectionClean": "4.11 Perform Operational Tasks"}, {"section": "4.12 Identify VCF Tools to Monitor NSX", "question": "What does Traceflow do in NSX?", "options": ["Traces BGP routes", "Simulates a packet between two VMs and shows actual path and drops", "Configures routing", "Monitors CPU"], "correct": 1, "explanation": "Traceflow sends synthetic packets to determine actual forwarding path and identify issues.", "priority": true, "sectionClean": "4.12 Identify VCF Tools to Monitor NSX"}, {"section": "5.1 VCF Tools to Troubleshoot NSX", "question": "When should you use NSX CLI vs Central CLI?", "options": ["NSX CLI only; Central CLI is deprecated", "Central CLI for multi-domain visibility; NSX CLI for single-domain deep dive", "Both are equivalent", "Central CLI only"], "correct": 1, "explanation": "Central CLI provides unified view across multiple managed domains; NSX CLI offers granular NSX-specific debugging.", "priority": true, "sectionClean": "5.1 VCF Tools to Troubleshoot NSX"}, {"section": "5.2 Troubleshoot Common Infrastructure Issues", "question": "What does 'get transport-node-tunnels' show?", "options": ["Routing paths only", "Status of Geneve/VXLAN tunnels between TEPs", "BGP tunnels", "VPN connections"], "correct": 1, "explanation": "transport-node-tunnels displays active TEP tunnels and their status.", "priority": true, "sectionClean": "5.2 Troubleshoot Common Infrastructure Issues"}, {"section": "5.3 Troubleshoot Connectivity and Routing", "question": "A VM cannot ping across segments. What should you check first?", "options": ["BGP configuration", "Routing table: is destination segment route in T1/T0 routing table?", "Physical switch VLAN", "Avi load balancer"], "correct": 1, "explanation": "Verify routing entries exist before checking firewall, MTU, or other issues.", "priority": true, "sectionClean": "5.3 Troubleshoot Connectivity and Routing"}, {"section": "5.4 ECMP and High Availability", "question": "What is the typical BFD failure detection time with default settings?", "options": ["<100ms", "<1 second", "3 seconds (1000ms TX + 1000ms RX + 3x multiplier)", "30 seconds"], "correct": 2, "explanation": "BFD with defaults (1000ms TX, 1000ms RX, 3x multiplier) detects failure in ~3 seconds.", "priority": true, "sectionClean": "5.4 ECMP and High Availability"}, {"section": "5.5 Logical Routing Packet Walk", "question": "In a distributed T1 setup, where is the T1-to-T1 east-west routing decision made?", "options": ["On the edge cluster", "On the source ESXi host (DLR instance)", "On the physical router", "On vCenter"], "correct": 1, "explanation": "Distributed T1 instances on each host make local routing decisions; no edge involvement for T1-to-T1 east-west.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "What is the path taken by a north-south packet in NSX?", "options": ["VM -> T1 DLR -> (Geneve) -> T0 edge -> physical network", "VM -> physical network (no routing)", "VM -> T0 only", "VM -> T1 edge only"], "correct": 0, "explanation": "North-south traffic flows through T1 DLR, encapsulated in Geneve to T0 edge, then exits to physical network.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "What is the correct order when upgrading NSX components during a VCF upgrade?", "options": ["Host transport nodes \u2192 Edge nodes \u2192 NSX Manager", "NSX Manager \u2192 Host transport nodes \u2192 Edge nodes", "NSX Manager \u2192 Edge nodes \u2192 Host transport nodes", "Edge nodes \u2192 NSX Manager \u2192 Host transport nodes"], "correct": 2, "explanation": "NSX upgrades follow: NSX Manager cluster first, then Edge nodes, then host transport nodes. This ensures the management plane can orchestrate the data plane upgrades.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "A customer has a standalone vSphere 7.0 + NSX-T 3.1.3 environment and wants to import it into VCF 9.0. What is the correct approach?", "options": ["Import directly into VCF 9.0", "Upgrade to NSX 4.1.2+ and vSphere 8.0 U3+ first, then import", "Reinstall everything from scratch", "Upgrade to VCF 5.0 first, skip NSX upgrade"], "correct": 1, "explanation": "VCF 9.0 brownfield import requires compatible versions. NSX-T 3.1.x must first be upgraded to NSX 4.1.2+ and vSphere must be 8.0 U3+ before the VCF 9.0 import can proceed.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "During a brownfield import, which component validates the existing environment's compatibility with VCF 9.0?", "options": ["vCenter Server", "NSX Manager", "VCF Operations (SDDC Manager)", "Cloud Builder only"], "correct": 2, "explanation": "VCF Operations (formerly SDDC Manager) runs the compatibility validation during brownfield import to ensure all components meet version and configuration requirements.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "A VCF admin needs to provide DHCP services to a segment, but the organization requires centralized IP address management through their Infoblox server. Which DHCP model should be used?", "options": ["NSX Local DHCP Server on the segment", "DHCP Relay to the external Infoblox server", "Gateway DHCP Server on T0", "Static bindings for all VMs"], "correct": 1, "explanation": "DHCP Relay forwards DHCP requests to an external server (Infoblox), allowing centralized IP management while NSX handles the L2 relay.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which DHCP option codes are used for PXE boot configuration?", "options": ["Options 3 and 6 (gateway and DNS)", "Options 66 and 67 (TFTP server and boot file)", "Options 150 and 120 (TFTP and SIP)", "Options 42 and 44 (NTP and WINS)"], "correct": 1, "explanation": "DHCP Option 66 specifies the TFTP server name and Option 67 specifies the boot file name, both essential for PXE boot.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which VPN type supports dynamic routing (BGP) over the tunnel?", "options": ["Policy-based VPN", "Route-based VPN", "L2 VPN", "SSL VPN"], "correct": 1, "explanation": "Route-based VPN uses a Virtual Tunnel Interface (VTI) and supports dynamic routing protocols like BGP over the tunnel, making it ideal for complex multi-subnet scenarios.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "An architect needs to extend a VLAN across two data centers for VM mobility. Which NSX service should be used?", "options": ["Route-based IPSec VPN on T0", "Policy-based IPSec VPN on T1", "L2 VPN on T0", "Distributed firewall"], "correct": 2, "explanation": "L2 VPN extends Layer 2 domains across sites, enabling VM mobility. L2 VPN runs only on Tier-0 gateways.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which service is NOT available on a Tier-1 gateway?", "options": ["NAT", "IPSec VPN", "BGP dynamic routing", "DHCP Relay"], "correct": 2, "explanation": "Tier-1 gateways do not run BGP or OSPF. They use static route advertisement to their parent Tier-0 gateway.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "East-west traffic between two VMs on different Tier-1 gateways, with no stateful services configured, follows which path?", "options": ["T1 SR \u2192 Edge \u2192 T0 SR \u2192 Edge \u2192 T1 SR", "T1 DR \u2192 T0 DR \u2192 T1 DR (entirely on hypervisor)", "Direct L2 switching", "Through NSX Manager"], "correct": 1, "explanation": "Without stateful services, east-west inter-T1 traffic takes the distributed path through DR components on the hypervisor, never touching edge nodes.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "In an NSX VPC, which subnet type applies NAT at the VPC gateway?", "options": ["Public subnet", "Private subnet", "Isolated subnet", "Transit subnet"], "correct": 1, "explanation": "Private subnets have NAT applied at the VPC gateway level. Public subnets have direct T0 connectivity without NAT.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "A Network Admin tries to create a new DFW security policy but receives 'Access Denied'. Why?", "options": ["Network Admin role does not have write access to security policies", "DFW requires Enterprise Admin", "The policy limit is reached", "NSX Manager needs restart"], "correct": 0, "explanation": "The Network Admin role only has write access to networking resources. Security policies (DFW, IDS/IPS) require the Security Admin or Enterprise Admin role.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which NSX role can manage VPCs and subnets within a project but cannot see other projects' resources?", "options": ["Enterprise Admin", "Network Admin", "Organization Admin", "Project Admin"], "correct": 3, "explanation": "Project Admin is scoped to a single project and can manage VPCs, subnets, and policies within it. They have no visibility into other projects.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "A new segment is created on a Tier-1 gateway, but VMs on other Tier-1s cannot reach it. What is the most likely cause?", "options": ["NSX Manager is down", "Route advertisement is not enabled on the T1 for connected subnets", "The segment MTU is wrong", "DFW is blocking"], "correct": 1, "explanation": "By default, T1 does not advertise connected routes to T0. Route advertisement must be explicitly enabled for connected subnets.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "How can a shared services subnet (DNS, AD) on one Tier-1 be made accessible to all other Tier-1 gateways?", "options": ["Enable OSPF on all T1s", "Enable route advertisement for connected subnets on the shared services T1; T0 redistributes to other T1s", "Create L2 VPN between all T1s", "Use NAT on each T1"], "correct": 1, "explanation": "Enabling route advertisement on the shared services T1 causes T0 to learn those routes and redistribute them to all connected T1 gateways.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "An NSX admin wants to prevent the Tier-0 gateway from advertising the 172.16.0.0/16 management subnet to external BGP peers. What should be configured?", "options": ["DFW rule to block the prefix", "Outbound route map on T0 with a deny action matching 172.16.0.0/16 prefix list", "Disable route redistribution entirely", "Remove the static route"], "correct": 1, "explanation": "An outbound route map with a prefix list matching 172.16.0.0/16 and a deny action prevents that specific prefix from being advertised to BGP peers.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which BGP attribute is used to influence OUTBOUND path selection and is only visible within the local AS?", "options": ["MED", "AS path prepend", "Local preference", "Community"], "correct": 2, "explanation": "Local preference is used for outbound path selection and is only shared within the local AS. Higher values are preferred.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Default BFD detection time with 500ms interval and multiplier of 3 is:", "options": ["500ms", "1.5 seconds", "3 seconds", "9 seconds"], "correct": 1, "explanation": "BFD detection time = interval \u00d7 multiplier = 500ms \u00d7 3 = 1.5 seconds.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "In an Active-Active Tier-0 with ECMP, what protocol ensures sub-second failover when one edge node fails?", "options": ["BGP hold-timer", "BFD", "OSPF hello timer", "ARP"], "correct": 1, "explanation": "BFD provides sub-second failure detection for ECMP paths. BGP hold-timer (default 180s) is far too slow for rapid failover.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "An IPv6-only container needs to access an IPv4-only external API. Which NSX feature enables this?", "options": ["SNAT on T1", "NAT64 on T0 with DNS64", "L2 VPN between IPv6 and IPv4 segments", "Route leaking from IPv6 to IPv4 T1"], "correct": 1, "explanation": "NAT64 on the T0 gateway translates IPv6 to IPv4, allowing IPv6-only workloads to reach IPv4 destinations. DNS64 synthesizes AAAA records for IPv4-only hosts.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "What is the well-known IPv6 prefix used by DNS64 to synthesize AAAA records for IPv4 addresses?", "options": ["fc00::/7", "fe80::/10", "64:ff9b::/96", "2001:db8::/32"], "correct": 2, "explanation": "64:ff9b::/96 is the well-known prefix defined in RFC 6052 for NAT64. DNS64 embeds IPv4 addresses within this prefix.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "Which IPv6 auto-configuration mechanism provides full address assignment including DNS and other options through a DHCPv6 server?", "options": ["SLAAC only", "Stateful DHCPv6", "Router Advertisement (RA) only", "Manual configuration"], "correct": 1, "explanation": "Stateful DHCPv6 provides complete address assignment with all options (DNS, domain, lease time). SLAAC provides only prefix and gateway.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "After a WAN outage between two federated NSX sites, the Global Manager reconnects. What happens to policies that were locally modified on a Local Manager during the outage?", "options": ["All local changes are lost", "GM reconciles policies; conflicts may require manual resolution", "LM policies always override GM", "The sites remain disconnected"], "correct": 1, "explanation": "When GM reconnects, it reconciles policies. If the same policy was modified on both GM and LM during the outage, manual conflict resolution may be needed.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}, {"section": "5.5 Logical Routing Packet Walk", "question": "RTEP tunnels between two federated NSX sites are failing. The physical network has standard 1500 MTU. What is the most likely cause?", "options": ["Wrong BGP AS number", "RTEP tunnels require jumbo MTU (9000+) for Geneve encapsulation overhead", "Certificate expiry", "Incorrect VLAN ID"], "correct": 1, "explanation": "RTEP tunnels use Geneve encapsulation which adds overhead. Physical MTU must support jumbo frames (typically 9000+) for reliable cross-site tunneling.", "priority": true, "sectionClean": "5.5 Logical Routing Packet Walk"}];
+
+const SECTION_CATEGORIES = {
+  "Section 3": [],
+  "Section 4": [],
+  "Section 5": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (s.startsWith("3.") || s.startsWith("Section 3") || s.startsWith("SECTION 3") || s.startsWith("Objective 3")) SECTION_CATEGORIES["Section 3"].push(s);
+  else if (s.startsWith("4.") || s.startsWith("Section 4") || s.startsWith("SECTION 4") || s.startsWith("Objective 4")) SECTION_CATEGORIES["Section 4"].push(s);
+  else if (s.startsWith("5.") || s.startsWith("Section 5") || s.startsWith("SECTION 5") || s.startsWith("Objective 5")) SECTION_CATEGORIES["Section 5"].push(s);
+  else { let matched = false; for (const k in SECTION_CATEGORIES) { if (SECTION_CATEGORIES[k].length > 0) { matched = true; } } if (!matched) { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; SECTION_CATEGORIES[firstKey].push(s); } }
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>

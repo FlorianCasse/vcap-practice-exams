@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Networking 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+  /* Setup Screen */
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+
+  /* Buttons */
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+
+  /* Quick select buttons */
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+  /* Randomize toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+
+  /* Question Card */
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+
+  /* Navigation */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+
+  .nav-buttons { display: flex; gap: 8px; }
+
+  /* Score Summary */
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+
+  /* Question Map */
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Networking 9.0 <span>(3V0-25.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    <div class="stat">Customized for <b>Florian</b></div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectPriority()">Priority Only</button>
+      <button class="btn btn-secondary btn-small" onclick="selectStrength()">Strength Only</button>
+    </div>
+
+    <div id="filterGroups"></div>
+
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <!-- EXAM SCREEN -->
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+const ALL_QUESTIONS = [{"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "In VCF 9.0, how is NSX Manager initially deployed into the VCF Instance?", "options": ["Manual OVA deployment by admin", "Automatically by Fleet Manager during Instance creation", "Deployed via Broadcom portal", "Deployed via vCenter content library"], "correct": 1, "explanation": "In VCF 9.0, NSX Manager is part of the VCF Instance Bill of Materials and is deployed automatically by Fleet Manager during instance provisioning.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "Which NSX component is responsible for computing and pushing forwarding tables to transport nodes?", "options": ["NSX Manager", "Local Controller Plane (LCP)", "Central Controller Plane (CCP)", "Service Router (SR)"], "correct": 2, "explanation": "Central Controller Plane (CCP) computes network policy and proactively pushes forwarding state to Local Controller Plane (LCP) agents on each transport node via port 1235.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "What is the minimum recommended NSX Manager cluster size for production VCF deployments?", "options": ["1 node", "2 nodes", "3 nodes", "5 nodes"], "correct": 2, "explanation": "NSX Manager requires 3 nodes minimum for production HA with quorum-based Corfu distributed database consensus.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "Which database technology does NSX Manager 9.0 use for cluster coordination?", "options": ["PostgreSQL", "MariaDB", "Corfu distributed database", "SQLite"], "correct": 2, "explanation": "Corfu is a distributed consensus database that maintains configuration consistency across NSX Manager cluster nodes.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "In which plane do the ESXi N-VDS kernel module and Distributed Router (DR) operate?", "options": ["Management Plane", "Control Plane", "Data Plane", "Service Plane"], "correct": 2, "explanation": "The Data Plane includes the ESXi N-VDS kernel module (handles overlay switching, DFW, DR routing) and Edge data path.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "What is the default encapsulation protocol used by NSX 9.0 overlay segments?", "options": ["VXLAN (legacy)", "Geneve", "IP-in-IP", "GRE"], "correct": 1, "explanation": "Geneve is the default NSX 9.0 encapsulation. It has lower CPU overhead than legacy VXLAN and supports advanced features like inline services.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.1 Determine NSX Architecture for VCF Networking Solution", "question": "If physical network MTU is 1500, what is the logical segment MTU for a Geneve-encapsulated overlay segment?", "options": ["1500 bytes", "1450 bytes", "1400 bytes", "1480 bytes"], "correct": 1, "explanation": "Geneve adds ~50 bytes header overhead (16 bytes Geneve + IP + UDP headers). 1500 - 50 = 1450 bytes logical MTU.", "priority": true, "sectionClean": "3.1 Determine NSX Architecture for VCF Networking Solution"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "A workload requires source NAT for outbound internet access. Where does this service run?", "options": ["Distributed Router on every ESXi host", "Service Router on NSX Edge nodes", "vCenter Server", "Physical network device"], "correct": 1, "explanation": "NAT is a stateful centralized service. It must run on Service Router (SR) components on NSX Edge nodes, not on every host.", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "Why is Active/Active ECMP mode incompatible with stateful NAT services on Tier-0?", "options": ["ECMP doesn't support routing", "Asymmetric traffic flows break session state tracking", "Edge nodes cannot run NAT", "BGP doesn't support NAT"], "correct": 1, "explanation": "ECMP hashes packets by 5-tuple, potentially sending different packets of same session to different Edges. This breaks stateful NAT tracking. Use Active/Standby HA instead.", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "Which component provides first-hop routing for east-west VM traffic without hairpinning?", "options": ["Service Router (SR)", "Distributed Router (DR)", "Tier-0 Gateway", "Physical router"], "correct": 1, "explanation": "Distributed Router (DR) runs in ESXi kernel and routes first-hop traffic locally. No traffic needs to leave the host.", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "What are the two DHCP modes supported by NSX? Choose the best answer:", "options": ["Master/Slave", "Server mode and Relay mode", "Proxy mode only", "Manual assignment only"], "correct": 1, "explanation": "NSX supports DHCP Server mode (runs on Tier-1 SR, requires Edge cluster) and DHCP Relay mode (forwards to external DHCP server).", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "Distributed Firewall (DFW) rules are applied at which point in the packet flow?", "options": ["On the physical network", "At the Tier-0 gateway", "At the vNIC before leaving the VM", "On the service router only"], "correct": 2, "explanation": "DFW is distributed and applied at the vNIC level, before traffic leaves the VM. This provides earliest enforcement.", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.2 Determine Centralized vs Distributed Connectivity", "question": "For a hybrid design with east-west DFW and north-south stateful inspection, which components are required?", "options": ["DFW on all hosts + Gateway Firewall on edges", "Service Router on every host", "Distributed Router on edges only", "Only physical firewall"], "correct": 0, "explanation": "Hybrid approach: DFW (distributed on all hosts) for east-west micro-segmentation + Gateway Firewall (on edges) for north-south stateful inspection.", "priority": true, "sectionClean": "3.2 Determine Centralized vs Distributed Connectivity"}, {"section": "3.3 Determine Requirements for Multisite/Federation", "question": "What is the maximum supported RTT latency between NSX Federation sites?", "options": ["50ms", "100ms", "150ms", "300ms"], "correct": 2, "explanation": "NSX Federation specification: Maximum 150ms RTT for control plane communication stability between sites.", "priority": true, "sectionClean": "3.3 Determine Requirements for Multisite/Federation"}, {"section": "3.3 Determine Requirements for Multisite/Federation", "question": "In NSX Federation, what is the purpose of the RTEP (Remote TEP) pool?", "options": ["Tunnel endpoints for intra-site traffic", "Tunnel endpoints for inter-site overlay tunnels", "Management IP allocation", "vMotion traffic only"], "correct": 1, "explanation": "RTEP pool provides tunnel endpoints specifically for inter-site overlay tunnels, separate from local TEP pool.", "priority": true, "sectionClean": "3.3 Determine Requirements for Multisite/Federation"}, {"section": "3.4 Determine VCF Fleet Architecture for Networking", "question": "In VCF 9.0 Fleet architecture, which component manages multiple VCF Instances?", "options": ["vCenter Server", "NSX Global Manager", "Fleet Manager", "SDDC Manager"], "correct": 2, "explanation": "Fleet Manager (formerly SDDC Manager) provides unified lifecycle management for multiple VCF Instances.", "priority": true, "sectionClean": "3.4 Determine VCF Fleet Architecture for Networking"}, {"section": "3.4 Determine VCF Fleet Architecture for Networking", "question": "Can two separate VCF Instances communicate directly via NSX without Federation?", "options": ["Yes, automatic cross-instance networking", "Yes, via their local NSX Managers", "No, unless NSX Federation is configured", "Only via physical network routing"], "correct": 2, "explanation": "Each VCF Instance has independent NSX. Cross-instance networking requires NSX Federation to create stretched objects.", "priority": true, "sectionClean": "3.4 Determine VCF Fleet Architecture for Networking"}, {"section": "3.5 Determine Network Optimization/Acceleration", "question": "Which feature provides accelerated kernel data path for specific workload profiles in NSX 9.0?", "options": ["Geneve offload", "Enhanced Data Path (EDP)", "TCP Segmentation Offload", "Load Balancer"], "correct": 1, "explanation": "Enhanced Data Path (EDP) is configured via Transport Node Profile to enable accelerated processing for compatible workloads.", "priority": true, "sectionClean": "3.5 Determine Network Optimization/Acceleration"}, {"section": "3.5 Determine Network Optimization/Acceleration", "question": "What is Geneve offload in NSX?", "options": ["Software encryption", "Hardware NIC acceleration of Geneve encapsulation", "BGP optimization", "VLAN trunking"], "correct": 1, "explanation": "Geneve offload allows compatible NICs to handle Geneve encapsulation/decapsulation in hardware, reducing CPU overhead.", "priority": true, "sectionClean": "3.5 Determine Network Optimization/Acceleration"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "In NSX Federation, where does the Global Manager typically run?", "options": ["On a Local Manager site", "On a dedicated Management Instance", "On any Edge cluster", "On vCenter Server"], "correct": 1, "explanation": "Global Manager runs on the dedicated Management Instance and coordinates stretched objects across all federated sites.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "What is the maximum supported RTT between federated NSX sites?", "options": ["100ms", "150ms", "250ms", "500ms"], "correct": 1, "explanation": "NSX Federation specification requires maximum 150ms RTT between sites for control plane stability.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "What happens to stretched objects if the Global Manager becomes unavailable?", "options": ["All sites lose network connectivity", "Local Managers continue operating, stretched objects remain in-service", "Stretched segments are deleted", "All Tier-0s fail over"], "correct": 1, "explanation": "Local Managers operate independently if GM is unavailable. Stretched objects remain in-service, though new configuration cannot be made from Global Manager.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "Which IP pool is used specifically for inter-site overlay tunnels in NSX Federation?", "options": ["Local TEP pool", "RTEP pool (Remote TEP)", "Tier-0 loopback pool", "Management pool"], "correct": 1, "explanation": "RTEP (Remote TEP) pool is specifically allocated for inter-site overlay tunnel endpoints, separate from local TEP pools.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "Can NSX Federation operate in Active/Active HA mode for Global Manager?", "options": ["Yes, fully supported", "No, only Active/Standby HA is supported", "Only for Tier-0 gateways", "Only with 3+ sites"], "correct": 1, "explanation": "Federation Global Manager only supports Active/Standby HA mode. Standby takes over on failure.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.1 Deploy VMware NSX Federation in VCF", "question": "In Federation, stretched Tier-0 gateways use local or centralized Edge clusters?", "options": ["Always centralized in management instance", "Each site uses its local Edge cluster", "Only one global Edge cluster", "Edges are physical only"], "correct": 1, "explanation": "Stretched Tier-0 uses service routers on each site's local Edge cluster. This provides localized gateway processing while maintaining stretched configuration.", "priority": true, "sectionClean": "4.1 Deploy VMware NSX Federation in VCF"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "In VCF 9.0, who initializes the NSX Manager cluster?", "options": ["Manual NSX UI setup", "Fleet Manager during Instance creation", "vCenter Server", "NSX Edge nodes"], "correct": 1, "explanation": "Fleet Manager automatically deploys and initializes the 3-node NSX Manager cluster as part of VCF Instance provisioning.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "What does a Host Transport Node Profile (TNP) define?", "options": ["Individual host configuration", "Cluster-wide N-VDS, uplink, VTEP pool, and teaming policies", "Edge node placement", "Virtual machine templates"], "correct": 1, "explanation": "TNP is a template applied to all hosts in a cluster, defining N-VDS configuration, uplink profile, VTEP pools, and advanced options.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "How are VTEP IP addresses allocated to ESXi transport nodes?", "options": ["Manual assignment per host", "Static assignment via DNS", "Automatically from configured IP pool", "Acquired via DHCP"], "correct": 2, "explanation": "VTEP IPs are automatically allocated from the configured VTEP IP pool when host preparation (TNP application) completes.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "How many Geneve VTEPs (tunnel endpoints) does a single ESXi host typically have?", "options": ["One per transport zone", "One per vDS", "One total per host", "One per segment"], "correct": 0, "explanation": "Each ESXi transport node gets one VTEP IP per transport zone it belongs to.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "What is the minimum number of NSX Edge nodes required in an Edge cluster for production?", "options": ["1 node", "2 nodes", "3 nodes", "4 nodes"], "correct": 1, "explanation": "NSX Edge cluster minimum 2 nodes for HA (Active/Standby or Active/Active depending on services).", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "Does NSX host transport node preparation require host reboot?", "options": ["Always required", "Never required", "Usually not required, some advanced features may need reboot", "Only for vSAN nodes"], "correct": 2, "explanation": "Most modern kernels support on-the-fly N-VDS installation. Some features (EDP, certain optimizations) may require reboot.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)", "question": "What is the purpose of the Uplink Profile within a Transport Node Profile?", "options": ["Define VLAN trunking and MTU", "Assign physical NICs, teaming policy, and uplink settings", "Configure DHCP", "Manage virtual machines"], "correct": 1, "explanation": "Uplink Profile specifies physical NIC mapping, teaming mode (active/active or active/standby), MTU, and LLDP settings for data plane connectivity.", "priority": true, "sectionClean": "4.2 Configure NSX Components (Manager, CCP, Transport Nodes)"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "On which NSX component do stateful services like NAT and Load Balancing run?", "options": ["Distributed Router (DR) on every host", "Service Router (SR) on Edge nodes", "NSX Manager", "vCenter Server"], "correct": 1, "explanation": "Stateful services require centralized processing. Service Router (SR) on NSX Edge nodes handles NAT, LB, VPN.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "Can NSX Active/Active ECMP mode be used with stateful NAT services?", "options": ["Yes, ECMP distributes load efficiently", "No, stateful services require Active/Standby HA mode", "Only with DNAT", "Only on Tier-0"], "correct": 1, "explanation": "Stateful services (NAT, LB, VPN) require Active/Standby HA. ECMP with multiple SRs would break session tracking.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "What is the difference between Tier-0 and Tier-1 NAT in NSX?", "options": ["No difference, NAT is NAT", "Tier-0 is datacenter-wide, Tier-1 is workload/tenant-specific", "Tier-1 only supports SNAT", "Tier-0 cannot do DNAT"], "correct": 1, "explanation": "Tier-0 NAT provides datacenter-wide addressing translation. Tier-1 NAT is scoped to individual workload segments for tenant isolation.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "In NSX load balancing, what is a Virtual Service (VS)?", "options": ["A virtual machine", "An exposed VIP endpoint with rules routing to backend pool", "A segment", "A firewall rule"], "correct": 1, "explanation": "Virtual Service is the exposed endpoint (VIP) that clients connect to. It distributes traffic to backend servers in a pool.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "Which NSX component provides enterprise load balancing with advanced features?", "options": ["Native NSX LB", "NSX ALB (Avi) with Service Engines", "vCenter load balancing", "Physical load balancer only"], "correct": 1, "explanation": "NSX ALB (Avi) provides advanced features like SSL termination, session persistence, active/passive health checks, and sophisticated routing.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.5 Configure Stateful Services in NSX", "question": "What happens to active sessions if a Service Router fails and failover occurs?", "options": ["Sessions automatically migrate", "Session state is lost, TCP connections are reset", "NSX maintains session state", "No impact"], "correct": 1, "explanation": "Session state is maintained only on the active SR. Failover causes TCP resets; applications must reconnect.", "priority": true, "sectionClean": "4.5 Configure Stateful Services in NSX"}, {"section": "4.7 Deploy and Manage Virtual Private Clouds (VPC)", "question": "In NSX VPC, what is the purpose of VPC Tier-0?", "options": ["Local segment switching", "North-south routing gateway for the VPC", "Inter-VPC communication hub", "Distributed routing only"], "correct": 1, "explanation": "VPC Tier-0 is the north-south gateway that provides routing between VPC segments and external networks.", "priority": true, "sectionClean": "4.7 Deploy and Manage Virtual Private Clouds (VPC)"}, {"section": "4.7 Deploy and Manage Virtual Private Clouds (VPC)", "question": "What is required to enable NSX VPC deployment?", "options": ["Single-site NSX only", "vCenter clustering", "NSX Federation (Global Manager) or multi-site setup", "Physical router configuration only"], "correct": 2, "explanation": "VPC requires NSX Federation Global Manager for central orchestration and stretched object support.", "priority": true, "sectionClean": "4.7 Deploy and Manage Virtual Private Clouds (VPC)"}, {"section": "4.7 Deploy and Manage Virtual Private Clouds (VPC)", "question": "Can two VPCs communicate directly without explicit routing configuration?", "options": ["Yes, automatic cross-VPC routing", "No, each VPC is isolated; cross-VPC requires routing", "Only via physical network", "Only with DFW"], "correct": 1, "explanation": "VPCs are administratively and forwarding isolated. Cross-VPC communication requires explicit route configuration.", "priority": true, "sectionClean": "4.7 Deploy and Manage Virtual Private Clouds (VPC)"}, {"section": "4.7 Deploy and Manage Virtual Private Clouds (VPC)", "question": "What are the two types of firewall policies available in NSX VPC?", "options": ["Ingress and egress only", "Gateway policy (T0) and Subnet policy (segment-level)", "Physical and virtual", "Manager and local"], "correct": 1, "explanation": "Gateway policy applies at VPC T0 for north-south traffic inspection. Subnet policy applies at segment level (similar to DFW) for east-west traffic.", "priority": true, "sectionClean": "4.7 Deploy and Manage Virtual Private Clouds (VPC)"}, {"section": "4.7 Deploy and Manage Virtual Private Clouds (VPC)", "question": "Which stateful services are available within an NSX VPC Tier-1?", "options": ["DFW only", "Routing (OSPF/BGP), NAT, DHCP, VPN, Load Balancing", "Virtual machines only", "Distributed routing only"], "correct": 1, "explanation": "VPC T1 supports full stateful service suite: dynamic routing, NAT, VPN, DHCP, and load balancing via dedicated Service Engines.", "priority": true, "sectionClean": "4.7 Deploy and Manage Virtual Private Clouds (VPC)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "In NSX Tier-0 routing, which protocol is used to advertise routes to external physical routers?", "options": ["OSPF", "Border Gateway Protocol (BGP)", "Static routing", "Dynamic routing only"], "correct": 1, "explanation": "BGP is used for Tier-0 to external (physical) router communication. OSPF is for internal NSX routing.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "How does ECMP load distribution work in NSX?", "options": ["Round-robin traffic", "Hash 5-tuple (SIP, DIP, Sport, Dport, Protocol)", "Random selection", "Weighted based on CPU"], "correct": 1, "explanation": "ECMP uses consistent 5-tuple hashing to distribute flows across equal-cost paths, ensuring flow affinity.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "Can stateful services (NAT, load balancing) operate in Active/Active ECMP mode?", "options": ["Yes, optimal for performance", "No, requires Active/Standby HA mode", "Only DNAT can use ECMP", "Only on Tier-0"], "correct": 1, "explanation": "Stateful services break with ECMP because session state must be maintained on single SR. Active/Standby HA is required.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "What does route redistribution enable in NSX routing?", "options": ["Only BGP routes", "Import/export routes between different routing protocols (BGP \u2194 OSPF)", "Manual route entry", "Host routing only"], "correct": 1, "explanation": "Route redistribution allows NSX to import routes learned via one protocol and advertise via another, enabling protocol interop.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "In OSPF, which area is the backbone that all other areas must connect to?", "options": ["Area 1", "Area 0", "Area 255", "No backbone required"], "correct": 1, "explanation": "OSPF Area 0 is the backbone; all inter-area routing must traverse Area 0.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)", "question": "What is the Autonomous System Number (ASN) used for in BGP?", "options": ["Identifies the BGP speaker", "Identifies the routing domain/organization", "Specifies ECMP mode", "Only for external routers"], "correct": 1, "explanation": "ASN identifies the routing autonomous system. External BGP peers use different ASNs; internal BGP uses same ASN.", "priority": true, "sectionClean": "4.8 Configure Advanced Routing (ECMP, BGP, OSPF)"}, {"section": "4.9 Configure Projects and Tenancy in NSX", "question": "What is the primary purpose of NSX Projects?", "options": ["Define vCenter security domains", "Provide multi-tenant isolation with administrative boundaries", "Configure network optimization", "Define physical security zones"], "correct": 1, "explanation": "NSX Projects enable multi-tenant isolation, allowing different teams/customers to manage independent network resources.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy in NSX"}, {"section": "4.9 Configure Projects and Tenancy in NSX", "question": "Can resources from different NSX Projects communicate directly?", "options": ["Yes, automatic inter-project routing", "No, projects are isolated; explicit routing config required", "Only via physical network", "Only via vCenter"], "correct": 1, "explanation": "By default, NSX Projects are isolated. Cross-project communication requires explicit routing policy configuration.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy in NSX"}, {"section": "4.9 Configure Projects and Tenancy in NSX", "question": "What type of administrator can manage resources within a specific NSX Project?", "options": ["Only infrastructure admin", "Project administrator assigned by infrastructure admin", "All users in the project", "vCenter admin only"], "correct": 1, "explanation": "Project administrator has scoped admin rights for their project's resources; infrastructure admin grants this role.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy in NSX"}, {"section": "4.9 Configure Projects and Tenancy in NSX", "question": "Which NSX resources can be scoped to a specific project?", "options": ["Only segments", "Segments, gateways, firewallpolicies, and load balancers", "Only gateways", "All global resources"], "correct": 1, "explanation": "Projects scope segments, Tier-0/Tier-1 gateways, firewall policies, and other network objects per tenant.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy in NSX"}, {"section": "4.9 Configure Projects and Tenancy in NSX", "question": "Can resource quotas be enforced at the project level?", "options": ["No quotas available", "Yes, optional quotas on segments, gateways, firewall rules", "Only CPU quotas", "Only on physical network"], "correct": 1, "explanation": "Infrastructure admin can set optional quotas (e.g., max 10 segments, 5 gateways) per project to limit resource usage.", "priority": true, "sectionClean": "4.9 Configure Projects and Tenancy in NSX"}, {"section": "4.3 Deploy an NSX Edge Cluster (STRENGTH)", "question": "What is the minimum number of NSX Edge nodes required for a production Edge cluster?", "options": ["1", "2", "3", "4"], "correct": 1, "explanation": "Minimum 2 Edge nodes for HA (Active/Standby or Active/Active depending on services).", "priority": false, "sectionClean": "4.3 Deploy an NSX Edge Cluster"}, {"section": "4.3 Deploy an NSX Edge Cluster (STRENGTH)", "question": "Which network is required for NSX Edge nodes?", "options": ["Management network only", "Management + Uplink (overlay TEP) networks", "Segment network only", "vMotion only"], "correct": 1, "explanation": "Edge nodes need management network (for NSX Manager communication) and uplink network (for overlay VTEP connectivity).", "priority": false, "sectionClean": "4.3 Deploy an NSX Edge Cluster"}, {"section": "4.4 Create an NSX Tier-0 Gateway (STRENGTH)", "question": "Which of the following is a responsibility of Tier-0 gateway in NSX?", "options": ["Switching between segments", "North-south routing and BGP/OSPF to physical routers", "Distributed routing only", "Segment creation"], "correct": 1, "explanation": "Tier-0 gateway provides north-south routing, peering with physical routers via BGP/OSPF, and ingress/egress point.", "priority": false, "sectionClean": "4.4 Create an NSX Tier-0 Gateway"}, {"section": "4.4 Create an NSX Tier-0 Gateway (STRENGTH)", "question": "Can a Tier-1 gateway exist without a parent Tier-0?", "options": ["Yes, independent routing", "No, Tier-1 is a child of Tier-0", "Only in federation", "Only with VPC"], "correct": 1, "explanation": "Tier-1 gateways are always children of a parent Tier-0, inheriting northbound routing and services.", "priority": false, "sectionClean": "4.4 Create an NSX Tier-0 Gateway"}, {"section": "4.6 Create an NSX Tier-1 Gateway (STRENGTH)", "question": "What services can be enabled on a Tier-1 gateway? (Select all that apply)", "options": ["OSPF, NAT, DHCP, Load Balancing", "BGP only", "Distributed routing only", "Physical routing"], "correct": 0, "explanation": "Tier-1 supports NAT, DHCP, load balancing, VPN, and optional OSPF/BGP (but typically BGP is on T0).", "priority": false, "sectionClean": "4.6 Create an NSX Tier-1 Gateway"}, {"section": "4.6 Create an NSX Tier-1 Gateway (STRENGTH)", "question": "What is the relationship between a Tier-1 and its parent Tier-0?", "options": ["Tier-1 replicates Tier-0 config", "Tier-0 provides northbound routing context for Tier-1", "Independent routing domains", "No relationship"], "correct": 1, "explanation": "Tier-0 provides the northbound routing context; Tier-1 connects workload segments upward to T0.", "priority": false, "sectionClean": "4.6 Create an NSX Tier-1 Gateway"}, {"section": "4.10 Configure Advanced NSX Integrations (STRENGTH)", "question": "Which vCenter feature integrates with NSX for automatic VM network assignment?", "options": ["Alarms", "SPBM (Storage Policy-Based Management)", "Network IP Address Management (IPAM) / DHCP", "vSAN"], "correct": 2, "explanation": "NSX integrates with vCenter for IPAM, DHCP relay/server, and automatic network binding based on VM placement policies.", "priority": false, "sectionClean": "4.10 Configure Advanced NSX Integrations"}, {"section": "4.10 Configure Advanced NSX Integrations (STRENGTH)", "question": "Can NSX integrate with external identity providers for RBAC?", "options": ["No, NSX only uses vCenter SSO", "Yes, NSX can integrate with external LDAP/SAML IdPs", "Only with ADDS", "Manual user entry only"], "correct": 1, "explanation": "NSX supports integration with external identity providers (LDAP, SAML) for flexible RBAC.", "priority": false, "sectionClean": "4.10 Configure Advanced NSX Integrations"}, {"section": "4.12 Identify VCF Tools to Monitor NSX (STRENGTH)", "question": "Which VCF component provides centralized monitoring and observability?", "options": ["vCenter Server", "VCF Operations (with vRO integration)", "vSAN only", "Physical monitoring"], "correct": 1, "explanation": "VCF Operations provides centralized monitoring for NSX, vSAN, vSphere, and other VCF components.", "priority": false, "sectionClean": "4.12 Identify VCF Tools to Monitor NSX"}, {"section": "4.12 Identify VCF Tools to Monitor NSX (STRENGTH)", "question": "What metric is typically monitored for NSX overlay network health?", "options": ["Physical NIC speed only", "VTEP tunnel status, latency, packet loss", "VM count", "vCenter heartbeat"], "correct": 1, "explanation": "NSX monitoring includes VTEP tunnel status, latency between TEPs, BFD status, and overlay packet loss.", "priority": false, "sectionClean": "4.12 Identify VCF Tools to Monitor NSX"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "What is the primary tool for verifying that NSX routing and firewall policies are correctly applied to a packet?", "options": ["vCenter alarms", "NSX Traceflow", "vRealize Operations", "SNMP traps"], "correct": 1, "explanation": "NSX Traceflow injects probe packets and shows the path, which policies matched, and where packet is dropped/allowed.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "Which command is used to verify tunnel status between ESXi transport nodes?", "options": ["get tunnels", "get transport-node-tunnels node-id <uuid>", "get logical-router tunnels", "get edges"], "correct": 1, "explanation": "get transport-node-tunnels shows tunnel establishment, latency, and any BFD/tunnel failures between VTEP endpoints.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "What is the purpose of Port Mirroring in NSX troubleshooting?", "options": ["Mirror logical switch configuration", "Copy network traffic to analyzer for packet capture and analysis", "Mirror routing tables", "Backup configuration"], "correct": 1, "explanation": "Port Mirroring (SPAN) copies traffic from source vNIC/segment to analyzer VM for deep packet analysis with tcpdump/wireshark.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "In NSX Traceflow, what does it mean if a packet is marked as 'denied'?", "options": ["Network is down", "Firewall rule (DFW or gateway policy) dropped the packet", "Tunnel failed", "VTEP unreachable"], "correct": 1, "explanation": "Traceflow shows which firewall section/rule matched and caused the deny. This helps identify incorrect security policies.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "Which VRealize component monitors NSX infrastructure health and performance?", "options": ["vRO", "vROps (vRealize Operations) with NSX Content Pack", "vRLI", "vRealize Automation only"], "correct": 1, "explanation": "vRealize Operations (vROps) with NSX Content Pack provides comprehensive NSX manager, edge, and transport node monitoring.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "What is the difference between NSX Central CLI and transport node CLI?", "options": ["Same thing", "Central CLI = global NSX view, transport node CLI = host-specific diagnostics", "Central CLI is deprecated", "No CLI on transport nodes"], "correct": 1, "explanation": "Central CLI (SSH to Manager) shows NSX-wide objects. Transport node CLI (SSH to ESXi) shows host-local VTEP, routes, DFW state.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.1 Identify VCF Tools to Troubleshoot NSX Issues", "question": "Which monitoring tool in VCF can alert on NSX Edge CPU/memory saturation?", "options": ["vCenter alarms", "VCF Operations / vRealize Operations dashboards", "NSX only", "Physical monitoring"], "correct": 1, "explanation": "VCF Operations integrates vROps for comprehensive NSX/vSphere/vSAN monitoring including resource saturation alerts.", "priority": true, "sectionClean": "5.1 Identify VCF Tools to Troubleshoot NSX Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "An ESXi host is stuck in 'Preparing' state after applying Transport Node Profile. What is the most likely cause?", "options": ["Host is out of memory", "Host transport node preparation hit an error - check uplink NIC or VTEP pool issues", "NSX Manager is down", "VTEP pool exhausted on the cluster"], "correct": 1, "explanation": "Transport node preparation failures are usually due to invalid uplink NIC, VTEP pool issue, or network connectivity problem. Check prep logs and verify physical network.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "VM-to-VM traffic between two hosts on overlay segments fails. Which command should you use first to diagnose?", "options": ["get logical-switches", "get transport-node-tunnels node-id <uuid>", "get firewall-sections", "get load-balancers"], "correct": 1, "explanation": "Check tunnel status between VTEP endpoints to verify overlay mesh connectivity. Tunnels must be up for any overlay traffic.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "What is a common cause of VTEP tunnel failures in NSX?", "options": ["Logical switch configuration", "Physical L2/L3 disconnection between VTEP IPs or UDP 6081 firewall block", "Distributed firewall rule", "Tier-0 BGP"], "correct": 1, "explanation": "VTEP tunnels require direct L2 connectivity (same subnet) or L3 routing + firewall open for UDP 6081. Physical network issues are common.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "NSX Manager cluster is unresponsive. What should you check first?", "options": ["Tier-0 routing", "Manager nodes status (get cluster status) and network connectivity", "Edge cluster state", "Transport node tunnels"], "correct": 1, "explanation": "Manager cluster health is checked via 'get cluster status'. Verify all 3 nodes are present and Corfu quorum is established.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "An NSX Edge node shows 'down' status. What two things should you verify?", "options": ["CPU speed", "Management network and uplink (data plane) network connectivity", "VM memory only", "vCenter heartbeat"], "correct": 1, "explanation": "Edge nodes need management network (NSX Manager communication) and uplink network (VTEP/data plane). Both must be operational.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "How do you check if an ESXi host's physical uplink NIC is properly configured in NSX?", "options": ["Check vCenter cluster", "Use get transport-node <uuid> nics to verify NIC status", "Manual inspection only", "vSAN status"], "correct": 1, "explanation": "get transport-node command shows physical NIC details (up/down, linked, transporting) to verify uplink is functional.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.2 Troubleshoot Common NSX Infrastructure Issues", "question": "What does MTU mismatch between physical network and overlay segments cause?", "options": ["No impact", "VTEP tunnel failures, packet fragmentation, connectivity issues", "Faster performance", "Automatic correction"], "correct": 1, "explanation": "MTU mismatch causes overlay tunnel issues. Physical MTU (e.g., 1500) - encapsulation (50 bytes Geneve) = logical MTU (1450). Mismatch causes packet loss.", "priority": true, "sectionClean": "5.2 Troubleshoot Common NSX Infrastructure Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "A VM cannot reach a web server on a different segment in the same Tier-1. What component is most likely missing?", "options": ["Tier-0 gateway", "Distributed Router (DR) child of Tier-1", "External firewall", "vSAN cluster"], "correct": 1, "explanation": "East-west segment-to-segment routing requires Distributed Router (DR) as child of Tier-1. If DR is missing, traffic fails at first hop.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "External traffic to a Tier-0 gateway fails. What is the first troubleshooting step?", "options": ["Check VM firewall", "Verify Tier-0 BGP neighbor state (get logical-router <t0> bgp neighbors)", "Restart vCenter", "Check vSAN"], "correct": 1, "explanation": "BGP neighbor state must be 'up' for T0 to reach external network. If 'down', Tier-0 cannot advertise/receive external routes.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "A SNAT rule is configured but VMs are not getting translated to the target IP. What is the most likely cause?", "options": ["SNAT not supported", "Rule order: another rule matched first, rule not applied to correct traffic", "Firewall is down", "Tier-1 doesn't support SNAT"], "correct": 1, "explanation": "NAT rules are processed in order. If traffic matches a higher-priority rule first, it won't reach the SNAT rule. Check rule sequence.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "VMs cannot obtain DHCP IP addresses on a segment. What should you check?", "options": ["Segment name", "Tier-1 DHCP server is enabled, DHCP pool is configured, firewall allows UDP 67/68", "NSX Manager", "BGP"], "correct": 1, "explanation": "DHCP server must be enabled on parent Tier-1 SR, pool must be defined, and firewall must allow DHCP discovery traffic.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "How do you verify that routes learned via BGP are actually being used for traffic forwarding?", "options": ["Check BGP neighbor status only", "Check routing table (get logical-router <t0> route) to see learned and connected routes", "vCenter status", "Physical router only"], "correct": 1, "explanation": "Routing table shows all routes (connected, learned, static). Verify BGP routes appear and have correct metric/next-hop.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "In a multi-Tier-1 design, how does traffic route between segments attached to different Tier-1s?", "options": ["Directly (no routing)", "Through Distributed Router (if same T0 parent), then via T0 if cross-T0", "Only via physical network", "Not supported"], "correct": 1, "explanation": "Segments on same T1: via DR (distributed). Segments on different T1s under same T0: through T0 (centralized). Different T0s: requires external routing.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.4 Troubleshoot Connectivity and Routing Issues", "question": "What does 'declare-dead' mean in the context of NSX BFD (Bidirectional Forwarding Detection)?", "options": ["After N consecutive failures, neighbor is declared down", "Immediate failure", "Timer only", "BGP metric"], "correct": 1, "explanation": "BFD 'declare-dead' multiplier (default 3) means after 3 missed hellos, neighbor is marked down. Enables sub-second failover detection.", "priority": true, "sectionClean": "5.4 Troubleshoot Connectivity and Routing Issues"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "A packet travels from VM1 on Segment-A to VM2 on Segment-B, both under the same Tier-1. Which router component handles first-hop forwarding?", "options": ["Service Router (SR)", "Distributed Router (DR) running on the ESXi host", "Tier-0 gateway", "Physical router"], "correct": 1, "explanation": "Distributed Router (part of T1) handles first-hop forwarding for east-west traffic within same T1, avoiding hairpinning to edge.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "In a packet walk for inbound DNAT traffic (external \u2192 VM on overlay), at what point is NAT applied?", "options": ["On the segment", "On Tier-0 Service Router before routing to Distributed Router", "On Distributed Firewall", "On the VM NIC"], "correct": 1, "explanation": "NAT is applied on Tier-0 Service Router (centralized). DNAT translates destination IP before traffic is routed to DR/segment.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "If a Distributed Firewall (DFW) rule denies a packet, does it continue to be routed?", "options": ["Yes, DFW has no effect on routing", "No, packet is dropped immediately at DFW stage", "Packet is queued", "Depends on segment"], "correct": 1, "explanation": "DFW drop is final. Packet never reaches routing/DR. Traceflow shows 'DENIED' at DFW evaluation stage.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "Describe the packet path for north-south traffic from external network to a VM with SNAT configured.", "options": ["External \u2192 T0 SR \u2192 DNAT \u2192 DR \u2192 Segment \u2192 VM \u2192 DFW", "External \u2192 DFW \u2192 Segment \u2192 VM", "External \u2192 Physical router only", "Direct to VM"], "correct": 0, "explanation": "Inbound (response): External \u2192 Tier-0 SR (DNAT translation) \u2192 Distributed Router \u2192 Segment \u2192 VM firewall \u2192 VM. Outbound: Reverse, with SNAT on egress.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "In a packet walk, if the source and destination VMs are on different Tier-0s, what must be configured?", "options": ["Nothing, automatic routing", "External routing (BGP, static) on physical network", "DFW rule allowing the traffic", "VPC"], "correct": 1, "explanation": "Different Tier-0s (e.g., separate VCF Instances or VPCs) require external network routing. NSX doesn't automatically route between independent T0s.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.5 Describe Logical Routing Packet Walk", "question": "What is the purpose of evaluating the return path in a packet walk?", "options": ["Verify asymmetric routing doesn't occur", "Ensure reply traffic traverses same stateful components (SR) if NAT/LB involved", "Change the data plane", "Optimize OSPF"], "correct": 1, "explanation": "For stateful services, return traffic must traverse same Service Router (HA/session tracking). Asymmetric paths break NAT/LB state.", "priority": true, "sectionClean": "5.5 Describe Logical Routing Packet Walk"}, {"section": "5.3 Describe ECMP and High Availability", "question": "What is the key difference between Active/Active ECMP and Active/Standby HA for Tier-0?", "options": ["No difference", "ECMP distributes traffic across multiple SRs; HA keeps one active, one standby", "ECMP is for edges only", "HA is slower"], "correct": 1, "explanation": "ECMP (Active/Active) distributes load across equal-cost paths. Active/Standby has primary processing, backup waits. Choose based on service type.", "priority": true, "sectionClean": "5.3 Describe ECMP and High Availability"}, {"section": "5.3 Describe ECMP and High Availability", "question": "When should you use Active/Standby HA instead of ECMP on Tier-0?", "options": ["Always use ECMP", "When using stateful services (NAT, LB, VPN) that require session state on single SR", "Never use HA", "For vSAN only"], "correct": 1, "explanation": "Stateful services require Active/Standby to maintain session state on single SR. ECMP would split sessions across SRs.", "priority": true, "sectionClean": "5.3 Describe ECMP and High Availability"}, {"section": "A. Brownfield Import \u2014 Existing NSX Cluster into VCF 9", "question": "What is the correct upgrade order for NSX components during a VCF upgrade?", "options": ["Hosts \u2192 Edges \u2192 NSX Manager", "NSX Manager \u2192 Hosts \u2192 Edges", "NSX Manager \u2192 Edge Nodes \u2192 Host Transport Nodes", "Edge Nodes \u2192 NSX Manager \u2192 Hosts"], "correct": 2, "explanation": "NSX upgrades follow: Manager first (control plane), then Edge nodes (service plane), then host transport nodes (data plane).", "priority": true, "sectionClean": "A. Brownfield Import \u2014 Existing NSX Cluster into VCF 9"}, {"section": "A. Brownfield Import \u2014 Existing NSX Cluster into VCF 9", "question": "A customer has NSX-T 3.1.3 and wants VCF 9.0. What is the path?", "options": ["Direct import into VCF 9.0", "Upgrade NSX to 4.1.2+ first, then import", "Reinstall from scratch", "Skip to NSX 9.0 directly"], "correct": 1, "explanation": "NSX-T 3.1.x must be upgraded to 4.1.2+ before VCF 9.0 import. Direct jump from 3.x to 9.0 is not supported.", "priority": true, "sectionClean": "A. Brownfield Import \u2014 Existing NSX Cluster into VCF 9"}, {"section": "B. NSX Segment DHCP Options", "question": "Organization requires centralized IP management via Infoblox. Which DHCP model?", "options": ["NSX Local DHCP Server", "DHCP Relay to Infoblox", "Gateway DHCP Server", "Static bindings"], "correct": 1, "explanation": "DHCP Relay forwards requests to external server (Infoblox) for centralized management.", "priority": true, "sectionClean": "B. NSX Segment DHCP Options"}, {"section": "C. Services Per Gateway Tier and IPSec VPN", "question": "Which VPN type supports dynamic routing over the tunnel?", "options": ["Policy-based", "Route-based", "L2 VPN", "SSL VPN"], "correct": 1, "explanation": "Route-based VPN uses VTI and supports BGP over the tunnel.", "priority": true, "sectionClean": "C. Services Per Gateway Tier and IPSec VPN"}, {"section": "C. Services Per Gateway Tier and IPSec VPN", "question": "Which service is NOT available on Tier-1?", "options": ["NAT", "IPSec VPN", "BGP", "DHCP Relay"], "correct": 2, "explanation": "T1 does not run BGP/OSPF. It uses static route advertisement to T0.", "priority": true, "sectionClean": "C. Services Per Gateway Tier and IPSec VPN"}, {"section": "D. Transit Gateways \u2014 Centralized vs Distributed", "question": "East-west inter-T1 traffic with no stateful services follows which path?", "options": ["T1 SR \u2192 Edge \u2192 T0 SR \u2192 Edge \u2192 T1 SR", "T1 DR \u2192 T0 DR \u2192 T1 DR (hypervisor only)", "Direct L2", "Through NSX Manager"], "correct": 1, "explanation": "Without stateful services, inter-T1 traffic uses distributed path through DR components on hypervisor.", "priority": true, "sectionClean": "D. Transit Gateways \u2014 Centralized vs Distributed"}, {"section": "E. NSX RBAC Roles", "question": "Network Admin gets 'Access Denied' creating a DFW policy. Why?", "options": ["Network Admin has no security write access", "DFW requires Enterprise Admin", "Policy limit reached", "Manager restart needed"], "correct": 0, "explanation": "Network Admin role has no write access to security policies. Need Security Admin or Enterprise Admin.", "priority": true, "sectionClean": "E. NSX RBAC Roles"}, {"section": "F. Route Leaking Between Tiers", "question": "New segment on T1 but VMs on other T1s can't reach it. Most likely cause?", "options": ["NSX Manager down", "Route advertisement not enabled on T1 for connected subnets", "MTU mismatch", "DFW blocking"], "correct": 1, "explanation": "T1 route advertisement defaults to disabled. Must enable for connected subnets.", "priority": true, "sectionClean": "F. Route Leaking Between Tiers"}, {"section": "F. Route Leaking Between Tiers", "question": "How to make shared DNS/AD on one T1 reachable from all other T1s?", "options": ["Enable OSPF on all T1s", "Enable route advertisement for connected subnets on shared T1; T0 redistributes", "Create L2 VPN", "NAT on each T1"], "correct": 1, "explanation": "T1 advertises to T0, T0 redistributes to all other connected T1s.", "priority": true, "sectionClean": "F. Route Leaking Between Tiers"}, {"section": "G. Route Maps and Prefix Lists", "question": "Admin wants to prevent T0 from advertising 172.16.0.0/16 to BGP peers. What to configure?", "options": ["DFW rule", "Outbound route map with deny matching 172.16.0.0/16", "Disable redistribution", "Remove static route"], "correct": 1, "explanation": "Outbound route map with prefix list matching 172.16.0.0/16 and deny action.", "priority": true, "sectionClean": "G. Route Maps and Prefix Lists"}, {"section": "G. Route Maps and Prefix Lists", "question": "Which BGP attribute is local-AS-only and controls OUTBOUND path selection?", "options": ["MED", "AS path prepend", "Local preference", "Community"], "correct": 2, "explanation": "Local preference is local-AS-only, higher value = preferred outbound path.", "priority": true, "sectionClean": "G. Route Maps and Prefix Lists"}, {"section": "H. IPv6 Support and NAT64", "question": "IPv6-only container needs IPv4 external API access. Which NSX feature?", "options": ["SNAT on T1", "NAT64 on T0 with DNS64", "L2 VPN", "Route leaking"], "correct": 1, "explanation": "NAT64 on T0 translates IPv6\u2192IPv4. DNS64 synthesizes AAAA records for IPv4 hosts.", "priority": true, "sectionClean": "H. IPv6 Support and NAT64"}, {"section": "H. IPv6 Support and NAT64", "question": "What is the DNS64 well-known IPv6 prefix?", "options": ["fc00::/7", "fe80::/10", "64:ff9b::/96", "2001:db8::/32"], "correct": 2, "explanation": "64:ff9b::/96 (RFC 6052) is used by DNS64 to embed IPv4 addresses in synthesized AAAA records.", "priority": true, "sectionClean": "H. IPv6 Support and NAT64"}, {"section": "I. NSX Federation \u2014 Repair Procedures", "question": "After WAN outage, GM reconnects to LMs. Policies were locally modified during outage. What happens?", "options": ["Local changes lost", "GM reconciles; conflicts may need manual resolution", "LM always overrides", "Sites stay disconnected"], "correct": 1, "explanation": "GM reconciles policies on reconnect. Conflicting changes may require manual resolution.", "priority": true, "sectionClean": "I. NSX Federation \u2014 Repair Procedures"}, {"section": "I. NSX Federation \u2014 Repair Procedures", "question": "RTEP tunnels failing between sites. Physical MTU is 1500. Most likely cause?", "options": ["Wrong BGP AS", "RTEP needs jumbo MTU (9000+) for Geneve overhead", "Certificate expiry", "Wrong VLAN"], "correct": 1, "explanation": "RTEP tunnels use Geneve encapsulation requiring jumbo frames.", "priority": true, "sectionClean": "I. NSX Federation \u2014 Repair Procedures"}];
+
+const SECTION_CATEGORIES = {
+  "Section 3 — Plan & Design": [],
+  "Section 4 — Configure & Administrate": [],
+  "Section 5 — Troubleshoot & Optimize": [],
+  "Appendix — Additional Exam Topics": []
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.section;
+  if (s.startsWith('3.')) SECTION_CATEGORIES["Section 3 — Plan & Design"].push(s);
+  else if (s.startsWith('4.')) SECTION_CATEGORIES["Section 4 — Configure & Administrate"].push(s);
+  else if (s.startsWith('5.')) SECTION_CATEGORIES["Section 5 — Troubleshoot & Optimize"].push(s);
+  else SECTION_CATEGORIES["Appendix — Additional Exam Topics"].push(s);
+});
+
+// Deduplicate
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════════════════════════════
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => q.section === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+
+    const list = document.createElement('div');
+    list.className = 'section-list';
+
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => q.section === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${isPriority ? 'red' : 'green'}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+function selectPriority() {
+  document.querySelectorAll('.section-item input').forEach(cb => {
+    const isPriority = !cb.dataset.section.includes('(STRENGTH)');
+    cb.checked = isPriority;
+    cb.closest('.section-item').classList.toggle('selected', isPriority);
+  });
+  updateCount();
+}
+function selectStrength() {
+  document.querySelectorAll('.section-item input').forEach(cb => {
+    const isStrength = cb.dataset.section.includes('(STRENGTH)');
+    cb.checked = isStrength;
+    cb.closest('.section-item').classList.toggle('selected', isStrength);
+  });
+  updateCount();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  EXAM
+// ═══════════════════════════════════════════════════════════════════════════════
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.section));
+
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+
+  currentIndex = 0;
+  answers = {};
+  revealed = {};
+
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">—</b></div>
+  `;
+
+  buildQuestionMap();
+  renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${isPriority ? 'priority' : 'strength'}">
+          ${isPriority ? '🔴 PRIORITY' : '✅ STRENGTH'} — ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+
+  // Update progress
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+
+  // Update all dots
+  examQuestions.forEach((_, i) => updateDot(i));
+
+  // Update running score
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+
+  // Update answered count
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) { currentIndex--; renderQuestion(); }
+}
+function nextQuestion() {
+  if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); }
+}
+
+function finishExam() {
+  // Auto-reveal unanswered
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+
+  showResults();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions — ' + (pass ? 'PASS (\u226570%)' : 'FAIL (need \u226570%)');
+
+  // Section breakdown
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+
+  document.getElementById('reviewTitle').textContent = `Review Mode — ${filtered.length} questions`;
+
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${isPriority ? 'priority' : 'strength'}">
+          ${isPriority ? '🔴' : '✅'} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+
+  examQuestions = wrongQuestions;
+  if (document.getElementById('randomizeToggle')?.checked !== false) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+
+  currentIndex = 0;
+  answers = {};
+  revealed = {};
+
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">—</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+
+  buildQuestionMap();
+  renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+
+  document.getElementById('headerStats').innerHTML = `<div class="stat">Customized for <b>Florian</b></div>`;
+
+  answers = {};
+  revealed = {};
+  examQuestions = [];
+  currentIndex = 0;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+// Init
+buildSetup();
+</script>
+</body>
+</html>

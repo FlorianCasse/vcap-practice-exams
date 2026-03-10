@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP VKS Administrator 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP VKS Administrator 9.0 <span>(3V0-24.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Objective 1.1 \u2014 Differentiate Between VMs and Containers", "question": "A customer wants to migrate a Windows Server 2022 application with many OS dependencies. Which workload model minimizes changes?", "options": ["Containerize via Kubernetes Pod with Windows OS container", "Deploy as VM Service on the Supervisor cluster", "Convert to Linux and containerize with Kubernetes Pod", "Use only traditional vSphere VMs, avoid Supervisor"], "correct": 1, "explanation": "Correct: B. VM Service preserves the Windows OS and dependencies without refactoring. Containers require application redesign.", "priority": true, "sectionClean": "Objective 1.1 \u2014 Differentiate Between VMs and Containers"}, {"section": "Objective 1.1 \u2014 Differentiate Between VMs and Containers", "question": "What is the typical memory overhead difference between a Kubernetes Pod and a VM in vSphere?", "options": ["Pod overhead 100MB, VM overhead 10MB", "Pod overhead 5-20MB, VM overhead 100MB+ baseline", "Pod and VM overhead are identical", "Pod overhead varies by CNI; VM has no overhead"], "correct": 1, "explanation": "Correct: B. Pods are lightweight (container runtime + networking namespace); VMs include full OS, hypervisor, BIOS emulation.", "priority": true, "sectionClean": "Objective 1.1 \u2014 Differentiate Between VMs and Containers"}, {"section": "Objective 1.1 \u2014 Differentiate Between VMs and Containers", "question": "Which statement is true about kernel isolation in containers vs VMs?", "options": ["Containers use kernel namespaces; VMs get isolated kernel per machine", "Both use identical isolation mechanisms (namespaces and cgroups)", "VMs have weaker isolation than containers", "Containers cannot be isolated at all"], "correct": 0, "explanation": "Correct: A. Containers share the host kernel via namespaces (pid, network, mount, UTS, IPC, user). VMs run separate kernel entirely.", "priority": true, "sectionClean": "Objective 1.1 \u2014 Differentiate Between VMs and Containers"}, {"section": "Objective 1.1 \u2014 Differentiate Between VMs and Containers", "question": "You need to run a real-time database application requiring <500ms latency. What workload model suits this?", "options": ["Containerize with Kubernetes Pod (simpler)", "VM Service (preserves low-latency configuration, dedicated resources)", "Hybrid: some Pods, some VMs", "Use only shared Supervisor Pods"], "correct": 1, "explanation": "Correct: B. VMs provide hardware-level isolation and resource guarantees needed for latency-sensitive workloads.", "priority": true, "sectionClean": "Objective 1.1 \u2014 Differentiate Between VMs and Containers"}, {"section": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm", "question": "In Kubernetes, which component is responsible for deciding which node a new Pod runs on?", "options": ["kubelet on each worker node", "Scheduler in control plane", "Kube-proxy", "API server"], "correct": 1, "explanation": "Correct: B. The scheduler watches for Pods without nodeName assignment and places them based on node resources and constraints.", "priority": true, "sectionClean": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm"}, {"section": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm", "question": "What is the primary purpose of etcd in a Kubernetes cluster?", "options": ["Container runtime management", "Network policy enforcement", "Distributed state store (cluster configuration, Pod definitions, Secrets)", "Load balancing across nodes"], "correct": 2, "explanation": "Correct: C. etcd stores all cluster state. Loss of etcd = loss of cluster. Must be backed up regularly.", "priority": true, "sectionClean": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm"}, {"section": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm", "question": "A Pod runs two containers: a web app and a sidecar logging agent. They must communicate frequently. How?", "options": ["Via ClusterIP Service", "Via NodePort Service", "Via localhost (same network namespace, shared IP)", "Via Pod-to-Pod VXLAN overlay"], "correct": 2, "explanation": "Correct: C. Containers in the same Pod share a network namespace and IP, so they communicate via localhost.", "priority": true, "sectionClean": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm"}, {"section": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm", "question": "Which Kubernetes object provides stable DNS names and load balancing for Pods?", "options": ["Deployment", "Service", "PersistentVolume", "ConfigMap"], "correct": 1, "explanation": "Correct: B. Service creates a stable endpoint (FQDN like my-svc.default.svc.cluster.local) and distributes traffic to matching Pods.", "priority": true, "sectionClean": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm"}, {"section": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm", "question": "In VKS, which CNI plugin is used by default for Pod networking?", "options": ["Flannel", "Weave", "Antrea", "Calico"], "correct": 2, "explanation": "Correct: C. VKS uses Antrea as the default CNI, which integrates with NSX for VXLAN overlay and distributed firewalling.", "priority": true, "sectionClean": "Objective 1.2 \u2014 Kubernetes Architecture, Networking, Storage, Service Mesh, and Helm"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "A customer needs Supervisor spanning 3 geographic data centers with automatic failover. Which architecture is recommended?", "options": ["Single-zone with stretched vSAN", "Three-zone Supervisor with NSX VPC", "VDS-only mode (no NSX)", "NSX Segment mode with 1 control plane VM"], "correct": 1, "explanation": "Correct: B. Three-zone spreads Supervisor VMs and VKS nodes across 3 failure domains. NSX VPC isolates tenants per namespace.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "Which networking mode does NOT require NSX infrastructure?", "options": ["NSX VPC", "NSX Segment", "vSphere Distributed Switch (VDS)", "Both A and B require NSX"], "correct": 2, "explanation": "Correct: C. VDS mode uses standard VLAN tagging on vSAN, no NSX overlay needed. Simple but no multi-tenancy isolation.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "A Small load balancer in VKS can handle approximately how many concurrent connections?", "options": ["500 concurrent connections", "50 concurrent connections per vCPU", "5000 concurrent connections", "Unlimited"], "correct": 1, "explanation": "Correct: B. Small: ~50 conns/vCPU, Medium: ~500 conns, Large: ~5000 conns. Undersizing causes API timeouts.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "A three-zone VKS deployment has one complete zone go offline. What happens to the Supervisor?", "options": ["Supervisor completely unavailable until zone recovered", "Supervisor remains available (2 of 3 zones active, quorum maintained)", "Supervisor needs manual intervention to failover", "Three-zone deployments cannot tolerate any zone failure"], "correct": 1, "explanation": "Correct: B. Three-zone Supervisor with 2 VMs per zone: if 1 zone fails, 4 VMs remain. Quorum (3 out of 6) maintained.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "When designing a multi-zone Supervisor, what is the primary benefit over single-zone?", "options": ["Lower licensing costs", "Automatic failover across zones, higher availability, disaster recovery capability", "Better performance (faster scheduling)", "No benefit; single-zone is preferred"], "correct": 1, "explanation": "Correct: B. Multi-zone enables automatic failover and disaster recovery across geographic sites.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)", "question": "NSX VPC provides which security capability that NSX Segment mode does not?", "options": ["Network Policies (both modes support this)", "Per-namespace dedicated VPC with isolated SNAT/DNAT, firewall rules, and edge gateway", "Pod-to-pod communication (both support this)", "NSX VPC and NSX Segment have identical security features"], "correct": 1, "explanation": "Correct: B. NSX VPC = dedicated VPC per namespace, per-namespace edge gateway, true multi-tenancy isolation.", "priority": true, "sectionClean": "Objective 1.3 \u2014 Determine Reference Architecture for VKS Deployment (NSX, VDS, Zones)"}, {"section": "Objective 2.1 \u2014 Configure vSphere Supervisor Capabilities, Services, and Architecture Topologies", "question": "A Supervisor cluster requires minimum resource allocation. What is the typical VM configuration?", "options": ["4 vCPU, 16GB RAM per control plane VM", "8 vCPU, 32GB RAM per control plane VM (3 total)", "2 vCPU, 8GB RAM (single VM)", "16 vCPU, 64GB RAM per VM"], "correct": 1, "explanation": "Correct: B. Production Supervisor requires 3 VMs with 8vCPU/32GB each for HA and etcd consensus.", "priority": true, "sectionClean": "Objective 2.1 \u2014 Configure vSphere Supervisor Capabilities, Services, and Architecture Topologies"}, {"section": "Objective 2.1 \u2014 Configure vSphere Supervisor Capabilities, Services, and Architecture Topologies", "question": "Which component in Supervisor stores all cluster state and requires backup?", "options": ["API Server", "etcd distributed key-value store", "Scheduler", "kubelet"], "correct": 1, "explanation": "Correct: B. Loss of etcd = loss of entire cluster state. Backup strategy is essential.", "priority": true, "sectionClean": "Objective 2.1 \u2014 Configure vSphere Supervisor Capabilities, Services, and Architecture Topologies"}, {"section": "Objective 2.2 \u2014 Configure Supervisor Cluster Networking (VDS, NSX Segments, VPCs, Load Balancing)", "question": "In NSX VPC mode, how are different vSphere Namespaces isolated from a networking perspective?", "options": ["Same overlay segment, different IP ranges", "Each Namespace gets a dedicated NSX VPC with separate security policies", "Routing between Namespaces via static routes", "No isolation; Namespaces share network"], "correct": 1, "explanation": "Correct: B. NSX VPC provides true multi-tenancy isolation. Each Namespace has dedicated VPC, firewall, edge gateway.", "priority": true, "sectionClean": "Objective 2.2 \u2014 Configure Supervisor Cluster Networking (VDS, NSX Segments, VPCs, Load Balancing)"}, {"section": "Objective 2.2 \u2014 Configure Supervisor Cluster Networking (VDS, NSX Segments, VPCs, Load Balancing)", "question": "What service provides load balancing for Supervisor API (port 6443) in VKS?", "options": ["Kube-proxy", "SNAT/DNAT rule", "Avi LoadBalancer (NSX ALB) or NSX Edge", "haproxy running on control plane"], "correct": 2, "explanation": "Correct: C. Avi LoadBalancer or NSX Edge provide L4 load balancing for Supervisor API and Services.", "priority": true, "sectionClean": "Objective 2.2 \u2014 Configure Supervisor Cluster Networking (VDS, NSX Segments, VPCs, Load Balancing)"}, {"section": "Objective 2.3 \u2014 Configure Supervisor Storage Policies and Persistent Volume Integration Across Zones", "question": "A PersistentVolumeClaim in VKS is stuck in 'Pending' status. What is the most likely cause?", "options": ["Pod using the PVC is not running", "CSI driver failed to provision vSAN disk (e.g., vSAN capacity full, policy not found)", "StorageClass is not yet created", "Kubelet is restarting"], "correct": 1, "explanation": "Correct: B. Pending PVC typically means CSI provisioning failed. Check vSAN capacity, verify StorageClass and policy exist.", "priority": true, "sectionClean": "Objective 2.3 \u2014 Configure Supervisor Storage Policies and Persistent Volume Integration Across Zones"}, {"section": "Objective 2.3 \u2014 Configure Supervisor Storage Policies and Persistent Volume Integration Across Zones", "question": "In a three-zone VKS deployment, how should StorageClasses be configured for performance?", "options": ["Single StorageClass with no zone affinity", "Separate StorageClass per zone, with zone affinity rules to ensure local data residency", "StorageClass randomly distributes across zones", "StorageClass is irrelevant to zones"], "correct": 1, "explanation": "Correct: B. Separate StorageClass per zone minimizes latency by keeping data local to the Pod's zone.", "priority": true, "sectionClean": "Objective 2.3 \u2014 Configure Supervisor Storage Policies and Persistent Volume Integration Across Zones"}, {"section": "Objective 2.4 \u2014 Configure VKS Identity and Access (External Providers, Kubernetes Admin Credentials)", "question": "A customer uses Active Directory and wants Kubernetes API access for AD groups. What authentication mechanism is required?", "options": ["Kubernetes admin certificate (cluster-admin)", "OIDC federation with AD as IdP, RBAC bindings for AD groups", "SSH key to control plane VMs", "No authentication needed for cluster-admin"], "correct": 1, "explanation": "Correct: B. OIDC token from AD/ADFS + Kubernetes RBAC role bindings for groups.", "priority": true, "sectionClean": "Objective 2.4 \u2014 Configure VKS Identity and Access (External Providers, Kubernetes Admin Credentials)"}, {"section": "Objective 2.4 \u2014 Configure VKS Identity and Access (External Providers, Kubernetes Admin Credentials)", "question": "How does a Pod authenticate to the Kubernetes API?", "options": ["Via Kubernetes admin certificate", "Via Service Account token mounted at /var/run/secrets/kubernetes.io/serviceaccount/token", "Via user password", "No authentication; Pods have auto access"], "correct": 1, "explanation": "Correct: B. kubelet mounts a Service Account token; the API server verifies it.", "priority": true, "sectionClean": "Objective 2.4 \u2014 Configure VKS Identity and Access (External Providers, Kubernetes Admin Credentials)"}, {"section": "Objective 2.5a \u2014 Manage Kubernetes Releases and Content Libraries for VKS Clusters", "question": "Where are Kubernetes release images stored for VKS cluster provisioning?", "options": ["Local ESXi datastore", "vSphere Content Library", "Harbor registry", "HTTP server"], "correct": 1, "explanation": "Correct: B. Content Library stores OVF templates for all available VKS releases.", "priority": true, "sectionClean": "Objective 2.5a \u2014 Manage Kubernetes Releases and Content Libraries for VKS Clusters"}, {"section": "Objective 2.5a \u2014 Manage Kubernetes Releases and Content Libraries for VKS Clusters", "question": "To share VKS releases across multiple Supervisor clusters, which library type is used?", "options": ["Subscribed Library only", "Published Library (shared via HTTPS) and Subscribed Libraries (on other Supervisors)", "Both are identical", "Manual copy via vMotion"], "correct": 1, "explanation": "Correct: B. One Published Library, multiple Subscribed Libraries auto-sync new content.", "priority": true, "sectionClean": "Objective 2.5a \u2014 Manage Kubernetes Releases and Content Libraries for VKS Clusters"}, {"section": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters", "question": "Which CNI plugin is the default in VKS and provides deepest NSX integration?", "options": ["Flannel", "Antrea", "Calico", "WeaveNet"], "correct": 1, "explanation": "Correct: B. Antrea supports Kubernetes Network Policies and NSX security policy enforcement.", "priority": true, "sectionClean": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters"}, {"section": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters", "question": "What is the VXLAN encapsulation overhead per packet?", "options": ["10 bytes", "30 bytes", "50 bytes", "100 bytes"], "correct": 2, "explanation": "Correct: C. VXLAN header = 50 bytes. Plan bandwidth accordingly (e.g., 10Gbps link \u2192 ~9.6Gbps after overhead).", "priority": true, "sectionClean": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters"}, {"section": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters", "question": "Supervisor API TLS certificate is signed by which entity in a typical enterprise VKS deployment?", "options": ["Self-signed (Supervisor generates on deploy)", "Internal enterprise CA", "Public CA (Let's Encrypt)", "NSX Manager CA"], "correct": 1, "explanation": "Correct: B. Internal CA signs the Supervisor API cert. External IdP may use different CA chain.", "priority": true, "sectionClean": "Objective 2.5b \u2014 Configure CNIs, NSX Networking Objects, TLS Certificates, and Secure VKS Clusters"}, {"section": "Objective 3.1 \u2014 Evaluate Load Balancer Size Implications on Supervisor Functionality", "question": "An organization has 500 VKS clusters across multiple Supervisors. What load balancer size is minimum?", "options": ["Small (covers basic deployment)", "Medium (supports ~100-200 clusters)", "Large (supports enterprise scale)", "HA pair of Large (recommended for mission-critical)"], "correct": 3, "explanation": "Correct: D. 500 clusters require HA Large LBs. Single Large = 5000 conns, dual for failover/redundancy.", "priority": true, "sectionClean": "Objective 3.1 \u2014 Evaluate Load Balancer Size Implications on Supervisor Functionality"}, {"section": "Objective 3.2 \u2014 Evaluate Namespace Network Options", "question": "Can two vSphere Namespaces share the same NSX VPC in VKS?", "options": ["Yes, namespaces always share VPCs for efficiency", "No, each namespace gets a dedicated VPC for isolation", "Only if they are in the same zone", "Depends on NSX license"], "correct": 1, "explanation": "Correct: B. NSX VPC mode = one VPC per namespace. This ensures network isolation and per-namespace security policies.", "priority": true, "sectionClean": "Objective 3.2 \u2014 Evaluate Namespace Network Options"}, {"section": "Objective 3.3 \u2014 Evaluate vSphere Namespace Architecture with Ingress and Egress Options", "question": "Which component in VKS Supervisor provides HTTP/HTTPS ingress routing?", "options": ["NSX Edge Gateway", "Contour ingress controller with Envoy proxy", "Avi LoadBalancer", "kube-proxy"], "correct": 1, "explanation": "Correct: B. Contour runs as a Supervisor Service, provides Layer 7 routing via Envoy proxy.", "priority": true, "sectionClean": "Objective 3.3 \u2014 Evaluate vSphere Namespace Architecture with Ingress and Egress Options"}, {"section": "Objective 3.4 \u2014 Create the Process of Enabling a Supervisor Cluster", "question": "What is the typical duration for Supervisor enablement on a vSphere cluster?", "options": ["5-10 minutes", "15-20 minutes", "30-45 minutes", "2+ hours"], "correct": 2, "explanation": "Correct: C. Supervisor enablement includes VM provisioning, control plane bootstrap, worker node deployment.", "priority": true, "sectionClean": "Objective 3.4 \u2014 Create the Process of Enabling a Supervisor Cluster"}, {"section": "Objective 3.5 \u2014 Create an Implementation of Service Mesh", "question": "When NSX Service Mesh is enabled on a namespace, what mechanism enforces traffic policies?", "options": ["Network Policies at network layer", "Sidecar proxies (Envoy) injected into Pods", "iptables rules on nodes", "NSX distributed firewall"], "correct": 1, "explanation": "Correct: B. Service Mesh uses sidecar proxies to intercept and manage traffic at application layer.", "priority": true, "sectionClean": "Objective 3.5 \u2014 Create an Implementation of Service Mesh"}, {"section": "Objective 4.1 \u2014 Create Supervisor Clusters with NSX VPC, NSX Segment, VDS, and Avi Load Balancer Options", "question": "Which networking mode allows per-namespace security policies and multi-tenancy isolation?", "options": ["VDS mode", "NSX Segment mode", "NSX VPC mode", "All modes support equal isolation"], "correct": 2, "explanation": "Correct: C. NSX VPC = one VPC per namespace, dedicated firewall policies, edge gateway per namespace.", "priority": true, "sectionClean": "Objective 4.1 \u2014 Create Supervisor Clusters with NSX VPC, NSX Segment, VDS, and Avi Load Balancer Options"}, {"section": "Objective 4.2 \u2014 Configure and Manage vSphere Namespaces and Zones", "question": "A vSphere Namespace has CPU quota of 500 cores. When namespace reaches 100%, what happens?", "options": ["New Pods are created anyway (quota is advisory only)", "New Pods enter Pending state until resources free (quota is enforced)", "Existing Pods are evicted", "No effect; quotas do not apply to Pods"], "correct": 1, "explanation": "Correct: B. CPU quota is hard limit. New Pods fail scheduling until resources available.", "priority": true, "sectionClean": "Objective 4.2 \u2014 Configure and Manage vSphere Namespaces and Zones"}, {"section": "Objective 4.3 \u2014 Create Workloads as Supervisor Pods or via VM Service", "question": "A Windows Server 2022 application cannot be containerized. How is it deployed on Supervisor?", "options": ["As a Kubernetes Deployment with Windows Pod", "Via VM Service with Windows VM Class", "Supervisor does not support Windows", "Must use traditional vSphere VMs only"], "correct": 1, "explanation": "Correct: B. VM Service allows Windows VMs on Supervisor. Define VM Class and storage, deploy YAML.", "priority": true, "sectionClean": "Objective 4.3 \u2014 Create Workloads as Supervisor Pods or via VM Service"}, {"section": "Objective 4.4 \u2014 Install, Uninstall, and Manage Supervisor Add-on Services", "question": "Which Supervisor Service provides a private container image registry for VKS clusters?", "options": ["Contour", "Harbor", "Prometheus", "NSX Service Mesh"], "correct": 1, "explanation": "Correct: B. Harbor is the default container registry in VKS, enables secure image pulls without DockerHub.", "priority": true, "sectionClean": "Objective 4.4 \u2014 Install, Uninstall, and Manage Supervisor Add-on Services"}, {"section": "Objective 4.5 \u2014 Provision, Delete, Monitor, and Scale VKS Clusters", "question": "A VKS cluster is stuck in 'Provisioning' state for 30+ minutes. What is the most likely cause?", "options": ["Cluster is working normally (provisioning takes time)", "Namespace has insufficient resource quota", "Load balancer unreachable or sizing insufficient", "Worker nodes detected malware"], "correct": 2, "explanation": "Correct: C. Provisioning stall usually indicates LB timeout during cluster bootstrap. Check LB health and capacity.", "priority": true, "sectionClean": "Objective 4.5 \u2014 Provision, Delete, Monitor, and Scale VKS Clusters"}, {"section": "Objective 4.5 \u2014 Provision, Delete, Monitor, and Scale VKS Clusters", "question": "How is a VKS cluster horizontally scaled (add worker nodes)?", "options": ["kubectl edit node (invalid)", "Modify MachineDeployment or use kubectl scale", "Recreate entire cluster with more nodes", "VKS does not support scaling"], "correct": 1, "explanation": "Correct: B. kubectl scale MachineDeployment updates replica count, new nodes provisioned.", "priority": true, "sectionClean": "Objective 4.5 \u2014 Provision, Delete, Monitor, and Scale VKS Clusters"}, {"section": "Objective 4.6 \u2014 Update VKS Clusters Through Rolling Updates and Configuration Changes", "question": "During VKS cluster rolling update, why is node drain critical?", "options": ["To free up vSAN cache for new version", "To evict Pods gracefully, respecting PodDisruptionBudget, before node shutdown", "Drain is optional; immediate shutdown is fine", "To reset network configuration"], "correct": 1, "explanation": "Correct: B. Node drain ensures running Pods are evicted gracefully. PDB prevents violation of minimum availability.", "priority": true, "sectionClean": "Objective 4.6 \u2014 Update VKS Clusters Through Rolling Updates and Configuration Changes"}, {"section": "Objective 4.7 \u2014 Create, Configure, and Upgrade Autoscalers", "question": "Cluster Autoscaler adds a new worker node when a Pod is Pending due to insufficient resources. Typical provision time?", "options": ["30-60 seconds", "2-5 minutes", "10-15 minutes", "30+ minutes"], "correct": 2, "explanation": "Correct: C. New worker node VM provisioning, Supervisor bootstrapping = 5-15 min. Pod still Pending during this time.", "priority": true, "sectionClean": "Objective 4.7 \u2014 Create, Configure, and Upgrade Autoscalers"}, {"section": "Objective 4.7 \u2014 Create, Configure, and Upgrade Autoscalers", "question": "At what CPU utilization threshold will Horizontal Pod Autoscaler scale up (by default)?", "options": ["50%", "70%", "80%", "90%"], "correct": 1, "explanation": "Correct: B. Default HPA target: 70% CPU utilization. Customizable via metrics.", "priority": true, "sectionClean": "Objective 4.7 \u2014 Create, Configure, and Upgrade Autoscalers"}, {"section": "Objective 4.8 \u2014 Manage Package Repositories, Standard Packages, Registry Secrets, and Private Registries", "question": "How does a Pod in VKS pull images from a private Harbor registry?", "options": ["Pods have auto-access (no credentials needed)", "Via ImagePullSecret with Harbor credentials", "Via environment variables only", "Private registries are not supported"], "correct": 1, "explanation": "Correct: B. ImagePullSecret provides registry credentials. Supervisor integrates with Harbor by default.", "priority": true, "sectionClean": "Objective 4.8 \u2014 Manage Package Repositories, Standard Packages, Registry Secrets, and Private Registries"}, {"section": "Objective 4.9 \u2014 Create and Manage Snapshots in VKS Clusters", "question": "What data is captured in a VKS cluster snapshot?", "options": ["Only cluster configuration (no workload data)", "etcd state + all PVC/PV data", "Only control plane VMs (no worker nodes)", "Nothing; snapshots are not supported"], "correct": 1, "explanation": "Correct: B. Snapshots include etcd (cluster state, manifests) + storage volumes (PVC data).", "priority": true, "sectionClean": "Objective 4.9 \u2014 Create and Manage Snapshots in VKS Clusters"}, {"section": "Objective 4.10 \u2014 Upgrade the Supervisor Service Within a Given Situation", "question": "During Supervisor upgrade, what is the primary risk for running VKS clusters?", "options": ["Clusters are automatically upgraded too (not true)", "Brief API unavailability during control plane update, some operations may fail", "All Pods are deleted and must be recreated", "No risk; clusters are unaffected"], "correct": 1, "explanation": "Correct: B. Supervisor upgrade may cause brief API latency. VKS clusters are NOT automatically upgraded.", "priority": true, "sectionClean": "Objective 4.10 \u2014 Upgrade the Supervisor Service Within a Given Situation"}, {"section": "Objective 4.11 \u2014 Create Storage Strategies with Dynamic and Static Persistent Volumes", "question": "A StatefulSet requires persistent storage with high redundancy (FTT=2). What resource is required?", "options": ["PVC with StorageClass referencing vSAN policy with FTT=2", "Manual disk creation via vSphere", "NFS mount (vSAN not used)", "StorageClass alone (no PVC needed)"], "correct": 0, "explanation": "Correct: A. PVC references StorageClass \u2192 CSI driver applies vSAN Storage Policy (FTT=2) during provisioning.", "priority": true, "sectionClean": "Objective 4.11 \u2014 Create Storage Strategies with Dynamic and Static Persistent Volumes"}, {"section": "Objective 4.12 \u2014 Create Workload Deployment Models (Pods, VMs, Ingress Controllers, Private Registries)", "question": "Which deployment model is best for a stateful database workload in VKS?", "options": ["Deployment with ephemeral storage", "StatefulSet with PVC and vSAN storage", "DaemonSet", "VM Service only"], "correct": 1, "explanation": "Correct: B. StatefulSet provides: stable Pod names, ordered startup, persistent storage via PVC.", "priority": true, "sectionClean": "Objective 4.12 \u2014 Create Workload Deployment Models (Pods, VMs, Ingress Controllers, Private Registries)"}, {"section": "Objective 4.13 \u2014 Implement Backup and Restore Strategies Using Velero", "question": "Velero backup fails with 'S3 bucket unreachable'. What is the likely cause?", "options": ["Velero Pod network issue, S3 endpoint unreachable", "vSAN storage problem", "Kubernetes API server issue", "Pod security policy blocking S3 access"], "correct": 0, "explanation": "Correct: A. Velero needs S3 connectivity. Check Pod logs, S3 endpoint config, network policies.", "priority": true, "sectionClean": "Objective 4.13 \u2014 Implement Backup and Restore Strategies Using Velero"}, {"section": "Objective 4.13 \u2014 Implement Backup and Restore Strategies Using Velero", "question": "During cluster disaster recovery, Velero restores backup to new VKS cluster. Which data is restored?", "options": ["Only manifests; PVC data is lost", "Manifests + PVC snapshots (full recovery)", "Only control plane state (no workloads)", "Cannot restore to different cluster"], "correct": 1, "explanation": "Correct: B. Velero restores complete cluster state + storage data. Requires same StorageClasses available.", "priority": true, "sectionClean": "Objective 4.13 \u2014 Implement Backup and Restore Strategies Using Velero"}, {"section": "Objective 4.14 \u2014 Edit YAML Code to Modify VKS Deployment", "question": "In a Deployment YAML, what is the correct path to the image name?", "options": ["spec.image", "spec.template.spec.containers[0].image", "metadata.image", "spec.containers[0].image"], "correct": 1, "explanation": "Correct: B. Deployment \u2192 template (Pod spec) \u2192 containers[0] \u2192 image field.", "priority": true, "sectionClean": "Objective 4.14 \u2014 Edit YAML Code to Modify VKS Deployment"}, {"section": "Objective 5.1 \u2014 Diagnose and Resolve Supervisor and VKS Cluster Provisioning, Connectivity, or Namespace Errors", "question": "A VKS cluster is stuck in 'Provisioning' state for 20 minutes. The Supervisor is healthy. Most likely cause?", "options": ["Namespace quota exceeded", "Content Library release not found", "Load balancer timeout during cluster bootstrap", "Supervisor API under attack"], "correct": 2, "explanation": "Correct: C. Provisioning involves multiple API calls through LB. Timeout suggests LB is bottleneck.", "priority": true, "sectionClean": "Objective 5.1 \u2014 Diagnose and Resolve Supervisor and VKS Cluster Provisioning, Connectivity, or Namespace Errors"}, {"section": "Objective 5.2 \u2014 Troubleshoot VM Class, Cluster Plans, Content Library, Storage, and Networking Errors", "question": "A Pod fails to start with error 'Admission webhook rejected: Pod requests GPU but VM Class has none'. Fix?", "options": ["Remove GPU request from Pod spec", "Change Pod to VM Service (VMs support GPU)", "Recreate VM Class with GPU enabled", "Pod cannot use GPU; use CPU-only workloads"], "correct": 2, "explanation": "Correct: C. VM Class must define GPU. Recreate class or use existing GPU-enabled class.", "priority": true, "sectionClean": "Objective 5.2 \u2014 Troubleshoot VM Class, Cluster Plans, Content Library, Storage, and Networking Errors"}, {"section": "Objective 5.3 \u2014 Troubleshoot Container Deployment, Registry, and Trusted CA Errors", "question": "Pod in image pull status. kubectl describe pod shows: 'Failed to pull image harbor.local/myapp:latest: x509: certificate signed by unknown authority'. Fix?", "options": ["Use HTTP instead of HTTPS", "Add Harbor's CA certificate to Pod's trust store", "Recreate the Pod", "Harbor certificate is always trusted"], "correct": 1, "explanation": "Correct: B. Add CA cert to /etc/ssl/certs in container or configure kubelet --insecure-skip-tls-verify (not recommended).", "priority": true, "sectionClean": "Objective 5.3 \u2014 Troubleshoot Container Deployment, Registry, and Trusted CA Errors"}, {"section": "Objective 5.4 \u2014 Restart or Recover Failed VKS Upgrades", "question": "VKS cluster upgrade fails halfway through. Control plane updated, 2 of 5 workers updated. Fix?", "options": ["Complete upgrade by manually updating remaining workers", "Delete failed upgrade, restore from pre-upgrade snapshot", "Force delete worker nodes, Cluster Autoscaler provisions new ones", "Upgrade cannot be recovered"], "correct": 1, "explanation": "Correct: B. Rollback safest option. Alternatively, delete stuck nodes manually, wait for Autoscaler to replace them.", "priority": true, "sectionClean": "Objective 5.4 \u2014 Restart or Recover Failed VKS Upgrades"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A VKS cluster has HPA configured (target 70% CPU), but Pods are not scaling up even at 85% CPU. Why?", "options": ["HPA is disabled (must enable)", "Metrics not available (metrics-server not deployed)", "Cluster Autoscaler misconfigured", "Insufficient load, HPA not needed"], "correct": 1, "explanation": "Correct: B. HPA requires metrics-server to collect CPU/memory from kubelets. Deploy if missing.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A customer is planning a VKS deployment for 1000 microservices across 3 geographies. What architecture is critical?", "options": ["Single Supervisor in primary data center, backup in secondary", "Three Supervisors (one per geography), each with zone-aware VKS clusters", "One centralized Supervisor, VKS clusters in all locations", "VKS does not support geographic distribution"], "correct": 1, "explanation": "Correct: B. Three independent Supervisors enable geographic distribution, local resilience, and disaster recovery.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "In VKS, what prevents a Pod from using a private container image from Harbor without explicitly configuring credentials?", "options": ["ImagePullSecret with Harbor credentials must be created and referenced in Pod spec", "Pods automatically authenticate to Harbor via ServiceAccount", "Harbor is always accessible without auth in VKS", "Private images are not supported in VKS"], "correct": 0, "explanation": "Correct: A. ImagePullSecret provides credentials. Pods cannot pull private images without this.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A VKS cluster with HPA configured has pending Pods due to node shortage. What happens?", "options": ["HPA scales Pods further (does nothing to add nodes)", "Cluster Autoscaler adds nodes, then HPA scales Pods", "Both are disabled; manual node scaling required", "Pending Pods are permanently unable to schedule"], "correct": 1, "explanation": "Correct: B. HPA scales Pods, triggering Cluster Autoscaler to add nodes. Takes 5-15 min per node.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "Velero backup of a VKS cluster runs daily. Backup fails with 'No space left on device' in S3. Fix?", "options": ["Reduce backup frequency or reduce retention", "Increase S3 bucket size, implement lifecycle policies to delete old backups", "Discard all backups, restart", "Velero cannot be fixed; use manual snapshots instead"], "correct": 1, "explanation": "Correct: B. Implement S3 lifecycle to auto-delete old backups after TTL (e.g., 30 days).", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A customer upgrades Supervisor from v1.28 to v1.29. During upgrade, the Supervisor API becomes temporarily unavailable. Expected?", "options": ["No, API should always be available during upgrades", "Yes, brief unavailability during control plane VM updates is normal (5-15 min)", "API is never affected by Supervisor upgrades", "Upgrade requires full cluster downtime"], "correct": 1, "explanation": "Correct: B. Supervisor upgrade updates control plane VMs sequentially. Brief API latency during updates is expected.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "In a stateful application deployed on VKS, which object ensures data persistence across Pod restarts?", "options": ["Deployment with ephemeral volumes", "StatefulSet with PersistentVolumeClaim and vSAN storage", "Service with backend Pods", "ConfigMap"], "correct": 1, "explanation": "Correct: B. StatefulSet + PVC maintains identity and persistent storage across pod lifecycle.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "Network Policies in VKS deny all Pod-to-Pod traffic by default unless explicitly allowed. Which CNI enforces this?", "options": ["Flannel", "Antrea (integrated with NSX, enforces policies via Open vSwitch)", "Calico", "No CNI enforces this; all traffic is allowed by default"], "correct": 1, "explanation": "Correct: B. Antrea uses OVS for policy enforcement, provides network policy security posture.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A Supervisor has vSAN capacity of only 50GB remaining. What is the immediate concern for VKS cluster provisioning?", "options": ["VKS cluster creation succeeds, but performance degrades", "vSAN rebuild operations may fail if a node fails (requires 30% free space)", "No concern; vSAN can use all available space", "Only vSAN deduplication is affected"], "correct": 1, "explanation": "Correct: B. vSAN requires 30% free capacity for fault tolerance and rebuild. <30% is critical.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "An organization implements Pod Security Policies to enforce non-root container execution. What new K8s feature replaces this in 1.25+?", "options": ["PodSecurityPolicy is still the standard", "PodSecurityAdmission (new standard, configured via labels)", "SecurityContext only", "Pod security cannot be enforced in newer K8s"], "correct": 1, "explanation": "Correct: B. PodSecurityPolicy deprecated in 1.25+. PodSecurityAdmission is new enforcement mechanism.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "In a multi-zone VKS deployment, how does Cluster Autoscaler distribute new nodes across zones?", "options": ["Random distribution (unpredictable)", "All nodes in primary zone first", "Based on node pool affinity rules and zone capacity", "Autoscaler cannot span zones"], "correct": 2, "explanation": "Correct: C. Node pools define per-zone scaling rules. Autoscaler respects these rules for zone distribution.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "Supervisor API server port is 6443. What service exposes this externally for VKS cluster API access?", "options": ["NSX Tier-1 router", "Avi LoadBalancer or NSX Edge (Layer 4 load balancing)", "Contour ingress controller (Layer 7)", "kube-proxy"], "correct": 1, "explanation": "Correct: B. Avi/NSX Edge provides Layer 4 load balancing for API server connectivity.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A VKS cluster rolling update is in progress. A Pod has PodDisruptionBudget with minAvailable: 3. How many Pods can be evicted during node drain?", "options": ["All Pods are evicted immediately", "Pods can be evicted as long as 3 Pods remain running (minAvailable enforced)", "No Pods are evicted (PDB prevents all drainage)", "PodDisruptionBudget is advisory only"], "correct": 1, "explanation": "Correct: B. PDB prevents eviction if it would violate minAvailable constraint. Ensures availability during updates.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "Supervisor Services like Harbor run where in the Supervisor cluster?", "options": ["On ESXi host management port", "As Pods in Supervisor kube-system namespace", "In vCenter appliance only", "On NSX Manager VM"], "correct": 1, "explanation": "Correct: B. Supervisor Services are standard Kubernetes Pods managed by Supervisor Service Manager.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A Supervisor with NSX VPC mode has 5 vSphere Namespaces. How many NSX VPCs are created?", "options": ["1 VPC shared across all namespaces", "5 VPCs (one dedicated per namespace)", "5 VPCs plus 1 management VPC", "VPCs and namespaces are unrelated"], "correct": 1, "explanation": "Correct: B. NSX VPC mode = one isolated VPC per namespace. Each has independent firewall, SNAT, edge gateway.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "When deploying a VM via VM Service, which object defines the CPU and memory resources?", "options": ["Pod spec (not valid for VMs)", "VM Class (defines resource template)", "Resource quota (limits across namespace)", "StorageClass"], "correct": 1, "explanation": "Correct: B. VM Class pre-defines vCPU/memory/GPU configurations. VM spec references the class.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "An organization requires etcd encryption for Supervisor. Where is this configured?", "options": ["In each Pod spec via securityContext", "Supervisor enablement options (enables by default in VCF 9.0)", "In vSAN Storage Policy", "etcd encryption cannot be enabled in VKS"], "correct": 1, "explanation": "Correct: B. VCF 9.0 Supervisor enables etcd encryption during enablement. Protects cluster secrets.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A Pod cannot reach an external service (DNS name: external.com:443). Network Policy allows egress. What is the most likely issue?", "options": ["Network Policy is blocking (contradicts the problem)", "DNS resolution failing or network routing issue (NSX firewall blocking egress)", "Pod has no internet connectivity by design", "External service is offline"], "correct": 1, "explanation": "Correct: B. Verify DNS resolution (nslookup), check NSX firewall policies, check egress MTU/TSO settings.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "In Helm charts deployed in VKS, what is the purpose of the values.yaml file?", "options": ["Defines the Kubernetes API version", "Provides default configuration values that can be overridden at install time", "Stores Container Registry credentials", "Defines Pod security policies"], "correct": 1, "explanation": "Correct: B. values.yaml provides templated values. 'helm install -f custom-values.yaml' overrides defaults.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "A StatefulSet creates Pods with names like my-app-0, my-app-1, my-app-2. If my-app-1 crashes, what happens?", "options": ["my-app-1 is replaced by my-app-3 (Pod renamed)", "my-app-1 is recreated with the same identity and persistent storage volume", "All Pods are restarted", "StatefulSet does not support recovery"], "correct": 1, "explanation": "Correct: B. StatefulSet maintains stable identity. New Pod gets same name and reattached storage.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}, {"section": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features", "question": "Contour ingress controller in VKS is exposed via which service type?", "options": ["ClusterIP (internal only)", "NodePort (high-numbered port on each node)", "LoadBalancer (Avi/NSX LB assigns external IP)", "Ingress (special service type)"], "correct": 2, "explanation": "Correct: C. Contour is exposed as LoadBalancer service, integrated with Avi/NSX for external access.", "priority": true, "sectionClean": "Objective 5.5 \u2014 Optimize Cluster Performance Using Monitoring and Scaling Features"}];
+
+const SECTION_CATEGORIES = {
+  "General": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (!matched) SECTION_CATEGORIES["General"].push(s);
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>

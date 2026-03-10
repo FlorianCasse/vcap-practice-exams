@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCAP Operations 9.0 — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VCAP Operations 9.0 <span>(3V0-22.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Which self-monitoring metric indicates that a Collector node is falling behind in metric ingestion?", "options": ["Collector throughput < 50 events/sec", "Collector backlog > 10,000 events", "Analytics heap utilization > 50%", "UI response time > 5000ms"], "correct": 1, "explanation": "Correct answer: B. Collector backlog exceeding 10,000 events indicates the collector cannot keep up with incoming metrics and may require horizontal scaling.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "VCF Operations has replaced which legacy VMware monitoring product?", "options": ["vRealize Operations Manager (vROps)", "vRealize Network Insight (vRNI)", "vRealize Log Insight", "vRealize Automation"], "correct": 0, "explanation": "Correct answer: A. VCF Operations is the successor to Aria Operations / vRealize Operations Manager.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "What is the maximum number of objects (VMs, hosts, networks) a single VCF Operations Collector can monitor?", "options": ["50,000 objects", "100,000 objects", "150,000 objects", "200,000 objects"], "correct": 1, "explanation": "Correct answer: B. Each Collector node can handle up to 100,000 objects. Larger deployments require multiple regional collectors.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Configuration Drift detection in VCF 9.0 monitors which of the following? (Select 3)", "options": ["Host firmware versions", "vSAN policy compliance", "DRS rule configurations", "VM shutdown schedules"], "correct": 2, "explanation": "Correct answer: A, B, C are all monitored. Configuration Drift tracks firmware, policies, and rules but not VM shutdown schedules.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.1 \u2013 Day 2 Tasks & Operational Readiness", "question": "Which identity protocol does VCF Identity Broker support that enables passwordless authentication?", "options": ["RADIUS", "LDAP with multi-factor", "FIDO2 (WebAuthn)", "Kerberos"], "correct": 2, "explanation": "Correct answer: C. VCF Identity Broker supports FIDO2/WebAuthn for passwordless, hardware-token authentication.", "priority": true, "sectionClean": "4.1 \u2013 Day 2 Tasks & Operational Readiness"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "What is the recommended capacity headroom for a vSAN cluster to allow for rebuild operations?", "options": ["15% free capacity", "20% free capacity", "30% free capacity", "40% free capacity"], "correct": 2, "explanation": "Correct answer: C. vSAN requires minimum 30% free capacity for rebuild and rebalancing operations.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "When CPU utilization exceeds 80% for a sustained period, what is the typical next step in capacity planning?", "options": ["Immediately add more hosts", "Analyze workload patterns and forecast growth", "Disable DRS optimization", "Reduce VM memory allocations"], "correct": 1, "explanation": "Correct answer: B. Analyze patterns first using 30-day trends and forecasting before expanding.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "What does VMX overhead per vCPU typically consume in memory?", "options": ["30-50 MB", "60-100 MB", "150-200 MB", "250-300 MB"], "correct": 1, "explanation": "Correct answer: B. VMX overhead is typically 60-100 MB per vCPU allocated to a VM.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "In a 10 Gigabit network, what is the approximate usable bandwidth for traffic (accounting for overhead)?", "options": ["10 Gbps", "9.6 Gbps", "8.5 Gbps", "7.0 Gbps"], "correct": 1, "explanation": "Correct answer: B. 10 Gigabit NIC typically provides ~9.6 Gbps usable bandwidth.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.2 \u2013 Capacity Management & Sizing", "question": "Which forecasting method does VCF Operations use for capacity trend analysis?", "options": ["Linear regression", "Exponential smoothing with Holt-Winters", "Simple moving average", "Kalman filtering"], "correct": 1, "explanation": "Correct answer: B. Exponential smoothing with Holt-Winters accounts for seasonal patterns in capacity.", "priority": true, "sectionClean": "4.2 \u2013 Capacity Management & Sizing"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "What is the typical confidence level for a 90-day capacity forecast?", "options": ["95%", "85%", "70%", "60%"], "correct": 2, "explanation": "Correct answer: C. 90-day forecasts typically have ~70% confidence; longer horizons are less reliable.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "Which component of seasonal decomposition represents the underlying long-term change?", "options": ["Base", "Trend", "Seasonal", "Residual"], "correct": 1, "explanation": "Correct answer: B. Trend captures the overall growth direction; seasonal captures repeated patterns.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "When should baseline data be excluded from capacity forecasting calculations?", "options": ["First 7 days", "First 14 days", "First 30 days", "First 60 days"], "correct": 1, "explanation": "Correct answer: B. Initial 14-day window is excluded due to post-deployment artifacts and stabilization.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "Which forecasting method allows you to account for both growth acceleration and deceleration?", "options": ["Linear regression", "Moving average", "Polynomial fitting", "Exponential smoothing"], "correct": 2, "explanation": "Correct answer: C. Polynomial fitting (quadratic, cubic) captures non-linear growth patterns.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.3 \u2013 Forecast Capacity Growth", "question": "What technique is used in VCF Operations to remove backup windows and maintenance spikes from forecast data?", "options": ["Data smoothing", "Anomaly filtering", "Baseline adjustment", "Confidence adjustment"], "correct": 1, "explanation": "Correct answer: B. Anomaly filtering identifies and removes outliers before model training.", "priority": true, "sectionClean": "4.3 \u2013 Forecast Capacity Growth"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "In a chargeback model, how is compute cost typically calculated?", "options": ["Fixed cost per VM regardless of size", "vCPU count \u00d7 CPU rate/hr + Memory GB \u00d7 Memory rate/hr", "Total cluster cost \u00f7 number of VMs", "Annual license cost \u00f7 12 \u00f7 number of VMs"], "correct": 1, "explanation": "Correct answer: B. Consumption-based model charges per vCPU and per GB of allocated memory.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "Storage deduplication and compression savings should be reflected in chargeback by:", "options": ["Ignoring them (charge for full provisioned capacity)", "Applying a reduction factor to storage rates", "Applying an increase factor to reward efficiency", "Removing the VM from chargeback calculations"], "correct": 1, "explanation": "Correct answer: B. Dedup/compression savings reduce chargeback burden; e.g., 50% dedup = 50% cost reduction.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "Which cost model allows different rates for on-demand vs. reserved capacity?", "options": ["Consumption-based", "Tiered model", "Hybrid model", "Custom model"], "correct": 1, "explanation": "Correct answer: B. Tiered models support different rates for on-demand, reserved, and spot-like capacity.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "How are network egress costs typically calculated in chargeback?", "options": ["All traffic is charged equally", "Egress GB \u00d7 rate/GB; ingress is free", "Bidirectional traffic \u00d7 rate/GB", "Flat monthly fee per VM"], "correct": 1, "explanation": "Correct answer: B. Egress (outbound) traffic is charged; ingress is typically free.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.4 \u2013 Cost Management & Chargeback", "question": "In a multi-tenant environment, how are shared license costs allocated?", "options": ["Equally across all tenants", "Per cluster and distributed by consumption percentage", "Only charged to largest tenant", "Amortized across on-demand VMs only"], "correct": 1, "explanation": "Correct answer: B. Shared licenses are allocated per cluster, then distributed to VMs proportional to their consumption.", "priority": true, "sectionClean": "4.4 \u2013 Cost Management & Chargeback"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "What are the four main types of policies in VCF Operations?", "options": ["Capacity, Compliance, Workload, Configuration", "Capacity, Security, Network, Storage", "Compute, Memory, Disk, Network", "Alert, Action, Remediate, Report"], "correct": 0, "explanation": "Correct answer: A. VCF policies cover capacity planning, compliance, workloads, and configurations.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "Which policy action is new in VCF 9.0 for addressing Configuration Drift?", "options": ["Scale cluster automatically", "Auto-remediate deviations from approved config", "Notify administrators via email", "Delete non-compliant objects"], "correct": 1, "explanation": "Correct answer: B. VCF 9.0 introduces auto-remediation for configuration drift.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "What condition duration is typical for a CPU utilization scaling policy to avoid thrashing?", "options": ["30 seconds", "60 seconds", "300 seconds (5 minutes)", "600 seconds (10 minutes)"], "correct": 2, "explanation": "Correct answer: C. 5-minute sustained threshold prevents rapid scaling in response to temporary spikes.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "In VCF Operations Policy Language (VCPL), how would you express 'memory overhead ratio > 2x'?", "options": ["${metrics['memory.overhead']} > 2", "${properties['memorySizeMB']} / ${metrics['memory.active']} > 2.0", "${memory.utilization} > 2x", "memory_overhead_ratio > 2"], "correct": 1, "explanation": "Correct answer: B. VCPL syntax uses ${properties[...]} and ${metrics[...]} with mathematical operators.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.5 \u2013 VCF Policy Management", "question": "Can policies be applied with temporal constraints (e.g., business hours only)?", "options": ["No, policies always apply 24/7", "Yes, via schedule definition", "Only for alert policies", "Only via external scheduler"], "correct": 1, "explanation": "Correct answer: B. VCF Operations supports temporal policy constraints.", "priority": true, "sectionClean": "4.5 \u2013 VCF Policy Management"}, {"section": "4.6 \u2013 Workload Optimization", "question": "At what CPU threshold is a VM typically considered 'idle' for optimization purposes?", "options": ["50 MHz average", "100 MHz peak", "<100 MHz average + <20% memory", ">500 MHz sustained"], "correct": 2, "explanation": "Correct answer: C. Idle VMs show <100MHz CPU and <20% memory utilization sustained.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.6 \u2013 Workload Optimization", "question": "What is the typical right-sizing recommendation based on 30-day peak metrics?", "options": ["Peak usage + 50% overhead", "95th percentile + 10-20% overhead", "Average usage + 100% overhead", "Maximum observed usage exactly"], "correct": 1, "explanation": "Correct answer: B. Right-sizing uses 95th percentile to capture normal peak + small headroom.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.6 \u2013 Workload Optimization", "question": "When does DRS typically trigger a v-motion for load balancing?", "options": ["CPU/Memory imbalance >20%", "CPU/Memory imbalance >50%", "Host CPU >60%", "Any metric >75%"], "correct": 1, "explanation": "Correct answer: B. DRS threshold for v-motion is typically 50% imbalance between cluster nodes.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.6 \u2013 Workload Optimization", "question": "What is the maximum number of powered-on VMs supported in a single DRS cluster?", "options": ["4,000", "8,000", "16,000", "32,000"], "correct": 3, "explanation": "Correct answer: D. DRS clusters support up to 32,000 powered-on VMs maximum.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.6 \u2013 Workload Optimization", "question": "For VDI workloads, what is a typical optimal VM configuration?", "options": ["8 vCPU, 8 GB RAM", "4 vCPU, 4 GB RAM", "2 vCPU, 2 GB RAM", "1 vCPU, 1 GB RAM"], "correct": 1, "explanation": "Correct answer: B. VDI standard is 4 vCPU / 4 GB; reduce to 2/2 if inactive.", "priority": true, "sectionClean": "4.6 \u2013 Workload Optimization"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "Which VCF Operations component enables automatic application topology discovery without agents?", "options": ["APM Collector", "Service Discovery Adapter", "Network Insight", "Kubernetes Adapter"], "correct": 1, "explanation": "Correct answer: B. Service Discovery Adapter auto-maps tiers using vCenter data + network traffic.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "What heuristics does VCF Operations use to identify the Web tier?", "options": ["VM names containing 'web'", "High CPU usage", "Listening on ports 80, 443 + HTTP signatures", "Running Windows OS"], "correct": 2, "explanation": "Correct answer: C. Web tier identified by well-known ports + HTTP protocol signatures.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "What is the typical warm-up period before application anomaly detection becomes reliable?", "options": ["2 days", "7 days", "14 days", "30 days"], "correct": 1, "explanation": "Correct answer: B. 7-day baseline required to establish normal behavior patterns.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "An SLO of 99.9% availability is equivalent to approximately how much downtime per month?", "options": ["4.3 hours", "43 minutes", "8 minutes", "Less than 1 minute"], "correct": 2, "explanation": "Correct answer: C. 99.9% = 0.1% downtime \u00d7 30 days \u00d7 24 hours \u00d7 60 min = ~43 minutes, but approximately 8 minutes typical interpretation.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.7 \u2013 Application Monitoring & Observability", "question": "Which external APM platforms does VCF Operations natively integrate with?", "options": ["Dynatrace, New Relic, DataDog", "Only proprietary vRealize APM", "Manual metrics only", "vCenter Alarms only"], "correct": 0, "explanation": "Correct answer: A. Native connectors available for major APM platforms.", "priority": true, "sectionClean": "4.7 \u2013 Application Monitoring & Observability"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "What is the standard metric naming convention in VCF Operations custom metrics?", "options": ["metric_name_resource", "{category}.{subcategory}.{metricName}", "resourceType-metricName", "metricNameResourceId"], "correct": 1, "explanation": "Correct answer: B. Convention is category.subcategory.metricName, e.g., app.database.connPoolSize.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "Which metric type is appropriate for tracking an application queue depth that accumulates over time?", "options": ["Gauge", "Counter", "Histogram", "Derivative"], "correct": 1, "explanation": "Correct answer: B. Counter for cumulative values; Gauge for point-in-time snapshots.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "Which Management Pack provides monitoring for vSAN health and policy compliance?", "options": ["Storage Management Pack", "vSAN Management Pack", "Disk Management Pack", "SDS Management Pack"], "correct": 1, "explanation": "Correct answer: B. vSAN Management Pack is the built-in pack for vSAN monitoring.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "What is the typical collection interval for real-time custom metrics in VCF Operations?", "options": ["5 seconds", "20 seconds", "1 minute", "5 minutes"], "correct": 1, "explanation": "Correct answer: B. Real-time collection: 20 seconds; standard: 5 minutes; long-term: 1 hour.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.8 \u2013 Management Packs & Custom Metrics", "question": "Management Pack deployment workflow typically includes which of the following steps? (Select 3)", "options": ["Download \u2192 Import \u2192 Activate", "Customize Alerts \u2192 Deploy Dashboards", "Run compliance audit", "Uninstall legacy packs"], "correct": 0, "explanation": "Correct answer: A, B. Typical workflow: Download \u2192 Import \u2192 Activate \u2192 Configure \u2192 Customize \u2192 Deploy.", "priority": true, "sectionClean": "4.8 \u2013 Management Packs & Custom Metrics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "In root cause analysis, what does CPU ready time > 5% typically indicate?", "options": ["VM is idle", "CPU contention / over-commitment", "Memory pressure", "Disk I/O bottleneck"], "correct": 1, "explanation": "Correct answer: B. CPU ready >5% indicates scheduler contention on the host.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "How does VCF Operations correlate changes with performance issues?", "options": ["Manual correlation by administrator", "Change timestamp \u00b1 5-minute window", "Only alerts within 30 minutes", "Configuration hashing"], "correct": 1, "explanation": "Correct answer: B. Changes within \u00b15 minutes of problem are correlated as potential causes.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "What is the standard anomaly detection threshold in VCF Operations?", "options": ["1\u03c3 deviation", "2\u03c3 deviations", "3\u03c3 deviations", "Any deviation >10%"], "correct": 1, "explanation": "Correct answer: B. 2\u03c3 threshold captures ~95% of normal variations; beyond is anomaly.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "When troubleshooting high VM latency, which metric should be checked first?", "options": ["Memory balloon", "vSAN rebuild", "CPU ready time", "Network errors"], "correct": 2, "explanation": "Correct answer: C. CPU ready is most common cause; check memory/storage/network if ready is low.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.9 \u2013 Troubleshooting & Diagnostics", "question": "What is the maximum tolerable time skew between Collector and managed resource for proper metric collection?", "options": ["\u00b130 seconds", "\u00b11 minute", "\u00b15 minutes", "\u00b115 minutes"], "correct": 2, "explanation": "Correct answer: C. Time synchronization >5 min skew causes metric collection issues.", "priority": true, "sectionClean": "4.9 \u2013 Troubleshooting & Diagnostics"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "Which dashboard type is most appropriate for identifying cost allocation by department?", "options": ["Operational dashboard", "Business/Chargeback dashboard", "Troubleshooting dashboard", "Compliance dashboard"], "correct": 1, "explanation": "Correct answer: B. Business dashboards display cost and chargeback metrics by department.", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "What is the real-time refresh interval for VCF Operations dashboards?", "options": ["5 seconds", "20 seconds", "1 minute", "5 minutes"], "correct": 1, "explanation": "Correct answer: B. Real-time dashboards update every 20 seconds (metric collection interval).", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "In a dashboard heatmap, what does red coloring typically represent?", "options": ["Warning (70-80% threshold)", "Critical (>85% threshold) or active alert", "Informational", "Offline resource"], "correct": 1, "explanation": "Correct answer: B. Red indicates critical status or active high-severity alert.", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "How would you schedule a capacity forecast report to be emailed every Friday at 9 AM?", "options": ["schedule: '9 * * * 5'", "schedule: '0 9 * * 5'", "schedule: 'Friday 9:00'", "schedule: 'weekly Friday 0900'"], "correct": 1, "explanation": "Correct answer: B. Cron format: minute hour day month dayOfWeek. 0 9 * * 5 = 9 AM Friday.", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.10 \u2013 Dashboards, Views & Reports", "question": "What is the default report retention period in VCF Operations?", "options": ["30 days", "90 days", "6 months", "1 year"], "correct": 1, "explanation": "Correct answer: B. Default 90-day retention; configurable up to 1 year.", "priority": true, "sectionClean": "4.10 \u2013 Dashboards, Views & Reports"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "What is a Super Metric in VCF Operations?", "options": ["A real-time metric from a Collector", "A derived metric calculated from base metrics using formulas", "A metric aggregated from multiple clusters", "A management pack metric"], "correct": 1, "explanation": "Correct answer: B. Super Metrics are calculated from base metrics using JavaScript-like formulas.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "Which function would you use to calculate the 95th percentile of response time?", "options": ["AVG(metric)", "MAX(metric)", "PERCENTILE(metric, 95)", "STDDEV(metric)"], "correct": 2, "explanation": "Correct answer: C. PERCENTILE(metric, 95) calculates 95th percentile value.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "How many levels deep can Super Metrics reference other Super Metrics?", "options": ["3 levels", "5 levels", "10 levels", "Unlimited"], "correct": 2, "explanation": "Correct answer: C. Maximum 10 levels of Super Metric nesting to prevent circular references.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "What formula would calculate memory efficiency percentage?", "options": ["(ActiveMemory / ConfiguredMemory) * 100", "(ConfiguredMemory - ActiveMemory) / ConfiguredMemory", "ActiveMemory / (ConfiguredMemory * 100)", "ConfiguredMemory - ActiveMemory * 100"], "correct": 0, "explanation": "Correct answer: A. Memory Efficiency = (Active / Configured) * 100.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.11 \u2013 Super Metrics & Formula Expressions", "question": "In formula expressions, which function calculates the moving average over a time window?", "options": ["AVG(metric)", "AVG(metric, period='1h', rolling=true)", "MOVING_AVG(metric, 1h)", "TREND(metric)"], "correct": 1, "explanation": "Correct answer: B. Use AVG with period and rolling=true for moving average.", "priority": true, "sectionClean": "4.11 \u2013 Super Metrics & Formula Expressions"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "What is the default log retention period in VCF Operations database?", "options": ["7 days", "14 days", "30 days", "90 days"], "correct": 2, "explanation": "Correct answer: C. 30-day default in-database; compressed archive to 1 year.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "What protocol and port are standard for VCF Operations syslog ingestion?", "options": ["UDP:515", "TCP:514", "TCP:601", "UDP:5140"], "correct": 1, "explanation": "Correct answer: B. Standard syslog: TCP or UDP port 514.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "How quickly are logs searchable after ingestion?", "options": ["30 seconds", "2 minutes", "5 minutes", "15 minutes"], "correct": 2, "explanation": "Correct answer: C. Logs indexed and searchable within 5 minutes of ingestion.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "Which log pattern would detect vSAN rebuild failures?", "options": ["vsan.*rebuild.*failed", "vsan rebuild error", "ERROR vsan rebuild", "vsan_rebuild_fail"], "correct": 0, "explanation": "Correct answer: A. Regex pattern: vsan.*rebuild.*failed matches variations of the error.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.12 \u2013 Log Monitoring & Analysis", "question": "When correlating logs with metrics, what is the typical matching time window?", "options": ["\u00b130 seconds", "\u00b12 minutes", "\u00b15 minutes", "\u00b115 minutes"], "correct": 2, "explanation": "Correct answer: C. \u00b15-minute window aligns log events with metric anomalies.", "priority": true, "sectionClean": "4.12 \u2013 Log Monitoring & Analysis"}, {"section": "4.13 \u2013 Network Monitoring", "question": "At what network utilization percentage is a critical alert typically triggered?", "options": ["70%", "80%", "90%", "95%"], "correct": 3, "explanation": "Correct answer: D. Critical threshold typically 95%; warning at 80%.", "priority": true, "sectionClean": "4.13 \u2013 Network Monitoring"}, {"section": "4.13 \u2013 Network Monitoring", "question": "What is an acceptable packet loss threshold for LAN links?", "options": [">0.1%", "<0.1%", "<1%", "<5%"], "correct": 1, "explanation": "Correct answer: B. Network links should have <0.1% packet loss; >0.1% indicates problems.", "priority": true, "sectionClean": "4.13 \u2013 Network Monitoring"}, {"section": "4.13 \u2013 Network Monitoring", "question": "Which NSX monitoring feature shows policy violations per VM?", "options": ["VXLAN tunnel monitoring", "Flow Policy Analysis", "NSX edge health", "Distributed routing"], "correct": 1, "explanation": "Correct answer: B. NSX Flow Policy Analysis shows which VMs violate firewall/micro-seg rules.", "priority": true, "sectionClean": "4.13 \u2013 Network Monitoring"}, {"section": "4.13 \u2013 Network Monitoring", "question": "What does IPFIX provide for network monitoring?", "options": ["Physical NIC statistics", "Per-flow telemetry (5-tuple + byte/packet counts)", "Only VLAN information", "vSwitch port statistics only"], "correct": 1, "explanation": "Correct answer: B. IPFIX provides detailed per-flow data (src/dst IP, ports, protocol, bytes/packets).", "priority": true, "sectionClean": "4.13 \u2013 Network Monitoring"}, {"section": "4.13 \u2013 Network Monitoring", "question": "Typical East-West VM-to-VM traffic represents what percentage of cluster bandwidth?", "options": ["10-20%", "25-35%", "40-60%", "70-90%"], "correct": 2, "explanation": "Correct answer: C. East-West traffic typically 40-60% of total cluster bandwidth.", "priority": true, "sectionClean": "4.13 \u2013 Network Monitoring"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "What is the primary difference between vSphere 8 PSC and VCF 9 Fleet Management?", "options": ["PSC is for vSphere only; Fleet is for entire VCF", "Fleet adds passwordless authentication and certificate automation", "Fleet is distributed; PSC is centralized", "There is no difference"], "correct": 1, "explanation": "Correct answer: B. Fleet Management adds passwordless (FIDO2), certificate automation, and unified governance.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "Which passwordless authentication method does VCF Identity Broker support?", "options": ["RADIUS", "TOTP + Email OTP", "FIDO2/WebAuthn hardware keys", "All of the above"], "correct": 3, "explanation": "Correct answer: D. Fleet supports FIDO2, TOTP, email OTP, and SMS OTP.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "What is the default password rotation policy in VCF Fleet Management?", "options": ["Every 30 days", "Every 60 days", "Every 90 days", "Every 180 days"], "correct": 2, "explanation": "Correct answer: C. Default 90-day rotation; configurable per policy.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "How many failed login attempts trigger account lockout in default Fleet policy?", "options": ["3 attempts", "5 attempts", "10 attempts", "15 attempts"], "correct": 1, "explanation": "Correct answer: B. Default 5-attempt lockout; lockout duration 15 minutes.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.14 \u2013 Fleet Management (New in VCF 9)", "question": "Which SAML feature allows VCF Identity Broker to federate with external identity providers?", "options": ["SAML Assertions", "SAML Single Sign-On (SSO)", "SAML Bindings", "SAML Metadata exchange"], "correct": 1, "explanation": "Correct answer: B. SAML SSO enables federation with external IdP for unified authentication.", "priority": true, "sectionClean": "4.14 \u2013 Fleet Management (New in VCF 9)"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "How is vSphere Foundation licensing typically allocated in VCF?", "options": ["Per VM", "Per physical CPU socket", "Per cluster", "Per core (logical)"], "correct": 1, "explanation": "Correct answer: B. Per-socket licensing: count physical CPU sockets, not logical cores.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "Is NSX 9 available as a standalone product or only through VCF BOM?", "options": ["Standalone only", "Only through VCF Bill of Materials", "Both options available", "As open-source only"], "correct": 1, "explanation": "Correct answer: B. NSX 9 is ONLY available through VCF Bill of Materials.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "What is the typical grace period for license expiration in VCF?", "options": ["15 days", "30 days", "60 days", "90 days"], "correct": 2, "explanation": "Correct answer: C. 60-day grace period for license overage before enforcement.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "For vSAN per-capacity licensing, what is counted toward the license?", "options": ["Only primary copies of data", "Primary + all replicas and mirrors", "Only deduped/compressed data", "Only physical disk usage"], "correct": 1, "explanation": "Correct answer: B. Capacity licensing includes all replicas/mirrors in the calculation.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.15 \u2013 Licensing & Entitlements", "question": "What is the minimum core requirement for vSAN licensing in VCF?", "options": ["8 cores per cluster", "16 cores per cluster", "32 cores per cluster", "64 cores per cluster"], "correct": 1, "explanation": "Correct answer: B. Minimum 16 cores (physical) per vSAN cluster.", "priority": true, "sectionClean": "4.15 \u2013 Licensing & Entitlements"}, {"section": "4.16 \u2013 Security & Compliance", "question": "After how many failed login attempts is an account locked in VCF Fleet Management?", "options": ["3 attempts", "5 attempts", "10 attempts", "15 attempts"], "correct": 1, "explanation": "Correct answer: B. Default 5-attempt lockout triggers 15-minute lock.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What is the minimum TLS version enforced in VCF Operations for compliance?", "options": ["TLS 1.0", "TLS 1.1", "TLS 1.2+", "TLS 2.0"], "correct": 2, "explanation": "Correct answer: C. TLS 1.2 or higher required; older versions disabled.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "How often does VCF Operations perform database integrity checks for tamper detection?", "options": ["Every 6 hours", "Daily", "Weekly", "Monthly"], "correct": 1, "explanation": "Correct answer: B. Database integrity checks run daily; alerts if tampering detected.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which compliance framework requires 6-year log retention in VCF?", "options": ["SOC 2", "ISO 27001", "HIPAA", "PCI-DSS"], "correct": 2, "explanation": "Correct answer: C. HIPAA requires 6-year retention; VCF supports up to 7-year.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What encryption standard does VCF use for data at rest in vSAN?", "options": ["AES-128", "AES-192", "AES-256", "Triple-DES"], "correct": 2, "explanation": "Correct answer: C. AES-256 encryption for vSAN data at rest.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You have vertically scaled up a VCF Operations collector node by adding 8 additional vCPUs. What MUST you do next?", "options": ["Wait 24 hours for automatic discovery", "Trigger Inventory Sync in Cluster Management", "Restart the collector node", "Update the collector group configuration"], "correct": 1, "explanation": "Correct answer: B. Trigger Inventory Sync to refresh capacity. Automatic discovery does not occur without explicit sync.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What is the key difference between horizontal and vertical scaling in VCF Operations?", "options": ["Horizontal = upgrade vSAN; Vertical = upgrade ESXi", "Horizontal = add new cluster nodes; Vertical = add resources to existing nodes", "Horizontal = faster; Vertical = more reliable", "Both terms refer to the same operation"], "correct": 1, "explanation": "Correct answer: B. Horizontal scaling adds new nodes; vertical scaling adds resources (CPU/memory) to existing nodes.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A cluster shows CPU capacity as '768 GHz' instead of '96 vCores'. Which capacity model is active?", "options": ["Allocation model (frequency-based)", "Demand model (frequency-based)", "Hybrid model", "Legacy model (deprecated)"], "correct": 1, "explanation": "Correct answer: B. Demand model uses GHz (frequency); Allocation model displays vCore counts.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to calculate capacity based on what VMs are actually consuming, not just configured resources. Which model should you enable?", "options": ["Allocation model", "Demand model", "Predictive model", "Baseline model"], "correct": 1, "explanation": "Correct answer: B. Demand model reflects actual usage and consumption.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To see vCore-based capacity reporting in VCF Operations, which model must be enabled on the cluster?", "options": ["Demand model", "Allocation model", "Real-time model", "Forecast model"], "correct": 1, "explanation": "Correct answer: B. Allocation model reports capacity in vCore units.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to automatically delete VM snapshots older than 2 weeks on weekends. Which VCF Operations feature do you use?", "options": ["Policy Templates", "Automation Central", "Scheduled Reports", "Alert Actions"], "correct": 1, "explanation": "Correct answer: B. Automation Central orchestrates scheduled tasks and automated actions.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "In Automation Central, what type of trigger would you use to automatically resize undersized VMs based on memory utilization?", "options": ["Time-based trigger (weekly schedule)", "Metric threshold trigger (memory > 85% for 5 days)", "Event-based trigger (VM power-on)", "Manual trigger only"], "correct": 1, "explanation": "Correct answer: B. Metric threshold trigger fires when memory utilization exceeds sustained threshold.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which Automation Central action removes old snapshots from vSAN datastores?", "options": ["Delete Snapshot (vCenter task)", "Consolidate VM Disks", "Reclaim Datastore Space", "Purge Snapshot Queue"], "correct": 0, "explanation": "Correct answer: A. Delete Snapshot is a vCenter task triggered via Automation Central actions.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to plan VM migration from vSphere to VCF without actually moving VMs. Which feature allows this simulation?", "options": ["Capacity Planning Report", "What-If Scenarios", "Committed Scenarios", "Forecast Models"], "correct": 1, "explanation": "Correct answer: B. What-If Scenarios simulate VM placement without actual migration.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "How do Committed Scenarios differ from What-If Scenarios?", "options": ["Committed reserve capacity; What-If simulates migration placement", "What-If is faster than Committed", "Committed is for vSAN; What-If is for vSphere", "They are identical features with different names"], "correct": 0, "explanation": "Correct answer: A. Committed Scenarios reserve future capacity; What-If simulates workload placement.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To enable cost tracking in VCF Operations, you configure the Pricing Card in which location?", "options": ["Administration > Billing", "Policy > Edit > Cost/Price Settings", "Capacity > Cost Analysis", "Reports > Cost Chargeback"], "correct": 1, "explanation": "Correct answer: B. Pricing Card is configured within Policy settings.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which rate factor in Pricing Card represents the monthly cost per GHz of CPU?", "options": ["CPU utilization rate", "CPU frequency rate", "CPU rate ($/GHz/month)", "Compute rate per vCore"], "correct": 2, "explanation": "Correct answer: C. CPU rate is configured as $/GHz/month.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You need to ensure all Windows VMs run on cluster-A due to licensing compliance. Which intent type do you configure?", "options": ["Operational Intent", "Business Intent", "Compliance Intent", "Licensing Intent"], "correct": 1, "explanation": "Correct answer: B. Business Intent enforces business criteria like licensing and compliance.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Operational Intent primarily focuses on which objective?", "options": ["Compliance and licensing constraints", "Balancing workloads and avoiding cluster hotspots", "Cost optimization", "Performance guarantees"], "correct": 1, "explanation": "Correct answer: B. Operational Intent balances workloads across clusters.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "A vSAN cluster shows: Total Capacity = 2000 GB, Used = 1200 GB, Reserved (N+1) = 400 GB. What is the headroom percentage?", "options": ["10%", "20%", "30%", "40%"], "correct": 1, "explanation": "Correct answer: B. Headroom = (2000 - 1200 - 400) / 2000 = 20%.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What is the minimum recommended headroom percentage for vSAN clusters to allow rebuild capacity?", "options": ["10-15%", "20-25%", "30% minimum", "50% minimum"], "correct": 2, "explanation": "Correct answer: C. vSAN requires 30% minimum headroom for rebuilds.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "N+1 host failure tolerance means how many hosts can fail without losing availability?", "options": ["All hosts can fail", "At least one host can fail", "At most one host can fail without data loss", "It depends on cluster size"], "correct": 2, "explanation": "Correct answer: C. N+1 allows one host failure while maintaining availability.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to create a group for NSX Tier-0 Edges. What object type should you select?", "options": ["Transport Edge", "NSX Edge Cluster", "Virtual Machine", "Network Interface"], "correct": 2, "explanation": "Correct answer: C. NSX Edges run as VMs; select 'Virtual Machine' object type.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which Custom Group type automatically includes objects based on matching tags?", "options": ["Static Group", "Dynamic Group", "Template Group", "Automatic Group"], "correct": 1, "explanation": "Correct answer: B. Dynamic Groups use tag-based criteria.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To tag NSX Edges for custom grouping in VCF Operations, what tag naming convention should you use?", "options": ["nsx-edge-tier0", "nsx:edge:tier0", "nsxedge_t0", "Any custom name; no convention required"], "correct": 1, "explanation": "Correct answer: B. Use nsx:edge:tier0 (colon-separated) for NSX tagging convention.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To enable auto-discovery of running services on VMs in VCF Operations, where do you navigate?", "options": ["Environment > Service Catalog", "Administration > Management > Service Discovery", "Policy > Monitoring > Service Detection", "Dashboards > Service Monitoring"], "correct": 1, "explanation": "Correct answer: B. Administration > Management > Service Discovery.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What is the key difference between Managed Telegraf and Opensource Telegraf?", "options": ["Managed is faster; Opensource is more secure", "Managed is deployed by VCF and auto-managed; Opensource is user-installed and user-managed", "Managed only works on Linux; Opensource on Windows", "Both are identical; naming is different"], "correct": 1, "explanation": "Correct answer: B. Managed Telegraf is VCF-deployed; Opensource is user-managed.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "In Business Applications, which tier would you assign to an Apache web server?", "options": ["Application Tier", "Database Tier", "Web Tier", "Infrastructure Tier"], "correct": 2, "explanation": "Correct answer: C. Apache is a Web Tier component.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You create a new Collector Group. Which objects are automatically moved to it?", "options": ["All existing objects and agents", "Only newly discovered objects matching group rules", "Only agents; objects remain unchanged", "No objects; collector group is for organization only"], "correct": 1, "explanation": "Correct answer: B. Only newly discovered objects are auto-assigned; existing objects require manual reassignment.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To move an existing agent from Collector A to a new Collector Group B, what do you do?", "options": ["Wait for automatic discovery", "Create a new Collector Group B rule", "Manually reassign the object via right-click > move to group", "Redeploy the agent on the VM"], "correct": 2, "explanation": "Correct answer: C. Manual reassignment is required.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To configure webhooks in VCF Operations for external system integration, where do you start?", "options": ["Policy > Alerting > Webhooks", "Administration > Outbound Settings > Add > Webhook", "Notifications > External Systems", "Integration > Third-party Plugins"], "correct": 1, "explanation": "Correct answer: B. Administration > Outbound Settings is the WLP configuration location.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which authentication method does WLP support for secure webhook delivery?", "options": ["Basic Auth and Token-based", "OAuth 2.0 only", "Mutual TLS only", "No authentication required"], "correct": 0, "explanation": "Correct answer: A. WLP supports Basic Auth (username:password) and Token-based (bearer tokens).", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to send VCF Operations alerts to a Slack channel. Which outbound plugin do you use?", "options": ["Email Plugin", "Webhook Notification Plugin (WLP)", "SNMP Trap Plugin", "Syslog Plugin"], "correct": 1, "explanation": "Correct answer: B. WLP can POST to Slack's incoming webhook URLs.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What is the CRITICAL requirement to enable Log Assist in VCF Operations?", "options": ["Enterprise license (not Standard license)", "Active VMware Support Account", "vSAN license with 5-year subscription", "NSX Advanced Load Balancer"], "correct": 1, "explanation": "Correct answer: B. Active VMware Support Account is mandatory for Log Assist.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "How long is the recommended log retention period for Log Assist to function properly?", "options": ["7 days minimum", "14 days minimum", "30 days minimum", "90 days minimum"], "correct": 2, "explanation": "Correct answer: C. 30 days minimum recommended storage for log retention.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To edit an existing dashboard in VCF Operations, what action do you perform?", "options": ["Dashboard > select > Edit > Add Widget", "Administration > Dashboards > Manage", "Reports > Dashboard Templates", "Dashboard > Clone > Customize"], "correct": 0, "explanation": "Correct answer: A. Dashboard > select > Edit > Add Widget (or modify existing).", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "You want to email a capacity forecast report weekly to your team. Where do you configure this?", "options": ["Policy > Reports > Schedule", "Reports > New > select template > Schedule > recipients (email)", "Dashboard > Automation > Email Notify", "Administration > Notifications > Report Distribution"], "correct": 1, "explanation": "Correct answer: B. Reports > New > configure schedule and recipients.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which report delivery method is supported for automated report distribution?", "options": ["Email only", "SFTP only", "Email and SFTP", "HTTP POST only"], "correct": 2, "explanation": "Correct answer: C. Both email and SFTP are supported for report delivery.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To count all oversized VMs across ALL clusters in a datacenter, which depth value should you use?", "options": ["depth=0", "depth=1", "depth=2", "depth=3"], "correct": 2, "explanation": "Correct answer: C. depth=2 traverses datacenter \u2192 clusters \u2192 VMs.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What does depth=1 represent in a Super Metric formula on a cluster object?", "options": ["The cluster itself only", "The cluster + one level (hosts in the cluster)", "All VMs in the cluster", "The datacenter containing the cluster"], "correct": 1, "explanation": "Correct answer: B. depth=1 includes one level of children (hosts under cluster).", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "In the formula count(${this, metric=cpu|total, depth=2}), what will be counted?", "options": ["Total CPU of the current object", "Total CPU of current + children (depth=1)", "Total CPU of current + 2 levels of children", "Total CPU of all objects in the VCF instance"], "correct": 2, "explanation": "Correct answer: C. depth=2 aggregates across 2 levels of hierarchy.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To configure Aria Logs agent for non-SSL communication, which config file do you modify?", "options": ["agent.conf", "telegraf.ini", "liagent.ini", "logagent.properties"], "correct": 2, "explanation": "Correct answer: C. liagent.ini is the Aria Logs agent configuration file.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which port number is used for syslog forwarding in Aria Operations for Logs (non-SSL)?", "options": ["443", "514", "9543 (API)", "1514"], "correct": 1, "explanation": "Correct answer: B. Port 514 is standard syslog; 9543 is for API.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "What search syntax would you use in Aria Logs to find all ERROR-level messages related to 'vSAN'?", "options": ["level:ERROR AND message:vSAN", "ERROR | grep vSAN", "field='ERROR' AND topic='vSAN'", "error AND vsan"], "correct": 0, "explanation": "Correct answer: A. Structured query uses field:value syntax with AND/OR operators.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Configuration drift monitoring detects which type of change on a host?", "options": ["VM creation/deletion only", "Firmware version, vSAN policy, NSX configuration changes", "Storage IOPS changes only", "Licensing changes only"], "correct": 1, "explanation": "Correct answer: B. Drift detects firmware, vSAN, NSX, affinity rule changes.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which compliance benchmark is the DEFAULT in VCF Operations?", "options": ["DISA STIG only", "CIS Benchmarks only", "VMware Security Configuration Guide (SCG)", "NIST Cybersecurity Framework"], "correct": 2, "explanation": "Correct answer: C. VMware SCG is the default compliance baseline.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "Which component in VCF does NOT allow manual root password change?", "options": ["ESXi hosts", "vCenter Server", "SDDC Manager", "NSX Manager"], "correct": 2, "explanation": "Correct answer: C. SDDC Manager password is managed by VCF Password Manager; no manual root change.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}, {"section": "4.16 \u2013 Security & Compliance", "question": "To configure Microsoft Azure AD as an identity provider in VCF, which protocol do you use?", "options": ["OAuth 2.0", "SAML 2.0", "Kerberos", "LDAP"], "correct": 1, "explanation": "Correct answer: B. SAML 2.0 is used for Azure AD/Entra ID integration.", "priority": true, "sectionClean": "4.16 \u2013 Security & Compliance"}];
+
+const SECTION_CATEGORIES = {
+  "Section 4": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (s.startsWith("4.") || s.startsWith("Section 4") || s.startsWith("SECTION 4") || s.startsWith("Objective 4")) SECTION_CATEGORIES["Section 4"].push(s);
+  else { let matched = false; for (const k in SECTION_CATEGORIES) { if (SECTION_CATEGORIES[k].length > 0) { matched = true; } } if (!matched) { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; SECTION_CATEGORIES[firstKey].push(s); } }
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+</body>
+</html>
