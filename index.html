@@ -40,6 +40,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(-1px);
         }
+        @media (max-width: 768px) {
+            body { margin: 30px auto; padding: 0 16px; }
+            h1 { font-size: 1.5rem; }
+            a { padding: 18px 20px; font-size: 1rem; }
+        }
+        @media (hover: none) and (pointer: coarse) {
+            a { padding: 18px 20px; -webkit-tap-highlight-color: transparent; }
+            a:hover { transform: none; }
+        }
     </style>
 </head>
 <body>
