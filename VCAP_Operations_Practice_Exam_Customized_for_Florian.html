@@ -217,8 +217,8 @@ ALL_QUESTIONS.forEach((q, i) => {
   const s = q.sectionClean || q.section;
   let matched = false;
     if (s.startsWith("4.") || s.startsWith("Section 4") || s.startsWith("SECTION 4") || s.startsWith("Objective 4")) SECTION_CATEGORIES["Section 4"].push(s);
-  else SECTION_CATEGORIES["Appendix & Additional Topics"].push(s);
-  else { let matched = false; for (const k in SECTION_CATEGORIES) { if (SECTION_CATEGORIES[k].length > 0) { matched = true; } } if (!matched) { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; SECTION_CATEGORIES[firstKey].push(s); } }
+  else if (s.indexOf("Appendix") >= 0 || s.indexOf("Additional") >= 0 || s.indexOf("Exam Feedback") >= 0 || s.indexOf("Cross-Domain") >= 0) SECTION_CATEGORIES["Appendix & Additional Topics"].push(s);
+  else { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; if (firstKey) SECTION_CATEGORIES[firstKey].push(s); }
 
 });
 
