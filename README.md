@@ -2,6 +2,10 @@
 
 Interactive browser-based practice exams for VMware Certified Advanced Professional (VCAP) certifications.
 
+👉 **Live site: https://floriancasse.github.io/vcap-practice-exams/**
+
+The repository is published via GitHub Pages. The landing page (`index.html`) lists every exam and links to it — just open the live site and pick an exam, no download required.
+
 ## Exams
 
 - **Automation** (3V0-21.25) - VCAP Automation 9.0
@@ -25,4 +29,7 @@ Some exams include customized versions with priority/strength tagging per sectio
 
 ## Usage
 
-Open `index.html` in any browser, or host the files on any static web server. No build step or dependencies required — everything is self-contained HTML/CSS/JS.
+- **Online (recommended):** open https://floriancasse.github.io/vcap-practice-exams/ and choose an exam from the home page.
+- **Local:** clone the repo and open `index.html` in any browser — it is the same landing page that lists all exams. You can also open any individual `VCAP_*.html` file directly.
+
+The site is hosted on GitHub Pages from this repository. No build step or dependencies required — everything is self-contained HTML/CSS/JS.
