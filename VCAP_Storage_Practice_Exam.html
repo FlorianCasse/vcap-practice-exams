@@ -146,6 +146,8 @@
   .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
   .priority-dot.blue { background: var(--accent); }
 
+.option.multi .option-letter { border-radius: 4px; }
+.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -354,7 +356,7 @@ function updateDot(i) {
   if (i === currentIndex) dot.classList.add('current');
   const qid = examQuestions[i].id;
   if (revealed[qid] !== undefined) {
-    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
   } else if (answers[qid] !== undefined) {
     dot.classList.add('answered');
   }
@@ -369,13 +371,13 @@ function renderQuestion() {
   const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   let optionsHtml = q.options.map((opt, i) => {
-    let cls = 'option';
+    let cls = 'option' + (isMulti(q) ? ' multi' : '');
     if (isRevealed) {
       cls += ' disabled';
-      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
-      else if (i === selectedOpt) cls += ' incorrect';
+      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
     } else {
-      if (selectedOpt === i) cls += ' selected';
+      if (optionIsSelected(q, i)) cls += ' selected';
     }
     return `<div class="${cls}" onclick="selectOption(${i})">
       <div class="option-letter">${letters[i]}</div>
@@ -384,7 +386,7 @@ function renderQuestion() {
   }).join('');
   let explanationHtml = '';
   if (isRevealed) {
-    const isCorrect = selectedOpt === q.correct;
+    const isCorrect = answerIsCorrect(q);
     explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
       <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
       ${q.explanation}
@@ -399,8 +401,9 @@ function renderQuestion() {
         </span>
       </div>
       <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Plusieurs réponses possibles — cochez toutes les bonnes</div>' : ''}
       <div class="options">${optionsHtml}</div>
-      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
         <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
       </div>` : ''}
       ${explanationHtml}
@@ -413,16 +416,48 @@ function renderQuestion() {
   updateRunningScore();
 }
 
+function isMulti(q) { return Array.isArray(q.correct); }
+
+function optionIsCorrect(q, i) {
+  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
+}
+
+function optionIsSelected(q, i) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
+}
+
+function answerIsCorrect(q) {
+  const a = answers[q.id];
+  if (isMulti(q)) {
+    if (!Array.isArray(a)) return false;
+    const sel = [...new Set(a)].sort((x, y) => x - y);
+    const cor = [...q.correct].sort((x, y) => x - y);
+    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
+  }
+  return a === q.correct;
+}
+
+function hasSelection(q) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
+}
+
 function selectOption(i) {
   const q = examQuestions[currentIndex];
   if (revealed[q.id] !== undefined) return;
-  answers[q.id] = i;
+  if (isMulti(q)) {
+    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
+    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
+  } else {
+    answers[q.id] = i;
+  }
   renderQuestion();
 }
 
 function checkAnswer() {
   const q = examQuestions[currentIndex];
-  if (answers[q.id] === undefined) return;
+  if (!hasSelection(q)) return;
   revealed[q.id] = true;
   renderQuestion();
   const answeredEl = document.getElementById('answeredCount');
@@ -432,7 +467,7 @@ function checkAnswer() {
 function updateRunningScore() {
   const total = Object.keys(revealed).length;
   if (total === 0) return;
-  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
   const pct = Math.round(correct / total * 100);
   const el = document.getElementById('liveScore');
   if (el) {
@@ -456,7 +491,7 @@ function showResults() {
   document.getElementById('examScreen').classList.add('hidden');
   document.getElementById('resultsScreen').classList.remove('hidden');
   const total = examQuestions.length;
-  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
   const pct = Math.round(correct / total * 100);
   const pass = pct >= 70;
   document.getElementById('scoreBig').textContent = pct + '%';
@@ -467,7 +502,7 @@ function showResults() {
     const s = q.sectionClean || q.section;
     if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
     sectionScores[s].total++;
-    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+    if (answerIsCorrect(q)) sectionScores[s].correct++;
   });
   const breakdown = document.getElementById('scoreBreakdown');
   breakdown.innerHTML = '';
@@ -492,17 +527,17 @@ function filterReview(mode) {
   container.innerHTML = '';
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   let filtered = examQuestions;
-  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
-  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
+  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
   document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
   filtered.forEach((q, idx) => {
-    const isCorrect = answers[q.id] === q.correct;
+    const isCorrect = answerIsCorrect(q);
     const isPriority = q.priority;
     const cleanSection = q.sectionClean || q.section;
     let optionsHtml = q.options.map((opt, i) => {
-      let cls = 'option disabled';
-      if (i === q.correct) cls += ' correct';
-      else if (i === answers[q.id]) cls += ' incorrect';
+      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
+      if (optionIsCorrect(q, i)) cls += ' correct';
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
       return `<div class="${cls}">
         <div class="option-letter">${letters[i]}</div>
         <div class="option-text">${opt}</div>
@@ -516,6 +551,7 @@ function filterReview(mode) {
         </span>
       </div>
       <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Plusieurs réponses possibles — cochez toutes les bonnes</div>' : ''}
       <div class="options">${optionsHtml}</div>
       <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
         <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
@@ -531,7 +567,7 @@ function backToResults() {
 }
 
 function retryWrong() {
-  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
   if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
   examQuestions = wrongQuestions;
   for (let i = examQuestions.length - 1; i > 0; i--) {
