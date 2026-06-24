@@ -295,11 +295,10 @@ function buildSetup() {
       const item = document.createElement('div');
       item.className = 'section-item selected';
       item.onclick = (e) => {
-        if (e.target.tagName === 'INPUT') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
         const cb = item.querySelector('input');
         cb.checked = !cb.checked;
-        item.classList.toggle('selected', cb.checked);
-        updateCount();
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
       };
       item.innerHTML = `
         <input type="checkbox" id="${id}" data-section="${s}" checked>
@@ -307,6 +306,11 @@ function buildSetup() {
         <label for="${id}">${cleanName}</label>
         <span class="count">${count}q</span>
       `;
+      const cbEl = item.querySelector('input');
+      cbEl.addEventListener('change', () => {
+        item.classList.toggle('selected', cbEl.checked);
+        updateCount();
+      });
       list.appendChild(item);
     });
     group.appendChild(list);
