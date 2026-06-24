@@ -146,13 +146,55 @@
   .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
   .priority-dot.blue { background: var(--accent); }
 
-.option.multi .option-letter { border-radius: 4px; }
-.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
 </style>
 </head>
 <body>
 
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;font-family:'Titillium','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or VMware. 100% AI-generated practice content.
+</div>
 <div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
   <h1>VCAP Networking 9.0 <span>(3V0-25.25)</span> — Practice Exam</h1>
   <div class="header-stats" id="headerStats">
     
@@ -361,7 +403,7 @@ function updateDot(i) {
   if (i === currentIndex) dot.classList.add('current');
   const qid = examQuestions[i].id;
   if (revealed[qid] !== undefined) {
-    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
   } else if (answers[qid] !== undefined) {
     dot.classList.add('answered');
   }
@@ -376,13 +418,13 @@ function renderQuestion() {
   const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   let optionsHtml = q.options.map((opt, i) => {
-    let cls = 'option' + (isMulti(q) ? ' multi' : '');
+    let cls = 'option';
     if (isRevealed) {
       cls += ' disabled';
-      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
-      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
     } else {
-      if (optionIsSelected(q, i)) cls += ' selected';
+      if (selectedOpt === i) cls += ' selected';
     }
     return `<div class="${cls}" onclick="selectOption(${i})">
       <div class="option-letter">${letters[i]}</div>
@@ -391,7 +433,7 @@ function renderQuestion() {
   }).join('');
   let explanationHtml = '';
   if (isRevealed) {
-    const isCorrect = answerIsCorrect(q);
+    const isCorrect = selectedOpt === q.correct;
     explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
       <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
       ${q.explanation}
@@ -406,9 +448,8 @@ function renderQuestion() {
         </span>
       </div>
       <div class="question-text">${q.question}</div>
-      ${isMulti(q) ? '<div class="multi-hint">☑ Plusieurs réponses possibles — cochez toutes les bonnes</div>' : ''}
       <div class="options">${optionsHtml}</div>
-      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
         <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
       </div>` : ''}
       ${explanationHtml}
@@ -421,48 +462,16 @@ function renderQuestion() {
   updateRunningScore();
 }
 
-function isMulti(q) { return Array.isArray(q.correct); }
-
-function optionIsCorrect(q, i) {
-  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
-}
-
-function optionIsSelected(q, i) {
-  const a = answers[q.id];
-  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
-}
-
-function answerIsCorrect(q) {
-  const a = answers[q.id];
-  if (isMulti(q)) {
-    if (!Array.isArray(a)) return false;
-    const sel = [...new Set(a)].sort((x, y) => x - y);
-    const cor = [...q.correct].sort((x, y) => x - y);
-    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
-  }
-  return a === q.correct;
-}
-
-function hasSelection(q) {
-  const a = answers[q.id];
-  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
-}
-
 function selectOption(i) {
   const q = examQuestions[currentIndex];
   if (revealed[q.id] !== undefined) return;
-  if (isMulti(q)) {
-    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
-    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
-  } else {
-    answers[q.id] = i;
-  }
+  answers[q.id] = i;
   renderQuestion();
 }
 
 function checkAnswer() {
   const q = examQuestions[currentIndex];
-  if (!hasSelection(q)) return;
+  if (answers[q.id] === undefined) return;
   revealed[q.id] = true;
   renderQuestion();
   const answeredEl = document.getElementById('answeredCount');
@@ -472,7 +481,7 @@ function checkAnswer() {
 function updateRunningScore() {
   const total = Object.keys(revealed).length;
   if (total === 0) return;
-  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
   const pct = Math.round(correct / total * 100);
   const el = document.getElementById('liveScore');
   if (el) {
@@ -496,7 +505,7 @@ function showResults() {
   document.getElementById('examScreen').classList.add('hidden');
   document.getElementById('resultsScreen').classList.remove('hidden');
   const total = examQuestions.length;
-  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
   const pct = Math.round(correct / total * 100);
   const pass = pct >= 70;
   document.getElementById('scoreBig').textContent = pct + '%';
@@ -507,7 +516,7 @@ function showResults() {
     const s = q.sectionClean || q.section;
     if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
     sectionScores[s].total++;
-    if (answerIsCorrect(q)) sectionScores[s].correct++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
   });
   const breakdown = document.getElementById('scoreBreakdown');
   breakdown.innerHTML = '';
@@ -532,17 +541,17 @@ function filterReview(mode) {
   container.innerHTML = '';
   const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
   let filtered = examQuestions;
-  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
-  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
   document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
   filtered.forEach((q, idx) => {
-    const isCorrect = answerIsCorrect(q);
+    const isCorrect = answers[q.id] === q.correct;
     const isPriority = q.priority;
     const cleanSection = q.sectionClean || q.section;
     let optionsHtml = q.options.map((opt, i) => {
-      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
-      if (optionIsCorrect(q, i)) cls += ' correct';
-      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
       return `<div class="${cls}">
         <div class="option-letter">${letters[i]}</div>
         <div class="option-text">${opt}</div>
@@ -556,7 +565,6 @@ function filterReview(mode) {
         </span>
       </div>
       <div class="question-text">${q.question}</div>
-      ${isMulti(q) ? '<div class="multi-hint">☑ Plusieurs réponses possibles — cochez toutes les bonnes</div>' : ''}
       <div class="options">${optionsHtml}</div>
       <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
         <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
@@ -572,7 +580,7 @@ function backToResults() {
 }
 
 function retryWrong() {
-  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
   if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
   examQuestions = wrongQuestions;
   for (let i = examQuestions.length - 1; i > 0; i--) {
@@ -614,5 +622,11 @@ document.addEventListener('keydown', (e) => {
 
 buildSetup();
 </script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium','Calibri',sans-serif;">
+  <img src="assets/logo/itq-glasses-orange.png" alt="" style="height:22px;width:auto;opacity:.95;margin-bottom:6px;display:inline-block;"><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official VMware or ITQ material. For practice only.
+</footer>
 </body>
 </html>
