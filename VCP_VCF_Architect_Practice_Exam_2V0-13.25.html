@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCP-VCF Architect 9.0 Practice Exam — Interactive Practice Exam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 640px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium Web','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
+</style>
+</head>
+<body>
+
+<div style="background:#FFEDEB;border-bottom:1px solid #FFC7C1;color:#040559;text-align:center;padding:7px 16px;font-size:0.78rem;font-weight:600;line-height:1.4;font-family:'Titillium Web','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or VMware. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
+    <svg width="34" height="20" viewBox="0 0 200 90" aria-hidden="true" style="display:block;flex-shrink:0;">
+      <g fill="none" stroke="#FF4F41" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="14" y="24" width="68" height="46" rx="20"/>
+        <rect x="118" y="24" width="68" height="46" rx="20"/>
+        <path d="M82 42 C92 31 108 31 118 42"/>
+        <path d="M14 36 L2 26"/>
+        <path d="M186 36 L198 26"/>
+      </g>
+    </svg>
+    <span style="color:#fff;font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;line-height:1;">itq</span>
+  </a>
+  <h1>VCP-VCF Architect 9.0 Practice Exam <span>(2V0-13.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"question": "A customer states: 'We need to ensure our ERP system is available 99.99% of the time.' How should this requirement be classified?", "options": ["Business requirement \u2014 it describes a business outcome without specifying technology", "Technical requirement \u2014 it specifies an exact SLA percentage", "Constraint \u2014 it limits the design options available", "Assumption \u2014 it assumes the infrastructure can deliver this SLA"], "correct": 0, "explanation": "A business requirement expresses what the organization needs to achieve (99.99% availability for ERP). It does not prescribe HOW to achieve it technically. A technical requirement would specify the mechanism (e.g., 'deploy vSphere HA with Host Isolation Response set to Power Off').", "section": "1.1 \u2013 Differentiate Business vs Technical Requirements"}, {"question": "Which of the following is a technical requirement derived from the business requirement 'All financial transactions must be encrypted'?", "options": ["Deploy VM encryption using a KMIP-compliant key manager integrated with vSphere", "The company must comply with PCI-DSS standards", "Budget for encryption is limited to $50,000", "Financial data must be protected at all times"], "correct": 0, "explanation": "A technical requirement specifies HOW to implement a business need. Deploying VM encryption with KMIP is a concrete technical solution. The business requirement ('must be encrypted') states WHAT is needed. PCI-DSS compliance is a constraint, and the budget is also a constraint.", "section": "1.1 \u2013 Differentiate Business vs Technical Requirements"}, {"question": "An architect produces a diagram showing 'VCF Fleet \u2192 Instances \u2192 Management Domain \u2192 Workload Domains' with data flow arrows but no specific hardware, IP addresses, or vendor names. What type of design is this?", "options": ["Conceptual design", "Logical design", "Physical design", "Implementation plan"], "correct": 1, "explanation": "A logical design shows how components interact, including relationships and data flows, but remains platform-independent (no specific hardware/IPs). A conceptual design is higher-level (major components and relationships only). A physical design includes specific implementation details (hardware specs, IPs, hostnames).", "section": "1.2 \u2013 Conceptual Model, Logical Design, Physical Design"}, {"question": "Which design artifact would include specific ESXi host models, NIC configurations, VLAN IDs, and IP addressing schemes?", "options": ["Conceptual model", "Logical design", "Physical design", "Business requirements document"], "correct": 2, "explanation": "The physical design contains specific implementation details: hardware models, NIC types, VLAN IDs, IP subnets, hostnames, and exact configurations. This is the blueprint used for actual deployment.", "section": "1.2 \u2013 Conceptual Model, Logical Design, Physical Design"}, {"question": "During a design workshop, a customer says: 'We believe our network team will have the new spine-leaf fabric ready within 3 months.' How should this statement be classified?", "options": ["Requirement \u2014 it defines a needed capability", "Assumption \u2014 it is accepted as true but not yet confirmed", "Constraint \u2014 it limits the design timeline", "Risk \u2014 it represents a potential threat to the project"], "correct": 1, "explanation": "An assumption is something accepted as true without proof. The customer believes the fabric will be ready, but this is unconfirmed. If the fabric is NOT ready on time, it becomes a risk. The 3-month timeline could also be documented as a constraint, but the statement itself expresses belief (assumption).", "section": "1.3 \u2013 Requirements, Assumptions, Constraints, Risks"}, {"question": "A customer mandates: 'All infrastructure must be deployed in our existing two datacenters \u2014 no public cloud.' What is this?", "options": ["Business requirement", "Technical requirement", "Constraint", "Risk"], "correct": 2, "explanation": "A constraint is a limitation that bounds design choices. 'No public cloud' and 'existing two datacenters only' restrict where infrastructure can be deployed. Requirements define what is needed; constraints define what cannot be done or what limits exist.", "section": "1.3 \u2013 Requirements, Assumptions, Constraints, Risks"}, {"question": "Which AMPRS pillar is PRIMARILY addressed by implementing vSphere HA with Admission Control and proactive HA?", "options": ["Availability", "Manageability", "Performance", "Recoverability"], "correct": 0, "explanation": "Availability ensures systems remain operational and accessible. vSphere HA with Admission Control ensures enough capacity exists to restart VMs after host failures, maintaining uptime. Recoverability focuses on restoring services after a disaster (broader scope than single-host failure).", "section": "1.4 \u2013 AMPRS Design Characteristics"}, {"question": "A design decision to implement role-based access control (RBAC) with VCF Identity Broker and SAML federation primarily addresses which AMPRS pillar?", "options": ["Availability", "Manageability", "Performance", "Security"], "correct": 3, "explanation": "Security encompasses authentication, authorization, encryption, and access control. RBAC with Identity Broker and SAML federation controls who can access what, which is fundamentally a security design decision.", "section": "1.4 \u2013 AMPRS Design Characteristics"}, {"question": "Implementing VCF Operations with dashboards, alerts, and automated lifecycle management primarily addresses which AMPRS pillar?", "options": ["Availability", "Manageability", "Performance", "Recoverability"], "correct": 1, "explanation": "Manageability covers how easily the environment can be monitored, maintained, and operated day-to-day. VCF Operations provides dashboards, alerts, and LCM \u2014 all manageability capabilities. While monitoring can help availability, the primary design intent here is operational manageability.", "section": "1.4 \u2013 AMPRS Design Characteristics"}, {"question": "An architect identifies that a single VCF instance handles both production and development workloads with no domain separation. What risk mitigation strategy should be recommended?", "options": ["Accept the risk and document it as a known limitation", "Separate production and development into distinct Workload Domains with different policies", "Increase the number of ESXi hosts in the cluster", "Enable vSphere DRS in fully automated mode"], "correct": 1, "explanation": "Risk mitigation involves reducing the likelihood or impact of identified risks. Separating production and development into distinct Workload Domains provides isolation \u2014 a blast radius reduction strategy. This addresses multiple AMPRS concerns: security (access separation), performance (resource contention), and availability (fault isolation).", "section": "1.5 \u2013 Risk Mitigation Strategy"}, {"question": "When documenting a design decision, which elements should be included to establish traceability?", "options": ["The decision, its justification linked to a specific requirement, and its implications", "Only the decision and the technology selected", "The decision and the vendor pricing comparison", "The decision and the implementation timeline"], "correct": 0, "explanation": "A well-documented design decision includes: the decision itself, the requirement it addresses (traceability), the justification (why this choice), and the implications (what it affects \u2014 other components, AMPRS trade-offs, future scalability). This enables reviewers to understand and validate the decision chain.", "section": "1.6 \u2013 Document Design Decisions"}, {"question": "An architect decides to use a stretched vSAN cluster across two availability zones instead of VMware Live Recovery. Which implication should be documented?", "options": ["This decision only affects storage design", "This decision impacts availability (active-active), networking (stretched L2), performance (inter-site latency \u22645ms RTT), and cost (witness host requirement)", "This decision has no impact on networking design", "This decision eliminates the need for backup solutions"], "correct": 1, "explanation": "A stretched cluster decision has wide-ranging implications: availability (active-active across AZs), networking (stretched VLANs, L2 adjacency requirement), performance (\u22645ms RTT between sites for vSAN), infrastructure (witness appliance at third site), and cost. All implications must be documented.", "section": "1.6 \u2013 Document Design Decisions"}, {"question": "What is the purpose of a design validation strategy?", "options": ["To verify that the physical design can be deployed without errors", "To ensure the design meets all stated requirements, assumptions are valid, and risks are mitigated", "To test the performance of the production environment", "To document the design for future reference"], "correct": 1, "explanation": "A design validation strategy confirms that: (1) every requirement is addressed by at least one design decision, (2) assumptions remain valid, (3) constraints are respected, and (4) risks have appropriate mitigations. It is a quality assurance step before implementation begins.", "section": "1.7 \u2013 Design Validation Strategy"}, {"question": "In VCF 9.0, what is the relationship between a Fleet, an Instance, and a Domain?", "options": ["A Fleet contains Instances; each Instance contains a Management Domain and one or more Workload Domains", "A Domain contains Fleets; each Fleet contains Instances", "An Instance contains Fleets; each Fleet contains Domains", "Fleets, Instances, and Domains are independent and unrelated constructs"], "correct": 0, "explanation": "VCF 9.0 hierarchy: Private Cloud \u2192 Fleet \u2192 Instance \u2192 Domains. A Fleet is a logical grouping sharing centralized services (VCF Operations, VCF Automation). Each Instance is a discrete SDDC footprint with its own Management Domain and Workload Domains. This three-layer model replaced the older Consolidated/Standard architecture.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "A customer has a single datacenter with limited budget and wants to run both management and workload VMs on the same cluster. Which VCF architecture should be recommended?", "options": ["Standard architecture with separate management and workload domains", "Consolidated architecture combining management and workload on the same cluster", "Multi-instance fleet with dedicated management domain", "Stretched cluster across two availability zones"], "correct": 1, "explanation": "Consolidated architecture runs management and workload functions on the same cluster, reducing hardware requirements and cost. It is suitable for smaller deployments or budget-constrained environments. The trade-off is reduced isolation between management and workload VMs.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "What is a key advantage of the Standard architecture over the Consolidated architecture in VCF?", "options": ["Lower hardware cost", "Simpler initial deployment", "Isolation between management and workload domains, enabling independent scaling and lifecycle management", "Fewer network requirements"], "correct": 2, "explanation": "Standard architecture separates management and workload into distinct domains/clusters. This provides fault isolation (management plane protected from workload issues), independent scaling (add workload capacity without affecting management), and independent lifecycle management (upgrade workload domains separately).", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "A global enterprise with datacenters in Europe, North America, and Asia wants centralized management with local workload execution. Which VCF 9.0 topology best fits?", "options": ["Single instance with multiple workload domains", "Multi-instance fleet with centralized fleet services spanning regions", "Three independent VCF deployments with no fleet relationship", "Consolidated architecture in each region"], "correct": 1, "explanation": "A multi-instance fleet provides centralized fleet services (VCF Operations, VCF Automation) while allowing local workload execution via instances in each region. VCF 9.0 supports up to 300ms RTT for fleet-to-instance communication, enabling global fleet topologies. Independent deployments would lose centralized management.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "During requirements gathering, a customer says: 'We need to support 500 VDI desktops, an SAP HANA cluster, and a Kubernetes platform.' Which is the FIRST step an architect should take?", "options": ["Immediately size the hardware for all workloads", "Categorize and prioritize each workload's business objectives, SLAs, and technical requirements", "Recommend three separate VCF instances", "Select the vSAN storage policy for each workload"], "correct": 1, "explanation": "The first step is always to gather and analyze business objectives and requirements for each workload. Different workloads have different SLAs, performance needs, compliance requirements, and growth projections. Understanding these before making any design decisions ensures the solution addresses actual business needs.", "section": "3.1 \u2013 Gather and Analyze Business Objectives"}, {"question": "A customer's business objective is: 'Enable development teams to self-provision infrastructure within guardrails.' Which VCF component should the conceptual model highlight?", "options": ["VCF Operations for monitoring", "VCF Automation with tenant projects and self-service catalogs", "NSX distributed firewall for microsegmentation", "vSAN stretched cluster for availability"], "correct": 1, "explanation": "The business objective is self-service provisioning with governance. VCF Automation (formerly vRealize/Aria Automation) provides tenant projects, self-service catalogs, approval workflows, and resource quotas \u2014 exactly matching the 'self-provision within guardrails' objective.", "section": "3.2 \u2013 Create a Conceptual Model"}, {"question": "What is a prerequisite for deploying VMware Cloud Foundation 9.0?", "options": ["An existing vCenter Server must be pre-installed", "DNS, NTP, DHCP services and a management network must be available before VCF deployment", "NSX must be deployed before VCF installation", "vSAN OSA (Original Storage Architecture) disks must be configured"], "correct": 1, "explanation": "VCF prerequisites include: functioning DNS (forward and reverse), NTP services, a management network with proper VLAN configuration, and IP addressing. VCF deploys vCenter, NSX, and vSAN as part of its bring-up process \u2014 they are NOT prerequisites. VCF 9.0 supports only vSAN ESA (not OSA).", "section": "3.3 \u2013 VCF Logical Designs \u2013 Prerequisites"}, {"question": "A company wants to manage two VCF instances from a single pane of glass while maintaining separate SSO domains. Which fleet topology design decision is most appropriate?", "options": ["Single instance with multiple workload domains", "Multi-instance fleet with VCF Operations as the centralized fleet service and separate Identity Broker per instance", "Two independent VCF deployments with manual management", "Stretched cluster connecting both instances"], "correct": 1, "explanation": "A multi-instance fleet with centralized VCF Operations provides the single pane of glass. Separate Identity Broker (or SSO domain) per instance maintains authentication isolation. This balances centralized visibility with security boundary separation.", "section": "3.3 \u2013 Fleet Topologies \u2013 Logical Design"}, {"question": "When designing the network infrastructure for VCF, which network segments are required at minimum for the management domain?", "options": ["Only a management VLAN", "Management, vMotion, vSAN, and Host TEP (Tunnel Endpoint) VLANs", "Management and vMotion VLANs only", "Management, vMotion, and a single uplink VLAN"], "correct": 1, "explanation": "VCF management domain requires at minimum: Management network (ESXi mgmt, vCenter, SDDC Manager), vMotion network, vSAN network (storage traffic), and Host TEP network (NSX overlay tunnel endpoints). Additional networks include Edge TEP and uplinks for NSX edge nodes.", "section": "3.3 \u2013 Network Infrastructure \u2013 Logical Design"}, {"question": "For the VCF Management Domain logical design, what is the recommended minimum number of ESXi hosts for a standard (non-consolidated) deployment?", "options": ["2 hosts", "3 hosts", "4 hosts", "8 hosts"], "correct": 2, "explanation": "The VCF management domain requires a minimum of 4 ESXi hosts for a standard deployment. This supports vSAN (minimum 3 hosts for data availability plus 1 for HA capacity), the NSX management cluster (3 NSX Managers), vCenter, and SDDC Manager with adequate resource headroom.", "section": "3.3 \u2013 Management Domain \u2013 Logical Design"}, {"question": "A customer needs workload isolation between their HR, Finance, and Engineering departments with different security policies. What is the recommended VCF logical design approach?", "options": ["Place all departments in a single workload domain with different vSphere resource pools", "Create separate VCF instances for each department", "Create separate Workload Domains per department, each with its own security policies and NSX configuration", "Use a single cluster with different VM folders"], "correct": 2, "explanation": "Separate Workload Domains provide the strongest isolation within a single instance: independent vSphere clusters, independent NSX configurations, independent storage policies, and independent lifecycle management. This enables different security postures per department without the overhead of separate instances.", "section": "3.3 \u2013 Workload Domain \u2013 Logical Design"}, {"question": "In a VCF logical networking design, what is the advantage of using NSX Virtual Private Clouds (VPCs) for tenant networking?", "options": ["VPCs replace the need for NSX entirely", "VPCs allow tenants to self-service their own isolated network segments without requiring NSX administrative privileges", "VPCs eliminate the need for physical network infrastructure", "VPCs are only available in stretched cluster deployments"], "correct": 1, "explanation": "NSX VPCs in VCF 9.0 allow tenants to create and manage their own isolated network segments (subnets, security policies) through self-service, without needing full NSX administrative access. This aligns with the consumption model where platform teams provide the infrastructure and tenants consume it.", "section": "3.3 \u2013 VCF Networking \u2013 Logical Design"}, {"question": "When designing VCF Automation for the logical design, what is a key decision regarding multi-tenancy?", "options": ["Whether to use VCF Automation or a third-party automation tool", "How to structure Projects and which cloud zones, templates, and policies each tenant can access", "Whether to deploy VCF Automation in HA mode", "Which programming language to use for custom scripts"], "correct": 1, "explanation": "Multi-tenancy design in VCF Automation centers on Project structure: defining which cloud zones (compute resources), templates (images), network profiles, and governance policies each tenant project can access. This determines the self-service boundary and resource governance model.", "section": "3.3 \u2013 VCF Automation \u2013 Logical Design"}, {"question": "For the VCF Operations logical design, what is the primary design decision regarding deployment mode?", "options": ["Whether to deploy in simple (single-node) or high-availability (clustered) mode", "Whether to use VCF Operations or a third-party monitoring tool", "Whether to enable SNMP monitoring", "Whether to deploy in the management domain or a workload domain"], "correct": 0, "explanation": "VCF 9.0 supports simple deployment (single-node, lower resource footprint) and HA deployment (clustered, resilient). The choice depends on the customer's availability requirements for the monitoring platform itself, the scale of the environment, and resource constraints.", "section": "3.3 \u2013 VCF Operations \u2013 Logical Design"}, {"question": "When translating the VCF logical design to a physical design, which additional details must be specified for the network infrastructure?", "options": ["Only VLAN IDs", "Specific switch models, port configurations, VLAN IDs, MTU settings, IP subnets, and BGP/OSPF routing parameters", "Only the number of physical switches needed", "Only the cable types (copper vs fiber)"], "correct": 1, "explanation": "The physical network design must include: ToR/spine switch models and firmware versions, port speeds and configurations, VLAN IDs, MTU settings (9000 for vSAN/vMotion), IP subnets and gateway addresses, routing protocol configuration (BGP AS numbers, OSPF areas), and NIC teaming policies.", "section": "3.4 \u2013 Network Infrastructure \u2013 Physical Design"}, {"question": "For the physical design of a VCF management domain, an architect must specify ESXi host hardware. Which factor is MOST critical when selecting server hardware?", "options": ["The server brand preference of the customer", "Compatibility with the VCF Hardware Compatibility List (HCL) and vSAN ESA certification", "The lowest cost per server", "The number of available PCIe slots"], "correct": 1, "explanation": "VCF requires hardware on the Hardware Compatibility List (HCL). For VCF 9.0, servers must support vSAN ESA (the only supported storage architecture \u2014 OSA/hybrid is deprecated). Non-HCL hardware will not be supported and may fail VCF validation checks during bring-up.", "section": "3.4 \u2013 Management Domain \u2013 Physical Design"}, {"question": "A physical design specifies 8 ESXi hosts per workload domain cluster with 25GbE NICs. Each host has 2 physical NICs for a VDS. What is the bandwidth design consideration?", "options": ["25GbE is always sufficient regardless of workload", "The architect must validate that 50Gbps aggregate bandwidth per host meets the combined vSAN, vMotion, VM traffic, and NSX overlay requirements", "Only vSAN traffic needs to be considered for NIC sizing", "Physical NIC bandwidth is irrelevant when using NSX overlays"], "correct": 1, "explanation": "Physical NIC bandwidth must accommodate ALL traffic types sharing the VDS: vSAN (storage I/O), vMotion (live migration), VM workload traffic, NSX TEP (overlay encapsulation), and management traffic. With 2x25GbE, the architect must verify 50Gbps total handles peak loads across all traffic types. VCF 9.0 with vSAN ESA recommends 25GbE minimum.", "section": "3.4 \u2013 Workload Domain \u2013 Physical Design"}, {"question": "In the physical networking design for VCF, what is the recommended MTU setting for vSAN and NSX overlay traffic?", "options": ["1500 bytes (standard Ethernet)", "9000 bytes (jumbo frames) for vSAN and NSX TEP networks", "4096 bytes for all traffic types", "MTU settings have no impact on VCF performance"], "correct": 1, "explanation": "Jumbo frames (MTU 9000) are recommended for vSAN traffic and NSX TEP (overlay) traffic to reduce CPU overhead and improve throughput. The entire network path (NICs, switches, routers) must support jumbo frames end-to-end. Management traffic typically uses standard MTU 1500.", "section": "3.4 \u2013 VCF Networking \u2013 Physical Design"}, {"question": "For the VCF Automation physical design, which deployment consideration determines the required resources?", "options": ["The number of VCF Automation administrators", "The number of concurrent tenants, catalog items, and expected API request volume", "Only the number of cloud zones configured", "The operating system version of the VCF Automation appliance"], "correct": 1, "explanation": "VCF Automation resource sizing depends on: number of concurrent users/tenants, catalog item complexity, deployment frequency, API request volume, and integration count. These factors determine whether a simple or HA deployment is needed and the CPU/memory allocation for the appliance(s).", "section": "3.4 \u2013 VCF Automation \u2013 Physical Design"}, {"question": "To provide availability WITHIN a single availability zone, which combination of vSphere features should the design include?", "options": ["vSphere HA, DRS, vSAN fault domains, and Admission Control", "VMware Live Recovery and SRM only", "Stretched cluster and witness appliance", "vSphere Replication to a remote site"], "correct": 0, "explanation": "Within a single AZ: vSphere HA restarts VMs after host failure, DRS balances load, vSAN fault domains isolate rack-level failures, and Admission Control reserves capacity for failover. Stretched clusters and Live Recovery address cross-AZ availability. vSphere Replication provides DR to a remote site.", "section": "3.5 \u2013 Availability Within an Availability Zone"}, {"question": "A customer requires near-zero downtime for a critical application across two sites 10km apart with <5ms RTT latency. Which design provides availability ACROSS availability zones?", "options": ["VMware Live Recovery with 15-minute RPO", "vSAN stretched cluster with synchronous replication across the two sites", "Cold standby site with manual failover", "Backup and restore from offsite location"], "correct": 1, "explanation": "A vSAN stretched cluster provides active-active availability across two AZs with synchronous replication (RPO=0). Requirements: \u22645ms RTT between sites, stretched L2 networks, and a witness appliance at a third location. This is ideal for near-zero downtime when latency requirements are met.", "section": "3.5 \u2013 Availability Across Availability Zones"}, {"question": "What is a critical requirement for deploying a vSAN stretched cluster across two availability zones?", "options": ["Both sites must use identical server hardware from the same vendor", "A vSAN witness appliance must be deployed at a third location not co-located with either site", "The sites must be in the same building", "NSX must be deployed in dedicated mode for each site"], "correct": 1, "explanation": "A vSAN stretched cluster requires a witness appliance at a third fault domain (not co-located with either data site) to provide quorum and prevent split-brain scenarios. Additional requirements: \u22645ms RTT between data sites, \u2264200ms RTT to witness, and stretched L2 networks for management, vMotion, and TEP traffic.", "section": "3.5 \u2013 Availability Across Availability Zones"}, {"question": "When designing for lifecycle management in VCF 9.0, what is a key design consideration?", "options": ["All domains in a fleet must be upgraded simultaneously", "Workload domains can be upgraded independently from the management domain, but the management domain should be upgraded first", "Only the management domain needs lifecycle management", "Lifecycle management is handled entirely by vCenter Update Manager baselines"], "correct": 1, "explanation": "VCF LCM supports independent domain upgrades, but the management domain should be upgraded before workload domains to ensure compatibility. VCF 9.0 uses bundle-based lifecycle management (not baseline-based Update Manager, which is deprecated). This independence enables rolling upgrades with minimal disruption.", "section": "3.6 \u2013 Design for Manageability \u2013 Lifecycle Management"}, {"question": "A customer expects their VCF environment to grow from 4 hosts to 32 hosts over 3 years. Which design decision best addresses scalability?", "options": ["Deploy the largest hosts available today to avoid adding more later", "Design workload domains with scalable cluster sizes, plan IP address ranges for growth, and ensure network fabric supports additional ToR switches", "Deploy all 32 hosts on day one regardless of current workload", "Use a single large cluster that combines all workloads"], "correct": 1, "explanation": "Scalability design means planning for growth without redesign: allocate sufficient IP address ranges (subnets that accommodate 32+ hosts), design the network fabric to accept additional leaf switches, plan vSAN capacity for growth, and use multiple workload domains if needed. Over-provisioning on day one wastes budget; under-planning forces costly redesign.", "section": "3.6 \u2013 Design for Manageability \u2013 Scalability"}, {"question": "For capacity management design, what tool in VCF 9.0 provides forecasting and rightsizing recommendations?", "options": ["SDDC Manager only", "VCF Operations with its capacity analytics, what-if scenarios, and rightsizing dashboards", "vCenter Server performance charts", "NSX Manager bandwidth metrics"], "correct": 1, "explanation": "VCF Operations (successor to vRealize/Aria Operations) provides comprehensive capacity management: demand vs allocation models, what-if analysis, capacity forecasting algorithms, and VM rightsizing recommendations. SDDC Manager handles deployment/LCM but not capacity analytics.", "section": "3.6 \u2013 Design for Manageability \u2013 Capacity Management"}, {"question": "A customer requires all database VMs to have guaranteed IOPS of 10,000 with latency under 5ms. Which design approach addresses this performance requirement?", "options": ["Deploy all VMs on the same cluster and hope for the best", "Create a dedicated workload domain with vSAN storage policies specifying IOPS limits and stripe width, and dedicate NVMe-based hosts", "Use vSphere resource pools with unlimited reservations", "Increase the number of vCPUs assigned to each database VM"], "correct": 1, "explanation": "Performance design for storage-intensive workloads: dedicated workload domain with NVMe storage for consistent IOPS, vSAN storage policies with QoS parameters (IOPS limits/reservations, stripe width), and host hardware sized for the I/O profile. Resource pools alone don't guarantee storage performance. vCPU count doesn't address storage latency.", "section": "3.7 \u2013 Design for Performance"}, {"question": "When designing for performance in a VCF environment, which metric is MOST critical for vSAN ESA storage design?", "options": ["Number of VM snapshots", "Storage I/O latency and throughput per host, considering NVMe device count and network bandwidth (25GbE minimum)", "The number of datastores created", "The vCenter Server CPU allocation"], "correct": 1, "explanation": "vSAN ESA performance depends on: NVMe device count and speed per host (IOPS capacity), network bandwidth (25GbE minimum for ESA), number of disk groups, and the storage policy (FTT level, compression, deduplication). These determine the aggregate IOPS and throughput available to VMs.", "section": "3.7 \u2013 Design for Performance"}, {"question": "What is the key difference between Business Continuity (BC) and Disaster Recovery (DR) in VCF design?", "options": ["BC and DR are identical concepts", "BC focuses on maintaining operations during disruptions (minimizing downtime); DR focuses on restoring operations after a major disaster", "BC only applies to networking; DR only applies to storage", "BC requires stretched clusters; DR requires only backups"], "correct": 1, "explanation": "Business Continuity (BC) maintains operations during disruptions \u2014 stretched clusters, HA, fault tolerance keep services running. Disaster Recovery (DR) restores operations after a catastrophic event \u2014 Live Recovery, SRM, backup restoration bring services back online at an alternate site. BC = stay running; DR = come back after failure.", "section": "3.8 \u2013 BCDR for Management and Workloads"}, {"question": "For protecting VCF management components (vCenter, NSX, SDDC Manager), what is the recommended BCDR strategy?", "options": ["Only back up the vCenter database nightly", "Deploy management domain on a stretched cluster or use SDDC Manager backup/restore with file-level backups of all management appliances", "No protection is needed \u2014 management components auto-recover", "Replicate management VMs to public cloud"], "correct": 1, "explanation": "VCF management components require dedicated protection: stretched management cluster (BC approach) or SDDC Manager backup/restore workflows with regular file-level backups of vCenter, NSX Manager, and SDDC Manager (DR approach). Management plane recovery is prerequisite to workload recovery \u2014 it must be protected first.", "section": "3.8 \u2013 BCDR for Management and Workloads"}, {"question": "A customer requires RPO of 5 minutes and RTO of 1 hour for 200 critical VMs across two sites 100km apart. Which VCF recoverability design meets these requirements?", "options": ["vSAN stretched cluster (RPO=0)", "VMware Live Recovery with asynchronous replication configured for 5-minute RPO intervals", "Daily backup with offsite tape storage", "Manual VM export and import at the DR site"], "correct": 1, "explanation": "With 100km distance, latency likely exceeds 5ms RTT, ruling out stretched cluster (requires \u22645ms). VMware Live Recovery (converging vSphere Replication + vSAN Data Protection) provides asynchronous replication with configurable RPO intervals (down to 5 minutes) and automated failover (meeting 1-hour RTO). Daily backup cannot meet 5-minute RPO.", "section": "3.8 \u2013 Disaster Recovery Requirements"}, {"question": "Which VCF 9.0 feature provides convergent data protection combining replication and recovery orchestration?", "options": ["vSphere HA", "VMware Live Recovery (converging vSphere Replication, vSAN Data Protection, and recovery orchestration)", "NSX distributed firewall", "VCF Operations alerting"], "correct": 1, "explanation": "VMware Live Recovery is the VCF 9.0 convergent data protection solution, combining vSphere Replication (VM-level replication), vSAN Data Protection (snapshot-based protection), and recovery orchestration (automated failover/failback) into a single platform. It replaces the separate SRM + vSphere Replication model.", "section": "3.8 \u2013 Disaster Recovery Requirements"}, {"question": "When designing security for VCF management components, which design decision addresses zero-trust microsegmentation?", "options": ["Deploy a perimeter firewall at the datacenter edge", "Enable NSX Distributed Firewall (DFW) with micro-segmentation policies protecting management VMs and inter-component traffic", "Use VLAN-based isolation only", "Disable all network access to management components"], "correct": 1, "explanation": "Zero-trust microsegmentation requires controlling traffic between individual VMs/services, not just at the perimeter. NSX DFW enforces policies at the virtual NIC level, controlling east-west traffic between management components (vCenter \u2194 NSX Manager, SDDC Manager \u2194 ESXi). Perimeter firewalls only address north-south traffic.", "section": "3.9 \u2013 Design for Security"}, {"question": "A customer requires all data at rest to be encrypted and all administrative access to use multi-factor authentication. Which VCF design decisions address these requirements?", "options": ["Enable vSAN encryption with a KMIP key manager and configure VCF Identity Broker with SAML/OIDC federation supporting MFA", "Use VM-level encryption only and local vCenter SSO accounts", "Deploy a third-party endpoint protection agent on all VMs", "Enable TLS 1.2 on all management interfaces only"], "correct": 0, "explanation": "Data at rest encryption: vSAN encryption with an external KMIP-compliant key manager (HyTrust, Thales, etc.) encrypts all vSAN data. MFA for admin access: VCF Identity Broker with SAML or OIDC federation connected to a corporate IdP that enforces MFA. Together, these address both encryption and authentication requirements.", "section": "3.9 \u2013 Design for Security"}, {"question": "A customer wants to migrate 500 VMs from a legacy vSphere 7 environment into a new VCF 9.0 deployment. Which migration strategy design decisions must be made?", "options": ["Only decide on the migration tool", "Select migration tooling (HCX, vMotion, cold migration), define migration waves, assess VM compatibility with VCF, plan network cutover strategy, and define rollback procedures", "Migrate all 500 VMs simultaneously in a single maintenance window", "Rebuild all VMs from scratch in VCF"], "correct": 1, "explanation": "Migration design requires multiple decisions: tooling selection (HCX for cross-vCenter/cross-version, vMotion for same-vCenter, cold migration for incompatible VMs), wave planning (group by application dependency), compatibility assessment (VM hardware version, tools, storage), network strategy (re-IP vs L2 stretch), and rollback planning.", "section": "3.10 \u2013 Workload Migration / Onboarding"}, {"question": "For a brownfield migration into VCF, what is a critical compatibility consideration?", "options": ["The color scheme of the existing vCenter UI", "Whether existing hosts and storage are on the VCF HCL and whether vSAN ESA is supported on the existing hardware", "The number of vCenter Server licenses owned", "Whether the existing environment uses thick-provisioned disks"], "correct": 1, "explanation": "Brownfield (import existing infrastructure into VCF) requires: hosts on VCF HCL, storage compatibility with vSAN ESA (VCF 9.0 requirement \u2014 hybrid/OSA deprecated), network readiness for NSX overlay, and management component versions that support the VCF bring-up process. Hardware incompatibility is the most common blocker.", "section": "3.10 \u2013 Workload Migration / Onboarding"}, {"question": "When designing a VCF Automation tenant model, what determines the isolation boundary between tenants?", "options": ["The vCenter Server instance", "VCF Automation Projects \u2014 each project defines its own cloud zones, network profiles, image mappings, and governance policies", "The ESXi host cluster", "The physical rack in the datacenter"], "correct": 1, "explanation": "In VCF Automation, the Project is the tenant isolation boundary. Each project defines which cloud zones (compute resources) are available, which images can be deployed, which network profiles apply, and which approval/governance policies are enforced. Multiple projects can share the same underlying infrastructure while maintaining logical separation.", "section": "3.11 \u2013 VCF Automation Tenant Design"}, {"question": "A customer wants platform teams to manage infrastructure while application teams self-provision VMs and Kubernetes clusters. Which VCF design supports this governance model?", "options": ["Give all teams full VCF administrator access", "Design VCF Automation with role-based projects: platform team manages cloud zones and policies, application teams use self-service catalogs with approval workflows and resource quotas", "Create separate VCF instances for each team", "Use only vCenter permissions without VCF Automation"], "correct": 1, "explanation": "This is the 'platform as a service' consumption model: platform team (cloud admins) configures cloud zones, templates, network profiles, and governance policies. Application teams (project members) consume via self-service catalogs with approval workflows, resource quotas, and lease policies. VCF Automation's RBAC and project model enables this separation.", "section": "3.11 \u2013 Self-Service & Governance"}, {"question": "To automate VCF infrastructure provisioning (new workload domains, cluster expansion), which approach should be designed?", "options": ["Manual SDDC Manager UI workflows only", "SDDC Manager REST APIs integrated with CI/CD pipelines or Infrastructure-as-Code tools (Terraform VCF provider)", "Direct ESXi CLI commands via SSH", "vCenter Server PowerCLI scripts only"], "correct": 1, "explanation": "VCF infrastructure automation uses SDDC Manager REST APIs \u2014 the programmatic interface for creating workload domains, adding hosts, expanding clusters, and managing lifecycle. Integration with Terraform (VCF provider) or CI/CD pipelines enables Infrastructure-as-Code. Direct CLI or PowerCLI bypasses SDDC Manager's validation and orchestration.", "section": "3.11 \u2013 Automating VCF Infrastructure"}, {"question": "A customer wants to run containerized microservices alongside traditional VMs in VCF. Which design decision supports modern applications?", "options": ["Deploy a separate Kubernetes cluster outside of VCF", "Enable vSphere Kubernetes Service (VKS) on a workload domain to provide Supervisor clusters and Tanzu Kubernetes clusters integrated with VCF networking and storage", "Install Docker directly on ESXi hosts", "Use VCF Automation to deploy individual containers as VMs"], "correct": 1, "explanation": "VKS (vSphere Kubernetes Service, replacing TKG Service) provides native Kubernetes on VCF workload domains. Supervisor clusters integrate with NSX for pod networking and vSAN for persistent volumes. This delivers a unified platform for both VMs and containers, managed through VCF's operational model.", "section": "3.11 \u2013 Modern Applications in VCF"}, {"question": "When designing monitoring for VCF management components, which design approach ensures proactive issue detection?", "options": ["Check vCenter alarms manually each morning", "Deploy VCF Operations with management pack integrations, alert definitions for all management components (vCenter, NSX, SDDC Manager, vSAN), and automated remediation actions", "Use only SNMP traps sent to a legacy NMS", "Monitor only ESXi host hardware health"], "correct": 1, "explanation": "VCF Operations provides comprehensive monitoring: native management packs for all VCF components, pre-built alert definitions with severity levels, capacity analytics, and integration with remediation workflows. Proactive monitoring requires alerting on leading indicators (capacity trends, performance degradation) not just reactive alarms.", "section": "3.12 \u2013 Monitoring VCF Management Components"}, {"question": "For monitoring VCF workloads, a customer wants application-level visibility beyond infrastructure metrics. Which VCF Operations capability should be designed?", "options": ["Only vSAN performance dashboards", "Custom dashboards combining infrastructure metrics with application-level monitoring using management packs, custom groups, and super metrics", "ESXi ESXTOP command output", "NSX flow monitoring only"], "correct": 1, "explanation": "Application-level monitoring in VCF Operations uses: management packs (for specific applications like SQL, Oracle), custom groups (logical grouping of VMs by application), super metrics (calculated KPIs combining multiple metrics), and custom dashboards correlating infrastructure and application metrics. This provides end-to-end visibility.", "section": "3.12 \u2013 Monitoring VCF Workloads"}, {"question": "A customer asks: 'What happens if we lose an entire rack in our datacenter?' Which AMPRS pillar does this question primarily address, and what design mechanism mitigates this risk?", "options": ["Performance \u2014 add more CPUs to surviving hosts", "Availability \u2014 design vSAN fault domains aligned to physical racks so data remains accessible after a full rack failure", "Manageability \u2014 implement better rack labeling", "Security \u2014 encrypt data on the surviving racks"], "correct": 1, "explanation": "Rack-level failure is an availability concern. vSAN fault domains map to physical racks, ensuring data replicas are distributed across different racks. If an entire rack fails, vSAN objects remain accessible from surviving fault domains. vSphere HA restarts VMs on hosts in other racks. This is availability design within a single AZ.", "section": "3.5 \u2013 Availability Within an Availability Zone"}, {"question": "An architect is choosing between shared NSX (one NSX Manager cluster for management and workload domains) and dedicated NSX (separate NSX Manager clusters per workload domain). Which factor favors dedicated NSX?", "options": ["Lower resource consumption", "Simpler management with fewer components", "Workload domains requiring independent security policies, independent lifecycle management, and tenant isolation", "Budget constraints requiring minimum infrastructure"], "correct": 2, "explanation": "Dedicated NSX provides: independent security policies per domain (no cross-domain policy leakage), independent NSX lifecycle (upgrade one domain's NSX without affecting others), and stronger tenant isolation. The trade-off is higher resource consumption (additional NSX Manager clusters). Shared NSX is simpler and cheaper but provides less isolation.", "section": "3.4 \u2013 VCF Networking \u2013 Physical Design"}, {"question": "During a design review, a stakeholder asks why the architect chose RAID-1 (FTT=1, mirroring) over RAID-5 (FTT=1, erasure coding) for the management domain vSAN storage policy. What is the correct justification?", "options": ["RAID-1 is always faster than RAID-5", "RAID-1 provides faster rebuild times and lower write amplification for management workloads that are write-intensive, while RAID-5 provides better capacity efficiency for read-heavy workloads", "There is no difference between RAID-1 and RAID-5 in vSAN", "RAID-5 is not supported in VCF 9.0"], "correct": 1, "explanation": "RAID-1 (mirroring): faster rebuilds, lower write penalty, uses more capacity (2x for FTT=1). RAID-5 (erasure coding): better capacity efficiency (1.33x overhead for FTT=1), but higher CPU overhead for write operations and longer rebuild times. Management domain workloads (vCenter, NSX, SDDC Manager) benefit from RAID-1's write performance and faster recovery.", "section": "3.4 \u2013 Management Domain \u2013 Physical Design"}, {"question": "A conceptual model shows: 'Enterprise Private Cloud \u2192 Fleet A (Production) \u2192 Fleet B (Dev/Test)' with arrows indicating shared identity services. What does this conceptual model communicate?", "options": ["Detailed IP addressing and VLAN configuration", "The high-level organizational structure of the private cloud with two fleets separated by environment type, sharing identity services", "The physical rack layout of the datacenter", "The specific ESXi host hardware configuration"], "correct": 1, "explanation": "A conceptual model communicates the high-level architecture: major building blocks (fleets), their purpose (Production vs Dev/Test), and key relationships (shared identity). It intentionally excludes implementation details (IPs, VLANs, hardware). Stakeholders use it to validate that the architecture aligns with business intent.", "section": "3.2 \u2013 Create a Conceptual Model"}, {"question": "Which VCF 9.0 component replaces the Platform Services Controller (PSC) for centralized identity management?", "options": ["vCenter Single Sign-On (SSO)", "VCF Identity Broker", "NSX Manager authentication", "Active Directory domain controller"], "correct": 1, "explanation": "VCF Identity Broker replaces the old PSC/SSO model. It provides centralized identity federation supporting SAML 2.0, OIDC (OAuth 2.0), and FIDO2 (passwordless/hardware tokens). It can be deployed in embedded mode or as a standalone appliance, depending on the fleet topology and SSO boundary design.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "What is the maximum supported RTT latency for fleet-to-instance communication in VCF 9.0, and why is this architecturally significant?", "options": ["5ms RTT \u2014 limits fleet scope to a single datacenter campus", "50ms RTT \u2014 supports metro-area deployments only", "300ms RTT \u2014 enables global fleet topologies spanning continents", "No latency limit \u2014 fleet communication is asynchronous"], "correct": 2, "explanation": "VCF 9.0 supports up to 300ms RTT for fleet-to-instance management traffic. This is architecturally significant because it enables truly global fleet topologies: a single fleet management plane in one region managing instances on other continents. Previous versions had tighter latency requirements that restricted fleet scope.", "section": "3.3 \u2013 Fleet Topologies \u2013 Logical Design"}, {"question": "When designing VCF for a customer with strict data sovereignty requirements (data must not leave the country), which design constraint must be enforced?", "options": ["Use only NSX VPCs for network isolation", "Deploy separate VCF instances per country with data replication disabled across borders, and restrict fleet management traffic to metadata only", "Deploy a single global stretched cluster", "Use VCF Automation to tag VMs by country"], "correct": 1, "explanation": "Data sovereignty requires: separate instances per jurisdiction (data stays local), no cross-border data replication (DR must be within the same country), and fleet management restricted to operational metadata (no workload data traverses fleet communication). A global stretched cluster would violate sovereignty by replicating data across borders.", "section": "3.9 \u2013 Design for Security"}, {"question": "A customer's design requires 99.999% availability ('five nines') for a Tier-1 application. Which combination of design decisions provides the highest availability?", "options": ["Single host with local RAID storage", "vSAN stretched cluster across two AZs with vSphere HA, Admission Control, fault domains, and automated failover with VMware Live Recovery for DR to a third site", "Single AZ with 3-node cluster and nightly backups", "VCF consolidated architecture with DRS"], "correct": 1, "explanation": "Five-nines requires defense in depth: vSAN stretched cluster (active-active across AZs for site-level protection), vSphere HA with Admission Control (host-level failover), fault domains (rack-level protection), and VMware Live Recovery to a third site (disaster recovery). Each layer addresses a different failure mode: host, rack, site, and region.", "section": "3.5 \u2013 Availability Across Availability Zones"}, {"question": "In VCF 9.0, what storage architecture is supported for principal storage?", "options": ["Both vSAN OSA (Original Storage Architecture) and vSAN ESA (Express Storage Architecture)", "Only vSAN ESA (Express Storage Architecture) \u2014 hybrid and OSA configurations are deprecated", "Only external SAN storage (FC/iSCSI)", "Any storage type including NFS and vVols"], "correct": 1, "explanation": "VCF 9.0 supports only vSAN ESA as the principal storage architecture. OSA (Original Storage Architecture), hybrid configurations, and vVols are deprecated. vSAN ESA requires NVMe storage devices and delivers improved performance with a single storage tier, native compression, and snapshot efficiency.", "section": "3.4 \u2013 Management Domain \u2013 Physical Design"}, {"question": "A stakeholder says: 'Deploy NSX distributed firewall with microsegmentation on all management VMs using a zero-trust policy model.' How should this be classified?", "options": ["Business requirement \u2014 it states a business outcome", "Technical requirement \u2014 it specifies exact technology and configuration approach", "Assumption \u2014 it is not yet validated", "Risk \u2014 it introduces complexity"], "correct": 1, "explanation": "This is a technical requirement because it specifies the exact technology (NSX DFW), the scope (all management VMs), and the approach (zero-trust microsegmentation). A business requirement would say 'protect management infrastructure from lateral threats' without prescribing how.", "section": "1.1 \u2013 Differentiate Business vs Technical Requirements"}, {"question": "A design document contains the statement: 'The VCF environment will use spine-leaf networking with 2x Cisco Nexus 9336C-FX2 spine switches, 6x Nexus 93180YC-FX3 leaf switches, BGP ASN 65001, and MTU 9216.' What design level is this?", "options": ["Conceptual model", "Logical design", "Physical design", "Business requirements document"], "correct": 2, "explanation": "This is a physical design \u2014 it specifies exact switch models (Nexus 9336C-FX2, 93180YC-FX3), quantities, protocol configuration (BGP ASN 65001), and MTU values. A logical design would state 'spine-leaf topology with BGP routing' without vendor-specific details.", "section": "1.2 \u2013 Conceptual Model, Logical Design, Physical Design"}, {"question": "An architect documents: 'The customer's existing firewall vendor (Palo Alto) does not integrate natively with NSX service insertion, which may delay the security design by 4 weeks.' What is this?", "options": ["Requirement", "Assumption", "Constraint", "Risk \u2014 a potential event that could negatively impact the project timeline"], "correct": 3, "explanation": "A risk is a potential event with negative impact. The possible 4-week delay caused by the integration gap is uncertain but could harm the timeline. If the delay were certain, it would be a constraint. The architect should document the risk with a mitigation plan (e.g., evaluate NSX-native firewall as fallback).", "section": "1.3 \u2013 Requirements, Assumptions, Constraints, Risks"}, {"question": "A design decision to implement VMware Live Recovery with 15-minute RPO and automated failover runbooks primarily addresses which AMPRS pillar?", "options": ["Availability", "Manageability", "Performance", "Recoverability"], "correct": 3, "explanation": "Recoverability focuses on restoring services after a disaster. VMware Live Recovery with RPO/RTO objectives and automated runbooks is a disaster recovery mechanism \u2014 it recovers the environment after a major failure. Availability keeps things running (HA, stretched cluster); recoverability brings things back after they've failed.", "section": "1.4 \u2013 AMPRS Design Characteristics"}, {"question": "An architect identifies the risk: 'Single WAN link between two AZs creates a single point of failure for the stretched cluster.' Which mitigation strategy is most appropriate?", "options": ["Accept the risk and add it to the risk register", "Mitigate by designing redundant WAN links via diverse carriers with automatic failover", "Avoid the risk by abandoning the stretched cluster design entirely", "Transfer the risk to the network vendor's SLA"], "correct": 1, "explanation": "Risk mitigation reduces the probability or impact: redundant WAN links via diverse carriers eliminate the single point of failure while preserving the stretched cluster design. Acceptance (no action) leaves the vulnerability open. Avoidance (abandoning stretched cluster) may sacrifice business requirements. Transfer (vendor SLA) doesn't fix the technical gap.", "section": "1.5 \u2013 Risk Mitigation Strategy"}, {"question": "Which activity is part of a design validation strategy?", "options": ["Running a performance benchmark on production workloads", "Creating a traceability matrix that maps every requirement to at least one design decision and verifying all constraints are respected", "Deploying the physical infrastructure in the datacenter", "Writing operational runbooks for day-2 operations"], "correct": 1, "explanation": "Design validation verifies the design is complete and correct BEFORE implementation. A traceability matrix ensures every requirement has a corresponding design decision, every assumption is documented, all constraints are respected, and risks are mitigated. This is a quality gate between design and implementation.", "section": "1.7 \u2013 Design Validation Strategy"}, {"question": "In VCF 9.0, what are Fleet Services and where do they run?", "options": ["Fleet Services are VCF Operations and VCF Automation \u2014 they run centrally and manage one or more instances across the fleet", "Fleet Services are ESXi host agents that report to SDDC Manager", "Fleet Services are the vSAN witness appliances deployed at each site", "Fleet Services are the NSX Edge nodes providing north-south routing"], "correct": 0, "explanation": "Fleet Services in VCF 9.0 are the centralized management components: VCF Operations (monitoring, capacity, fleet lifecycle) and VCF Automation (self-service, multi-tenancy). They run centrally (typically in one instance's management domain) and manage the entire fleet across all instances.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "A customer has two datacenters and wants active workloads in both. They require a single management plane and tolerate no more than 5ms latency between sites. Which VCF architecture is most appropriate?", "options": ["Two independent VCF fleets", "A single VCF instance with a stretched management cluster and workload domains across both sites", "A single VCF fleet with one instance per datacenter and no stretched clusters", "Consolidated architecture in one datacenter with backup in the other"], "correct": 1, "explanation": "With \u22645ms latency and a need for active workloads in both sites with a single management plane, a single VCF instance with stretched management cluster provides unified management. Workload domains can also be stretched or site-specific. The latency requirement (\u22645ms) makes stretched clustering viable.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "What is the role of SDDC Manager in a VCF 9.0 instance?", "options": ["SDDC Manager only provides monitoring dashboards", "SDDC Manager orchestrates deployment, configuration, and lifecycle management of all components within an instance (vCenter, NSX, vSAN, hosts)", "SDDC Manager replaces vCenter Server for VM management", "SDDC Manager is deprecated in VCF 9.0"], "correct": 1, "explanation": "SDDC Manager is the orchestration engine within each VCF instance. It handles: initial deployment (bring-up), adding/removing hosts and clusters, creating workload domains, bundle-based lifecycle management (upgrades), and pre-check validation. It works alongside vCenter (compute) and NSX (networking), not as a replacement.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "Which deployment mode in VCF 9.0 allows running VCF Operations or NSX Manager as a single node instead of a 3-node cluster?", "options": ["Consolidated mode", "Simple deployment mode \u2014 reduces resource overhead at the cost of high availability for the management component", "Minimal mode", "Developer mode"], "correct": 1, "explanation": "VCF 9.0 introduces Simple deployment mode for components like VCF Operations and NSX Manager. Instead of deploying a 3-node cluster (HA mode), a single node can be used, reducing resource footprint. The trade-off is loss of HA for that management component \u2014 suitable for smaller environments or lab deployments.", "section": "2.1 \u2013 VCF Architecture Options"}, {"question": "During requirements gathering, the customer provides both 'Our compliance team requires all audit logs to be retained for 7 years' and 'We need enough storage for the next 3 years of growth.' How should these be categorized?", "options": ["Both are technical requirements", "The first is a compliance/regulatory requirement (non-functional); the second is a capacity/scalability requirement (non-functional)", "Both are business requirements with no technical implications", "The first is a constraint; the second is an assumption"], "correct": 1, "explanation": "Both are non-functional requirements: audit log retention (7 years) is a compliance requirement that drives log storage design, archival policies, and potentially VCF Operations for Logs sizing. The 3-year growth projection is a capacity requirement that drives storage sizing, cluster scalability planning, and IP address range allocation.", "section": "3.1 \u2013 Gather and Analyze Business Objectives"}, {"question": "A customer says: 'We need to support 50 developers provisioning environments on-demand, but no single team should consume more than 20% of total cluster capacity.' What type of requirements are these?", "options": ["Only business requirements", "A functional requirement (self-service provisioning) combined with a governance requirement (resource quotas per team)", "Only technical requirements", "These are constraints, not requirements"], "correct": 1, "explanation": "Self-service provisioning for 50 developers is a functional requirement defining a capability. The 20% capacity cap per team is a governance requirement defining a resource boundary. Together, they drive VCF Automation design: projects per team, cloud zone quotas, resource entitlements, and approval policies.", "section": "3.1 \u2013 Gather and Analyze Business Objectives"}, {"question": "When creating a conceptual model for a multi-site VCF deployment, what level of detail is appropriate?", "options": ["IP addressing, VLAN IDs, and host specifications", "Major building blocks (Fleet, Instances, Domains, Sites), their relationships, and the design intent \u2014 without implementation specifics", "Full NSX routing configuration and BGP peering details", "Exact vSAN storage policy configuration per workload"], "correct": 1, "explanation": "A conceptual model shows the 'what' and 'why' at a high level: which sites, how many fleets/instances, which domains, and the design intent (e.g., 'active-active for availability'). It deliberately omits implementation details like IPs, VLANs, routing configs \u2014 those belong in logical and physical designs.", "section": "3.2 \u2013 Create a Conceptual Model"}, {"question": "When designing VCF logical networking, what is the key decision regarding NSX Edge cluster sizing?", "options": ["NSX Edge clusters are not needed in VCF 9.0", "The number of Edge nodes, their form factor (VM vs bare-metal), and whether to use shared or dedicated Edge clusters per workload domain", "Only the VLAN ID for Edge uplinks", "Whether to use distributed switching or standard switching"], "correct": 1, "explanation": "NSX Edge cluster design decisions include: number of Edge nodes (minimum 2 for HA), form factor (VM Edges for most workloads, bare-metal for high-throughput), and shared vs dedicated per workload domain. Shared Edge clusters reduce resource overhead; dedicated provide isolation and independent scaling.", "section": "3.3 \u2013 VCF Networking \u2013 Logical Design"}, {"question": "A customer requires the management domain to remain operational even if all workload domains fail. What logical design principle does this reflect?", "options": ["Cost optimization \u2014 fewer hosts in the management domain", "Fault isolation \u2014 the management domain is on separate infrastructure to ensure the management plane survives workload-level failures", "Performance \u2014 management workloads need dedicated CPU", "Compliance \u2014 management and workloads must be on different hardware"], "correct": 1, "explanation": "Fault isolation between management and workload domains ensures the control plane (vCenter, NSX Manager, SDDC Manager) remains available even during catastrophic workload failures. This is a key principle of VCF standard architecture and critical for operational resilience.", "section": "3.3 \u2013 Management Domain \u2013 Logical Design"}, {"question": "In VCF 9.0, which component provides the self-service portal for tenants to provision VMs, networks, and Kubernetes clusters?", "options": ["SDDC Manager", "VCF Automation (formerly Aria Automation / vRealize Automation)", "VCF Operations", "vCenter Server"], "correct": 1, "explanation": "VCF Automation is the self-service and multi-tenancy platform. It provides catalog-based provisioning, project-based isolation, approval workflows, and integration with VKS for Kubernetes. SDDC Manager handles infrastructure orchestration but not tenant self-service. VCF Operations handles monitoring, not provisioning.", "section": "3.3 \u2013 VCF Automation \u2013 Logical Design"}, {"question": "For the physical design of a VCF workload domain, how should the architect determine the number of ESXi hosts required?", "options": ["Always use the minimum of 3 hosts", "Size based on: total workload resource requirements (CPU, memory, storage), vSAN FTT overhead, HA capacity reservation (N+1 or N+2), and planned growth headroom", "Match the number of hosts in the management domain", "Use the maximum supported cluster size (64 hosts) for future growth"], "correct": 1, "explanation": "Host count is driven by: aggregate CPU/memory demand of all VMs, vSAN capacity needs including FTT overhead (mirroring uses 2x, erasure coding less), HA reservation (N+1 means losing 1 host still meets demand), and growth buffer (typically 20-30%). Undersizing causes resource contention; oversizing wastes budget.", "section": "3.4 \u2013 Workload Domain \u2013 Physical Design"}, {"question": "When designing the physical storage for VCF 9.0 with vSAN ESA, what NVMe device configuration is recommended?", "options": ["A mix of SAS HDDs and NVMe SSDs (hybrid configuration)", "All NVMe devices in a single storage tier \u2014 vSAN ESA uses a flat storage pool without cache/capacity tier separation", "One NVMe cache device and multiple SAS capacity devices per disk group", "External FC SAN LUNs presented as vSAN datastores"], "correct": 1, "explanation": "vSAN ESA (Express Storage Architecture) uses a single-tier, all-NVMe design \u2014 no cache/capacity tier separation. All NVMe devices contribute to a flat storage pool. This eliminates the disk group concept from OSA and improves performance uniformity. Hybrid configurations (HDD+SSD) are deprecated in VCF 9.0.", "section": "3.4 \u2013 Management Domain \u2013 Physical Design"}, {"question": "A customer has a stretched vSAN cluster and the witness appliance becomes unreachable. What happens and what design mitigation should be in place?", "options": ["Nothing happens \u2014 the witness is optional", "The cluster loses quorum for objects that need the witness vote; the design should include a redundant witness or secondary witness with automated failover", "All VMs immediately shut down", "vSAN automatically rebuilds all data to one site"], "correct": 1, "explanation": "The witness provides the quorum vote for stretched cluster objects. If the witness is lost AND one data site fails, objects lose quorum and become inaccessible. Design mitigations: redundant network paths to the witness, witness replacement procedures, and ensuring the witness site is independently resilient.", "section": "3.5 \u2013 Availability Across Availability Zones"}, {"question": "For availability within a single AZ, what is the purpose of vSphere Admission Control in the design?", "options": ["To prevent new VMs from being created", "To reserve cluster capacity so that if one or more hosts fail, HA can restart all protected VMs on surviving hosts", "To limit the number of vMotion operations", "To control which users can access vCenter"], "correct": 1, "explanation": "Admission Control reserves a percentage of cluster resources (CPU/memory) to guarantee that HA can restart all protected VMs after host failures. Without it, the cluster could be fully committed, leaving no capacity for failover. Typical setting: 25% for N+1 in a 4-host cluster, or host-specific reservation.", "section": "3.5 \u2013 Availability Within an Availability Zone"}, {"question": "When designing for VCF lifecycle management, what determines the order in which components should be upgraded?", "options": ["Alphabetical order of component names", "The VCF Bill of Materials (BOM) compatibility matrix \u2014 management domain first, then workload domains, following SDDC Manager's prescribed upgrade sequence", "The customer's preference for which domain to upgrade first", "All components must be upgraded simultaneously in a single maintenance window"], "correct": 1, "explanation": "VCF lifecycle management follows a strict BOM-driven sequence: SDDC Manager first, then management domain components (vCenter, NSX, vSAN/ESXi), then workload domains. SDDC Manager validates compatibility at each step. Upgrading out of order can break component interoperability.", "section": "3.6 \u2013 Design for Manageability \u2013 Lifecycle Management"}, {"question": "A customer's VCF environment currently uses 40% of cluster capacity with expected 15% annual growth. What capacity management design should the architect recommend?", "options": ["No action needed until capacity exceeds 80%", "Configure VCF Operations capacity analytics with demand-based forecasting, set alert thresholds at 70% and 80%, and plan hardware procurement lead times for expansion", "Double the cluster size immediately", "Migrate workloads to public cloud to avoid capacity planning"], "correct": 1, "explanation": "Proactive capacity management: VCF Operations forecasts when thresholds will be breached (at 15% growth, 70% utilization reached in ~2 years). Alert thresholds at 70% (warning) and 80% (critical) trigger procurement actions with lead time built in. This prevents emergency over-provisioning or capacity crises.", "section": "3.6 \u2013 Design for Manageability \u2013 Capacity Management"}, {"question": "A customer reports that VDI desktops experience login storms every morning at 8 AM causing performance degradation. What design decision addresses this?", "options": ["Add more memory to each ESXi host", "Design the workload domain with storage policies optimized for burst IOPS, consider NVMe-backed vSAN ESA with adequate read cache, and size the cluster for peak concurrent login demand", "Disable vSphere DRS during login hours", "Reduce the number of VDI desktops"], "correct": 1, "explanation": "VDI boot/login storms are IOPS-intensive. Design considerations: vSAN ESA with NVMe provides high burst IOPS, storage policies with appropriate stripe width for parallelism, cluster sizing for peak concurrent sessions (not average), and potentially CBRC (Content Based Read Cache) or linked clones to reduce unique I/O.", "section": "3.7 \u2013 Design for Performance"}, {"question": "When designing for network performance in a VCF environment, which factor most impacts east-west traffic throughput between VMs?", "options": ["The speed of the physical uplinks to the ToR switches", "The NSX overlay encapsulation overhead and the Host TEP network bandwidth \u2014 VMs on different hosts communicate through Geneve-encapsulated tunnels over the TEP network", "The management network bandwidth", "The vMotion network MTU setting"], "correct": 1, "explanation": "East-west VM traffic in NSX uses Geneve overlay tunnels between host TEPs. The TEP network bandwidth directly impacts inter-host VM throughput. Design considerations: dedicated TEP VLAN with adequate bandwidth (25GbE+), jumbo frames (MTU 9000) to reduce encapsulation overhead, and NIC teaming for aggregate throughput.", "section": "3.7 \u2013 Design for Performance"}, {"question": "What is the difference between RPO and RTO, and how do they influence VCF recoverability design?", "options": ["RPO and RTO are the same metric measured differently", "RPO (Recovery Point Objective) = maximum acceptable data loss; RTO (Recovery Time Objective) = maximum acceptable downtime. Lower RPO requires more frequent replication; lower RTO requires faster failover mechanisms", "RPO applies only to storage; RTO applies only to networking", "RPO measures performance; RTO measures availability"], "correct": 1, "explanation": "RPO defines how much data loss is acceptable (RPO=0 means no data loss, requiring synchronous replication). RTO defines how long recovery can take (RTO=1hr means services must be restored within 1 hour). These metrics drive the choice between stretched cluster (RPO=0, near-zero RTO), Live Recovery (configurable RPO, automated RTO), or backup (high RPO/RTO).", "section": "3.8 \u2013 BCDR for Management and Workloads"}, {"question": "A customer requires DR protection for 500 VMs but cannot afford stretched clusters at both sites. Which VCF recoverability design provides a cost-effective solution?", "options": ["Deploy stretched clusters for all 500 VMs regardless of cost", "Tier the VMs: use VMware Live Recovery with 5-minute RPO for Tier-1 VMs (50 most critical), daily backup for Tier-2 VMs (remaining 450), and automate recovery runbooks", "Use only daily backups for all VMs", "Do not implement DR \u2014 accept the risk"], "correct": 1, "explanation": "Tiered recoverability matches protection level to business criticality: Tier-1 (mission-critical) gets near-real-time replication with automated failover; Tier-2 (important but tolerant of longer RTO) gets scheduled backups. This optimizes cost while meeting each tier's RPO/RTO requirements. Not all VMs need the same protection level.", "section": "3.8 \u2013 Disaster Recovery Requirements"}, {"question": "A customer requires compliance with CIS benchmarks for all ESXi hosts in VCF. Which design approach addresses this?", "options": ["Manually harden each host after deployment", "Design the VCF environment with a hardened host profile applied via SDDC Manager, enable compliance drift monitoring in VCF Operations, and remediate automatically", "Compliance monitoring is not possible in VCF", "Use third-party agents installed on each ESXi host"], "correct": 1, "explanation": "VCF security design for compliance: SDDC Manager applies consistent host configurations aligned to CIS benchmarks during provisioning. VCF Operations monitors for configuration drift against the baseline. Automated remediation restores compliance when drift is detected. This ensures continuous compliance, not just point-in-time hardening.", "section": "3.9 \u2013 Design for Security"}, {"question": "For a VCF design requiring network traffic encryption between all ESXi hosts, which NSX feature should be included in the security design?", "options": ["NSX distributed firewall only", "NSX IPsec or Geneve encryption for overlay traffic, ensuring all east-west VM traffic is encrypted in transit between hosts", "VM-level TLS certificates", "vSAN encryption (data at rest only)"], "correct": 1, "explanation": "NSX provides overlay encryption (Geneve tunnel encryption) to secure east-west traffic between hosts. This encrypts VM-to-VM communication traversing the physical network without requiring changes to guest OS or applications. vSAN encryption protects data at rest; DFW controls access but doesn't encrypt traffic content.", "section": "3.9 \u2013 Design for Security"}, {"question": "A customer is migrating from VCF 5.2 to VCF 9.0. What is a key architectural change they must plan for?", "options": ["VCF 9.0 uses the same architecture as 5.2 \u2014 no changes needed", "VCF 9.0 replaces Consolidated/Standard domain types with Fleet/Instance hierarchy, deprecates vSAN OSA and hybrid, and requires vSAN ESA \u2014 requiring potential hardware refresh and architectural redesign", "Only the UI changes \u2014 the underlying architecture is identical", "VCF 9.0 removes support for workload domains"], "correct": 1, "explanation": "VCF 5.2\u21929.0 migration involves fundamental architecture changes: Fleet/Instance model replaces the old architecture, vSAN ESA replaces OSA/hybrid (may require NVMe hardware refresh), VCF Operations replaces SDDC Manager monitoring, VCF Identity Broker replaces PSC, and several features are deprecated (vVols, Host Profiles, Auto Deploy, vCLS).", "section": "3.10 \u2013 Workload Migration / Onboarding"}, {"question": "When designing VCF Automation content libraries, what strategy ensures consistency across multiple workload domains?", "options": ["Each workload domain maintains its own independent content library", "Design a centralized content library with subscribed libraries in each workload domain, ensuring all domains use approved, tested VM templates and OVAs", "Content libraries are not supported in VCF 9.0", "Use snapshots instead of templates"], "correct": 1, "explanation": "A centralized published content library with subscriber libraries in each workload domain ensures: consistent golden images across environments, centralized template governance (only approved images are published), and efficient storage (subscribed libraries sync from the source). This supports the self-service model with controlled image catalogs.", "section": "3.11 \u2013 Self-Service & Governance"}, {"question": "A customer wants developers to deploy Kubernetes clusters via a self-service portal without needing infrastructure knowledge. Which VCF design enables this?", "options": ["Give developers direct access to vCenter to create VMs manually", "Design VCF Automation catalog items that provision VKS (Tanzu Kubernetes) clusters with pre-defined sizes, networking, and storage policies \u2014 developers select from the catalog", "Install standalone Kubernetes clusters outside of VCF", "Provide developers with SSH access to ESXi hosts"], "correct": 1, "explanation": "VCF Automation catalog items can abstract the complexity of Kubernetes provisioning: developers select a cluster size (small/medium/large), and the automation workflow creates a VKS cluster with pre-configured networking (NSX integration), storage (vSAN policies), and resource quotas \u2014 no infrastructure knowledge needed.", "section": "3.11 \u2013 Modern Applications in VCF"}, {"question": "When designing a monitoring strategy, a customer asks for a single dashboard showing the health of all VCF components across their entire fleet. Which design approach is correct?", "options": ["Create separate monitoring tools for each instance", "Deploy VCF Operations as a fleet service with cross-instance visibility, custom dashboards aggregating health metrics from all instances, and super metrics for fleet-wide KPIs", "Use only vCenter Server alarms in each instance", "Monitor only the management domain and ignore workload domains"], "correct": 1, "explanation": "VCF Operations as a fleet service provides cross-instance visibility: a single pane of glass for all instances in the fleet. Custom dashboards can aggregate metrics, super metrics calculate fleet-wide KPIs, and alert escalation ensures issues in any instance are surfaced to the fleet operations team.", "section": "3.12 \u2013 Monitoring VCF Management Components"}, {"question": "A customer wants to monitor not just infrastructure metrics but also detect anomalous workload behavior (e.g., CPU spike patterns that indicate security incidents). Which VCF Operations capability should be designed?", "options": ["Standard vSphere alarms only", "VCF Operations anomaly detection with machine-learning-based dynamic thresholds, integrated with log analytics from VCF Operations for Logs", "Manual daily review of performance charts", "NSX flow monitoring with no integration to VCF Operations"], "correct": 1, "explanation": "VCF Operations uses ML-based dynamic thresholds that learn normal behavior patterns and alert on anomalies (deviations from baseline). Integrating with VCF Operations for Logs correlates infrastructure anomalies with log events, enabling root cause analysis. This proactive approach detects issues before they become outages.", "section": "3.12 \u2013 Monitoring VCF Workloads"}];
+
+const SECTION_CATEGORIES = {
+  "Section 1": [],
+  "Section 2": [],
+  "Section 3": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (s.startsWith("1.") || s.startsWith("Section 1") || s.startsWith("SECTION 1") || s.startsWith("Objective 1")) SECTION_CATEGORIES["Section 1"].push(s);
+  else if (s.startsWith("2.") || s.startsWith("Section 2") || s.startsWith("SECTION 2") || s.startsWith("Objective 2")) SECTION_CATEGORIES["Section 2"].push(s);
+  else if (s.startsWith("3.") || s.startsWith("Section 3") || s.startsWith("SECTION 3") || s.startsWith("Objective 3")) SECTION_CATEGORIES["Section 3"].push(s);
+  else { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; if (firstKey) SECTION_CATEGORIES[firstKey].push(s); }
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        item.classList.toggle('selected', cb.checked);
+        updateCount();
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answers[qid] === examQuestions[i].correct ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' disabled';
+      if (i === q.correct) cls += ' correct' + (selectedOpt === i ? '' : ' was-correct');
+      else if (i === selectedOpt) cls += ' incorrect';
+    } else {
+      if (selectedOpt === i) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = selectedOpt === q.correct;
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && selectedOpt !== undefined ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  answers[q.id] = i;
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (answers[q.id] === undefined) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answers[q.id] === q.correct).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answers[q.id] === q.correct) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (mode === 'correct') filtered = examQuestions.filter(q => answers[q.id] === q.correct);
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answers[q.id] === q.correct;
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled';
+      if (i === q.correct) cls += ' correct';
+      else if (i === answers[q.id]) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => answers[q.id] !== q.correct);
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium Web','Calibri',sans-serif;">
+  <svg width="42" height="19" viewBox="0 0 200 90" aria-hidden="true" style="display:inline-block;margin-bottom:6px;opacity:.95;">
+    <g fill="none" stroke="#FF4F41" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="14" y="24" width="68" height="46" rx="20"/>
+      <rect x="118" y="24" width="68" height="46" rx="20"/>
+      <path d="M82 42 C92 31 108 31 118 42"/>
+      <path d="M14 36 L2 26"/>
+      <path d="M186 36 L198 26"/>
+    </g>
+  </svg><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official VMware or ITQ material. For practice only.
+</footer>
+</body>
+</html>
