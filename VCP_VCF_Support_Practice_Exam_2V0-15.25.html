@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCP-VCF Support 9.0 (2V0-15.25) — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 1024px) {
+    .header h1 { font-size: 1.2rem; }
+    .score-breakdown { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .header { padding: 14px 16px; }
+    .header h1 { font-size: 1.1rem; }
+    .header-stats { gap: 12px; font-size: 0.82rem; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+    .score-breakdown { grid-template-columns: 1fr; }
+    .nav-bar { gap: 8px; }
+    .setup { padding: 20px; }
+    .setup h2 { font-size: 1.15rem; }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .option { padding: 14px 16px; }
+    .q-dot { width: 40px; height: 40px; font-size: 0.8rem; }
+    .btn { padding: 12px 24px; min-height: 44px; }
+    .btn-small { padding: 8px 16px; min-height: 44px; }
+    .section-item { padding: 12px 14px; min-height: 44px; }
+    .toggle { width: 50px; height: 28px; }
+    .toggle .slider:before { height: 22px; width: 22px; }
+    .toggle input:checked + .slider:before { transform: translateX(22px); }
+    .option:hover:not(.disabled) { border-color: transparent; background: var(--surface2); }
+    .option.selected:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
+.option.multi .option-letter { border-radius: 4px; }
+.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;font-family:'Titillium','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or VMware. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
+  <h1>VCP-VCF Support 9.0 <span>(2V0-15.25)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A storage administrator looks after a compact VMware Cloud Foundation (VCF) deployment: one VCF instance, one workload domain, and a single vSAN Express Storage Architecture (ESA) cluster built from five nodes. The cluster's default storage policy mirrors data using RAID-1. With free capacity dropping fast, the administrator tries to shrink the footprint of several oversized virtual machines by switching them to a '2 host failures – RAID-6' erasure-coding policy, but vSAN rejects the change immediately. New drives are already on order. What is the best interim action to reclaim usable capacity?", "options": ["Turn on encryption in the default vSAN storage policy.", "Move the affected virtual machines to a '1 host failure – RAID-5' erasure-coding policy.", "Re-provision the virtual machines from thick to thin format.", "Turn on compression in the default vSAN storage policy."], "correct": 1, "explanation": "RAID-6 (FTT=2) in vSAN ESA needs a minimum of six hosts, so on a five-node cluster the policy is invalid and is rejected outright. RAID-5 (FTT=1) only needs four hosts, so it is valid on five nodes and still consumes noticeably less capacity than RAID-1 mirroring, buying time until the new drives arrive.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "After the admin account password expired on a pair of NSX Edge transport nodes, an engineer signed into each Edge console and set a new password manually. VCF Operations still holds the previous credential. Which follow-up action realigns VCF Operations with the password that was set by hand?", "options": ["In VCF Operations, remediate the admin password for each NSX Edge transport node.", "In VCF Operations, sync the admin password for each NSX Edge transport node.", "In VCF Operations, update the admin password for each NSX Edge transport node.", "In VCF Operations, rotate the admin password for each NSX Edge transport node."], "correct": 2, "explanation": "Because the password was changed directly on the Edge nodes (outside the VCF management plane), the stored credential is stale. The Update action tells VCF Operations the new password value so its inventory matches what is actually set on each node. Rotate/remediate would instead generate or push a different password.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "Inside a VCF Automation organization configured for All Apps, a developer publishes a catalog item into a vSphere Namespace. It provisions successfully into zone1 and zone2 but never deploys into zone3. The backing vSphere Supervisor spans three zones (zone1, zone2, zone3). What explains the failure in zone3?", "options": ["zone3 was never added to the vSphere Namespace.", "The developer lacks the Project Advanced User role on the vSphere Namespace.", "The vSphere Namespace is assigned the default large vSphere Namespace class.", "The developer lacks the Project User role on the vSphere Namespace."], "correct": 0, "explanation": "A vSphere Namespace does not automatically inherit every zone of its Supervisor; each zone has to be explicitly included in the Namespace. Successful deployments into zone1 and zone2 prove the developer's permissions are fine, so the only thing different about zone3 is that it was never added to the Namespace.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "An engineer launches the wizard to build a new VI workload domain from VCF Operations but stalls on the host-selection step – the list is empty. The UI explains: 'No suitable hosts available to create a VI workload domain. Hosts must be unassigned, commissioned with at least one physical NIC and the same storage type as the VI workload domain, and the ESX version must be compatible with the lowest ESX version present in the management domain.' Where does the engineer commission fresh hosts so the workload domain can be created?", "options": ["Through the VCF Installer.", "Through VCF Operations.", "Through the vSphere Client.", "Through Cloud Builder."], "correct": 1, "explanation": "Host commissioning in VCF is performed from VCF Operations (the role formerly held by SDDC Manager). The VCF Installer and Cloud Builder only participate in the initial bring-up of an instance, not in day-2 host commissioning.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "A consultant notices that the vSphere Global Inventory loads only when connected to the management domain vCenter; the workload domain's vCenter never displays it. Why is Global Inventory missing from the workload domain vCenter?", "options": ["No external VIDB instance has been deployed.", "An inventory sync was never run after the workload domain was created.", "Supervisor Management was never enabled.", "VCF SSO and vCenter linking have not been configured."], "correct": 3, "explanation": "The Global Inventory view depends on the vCenter instances being joined through VCF SSO and vCenter linking. Without that linking the workload domain vCenter operates standalone and cannot surface the shared Global Inventory.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A vSAN stretched cluster will not form between the witness appliance and the data nodes. From the witness, the engineer confirms reachability to a data node and the test succeeds:\nvmkping -I <witness-vmk#> <vsan-IP> -s 1472 -d\nWhat is the most likely remaining cause?", "options": ["There are no virtual machines on the vSAN cluster yet.", "Jumbo frames are not enabled on the witness network.", "Port 12321 is not open bidirectionally between all nodes.", "Port 443 is not open bidirectionally between all nodes."], "correct": 2, "explanation": "A successful 1472-byte ping with the don't-fragment bit set proves the L3 path and a standard 1500 MTU already work, so basic connectivity and jumbo-frame concerns are ruled out. vSAN witness traffic for a stretched cluster rides on port 12321, which must be open in both directions between all nodes.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "Shortly after standing up a brand-new three-node vSAN ESA cluster in an existing workload domain and creating several VMs, an administrator sees capacity draining far faster than planned. Investigation shows that Auto-Policy Management set the datastore default policy to RAID-1 instead of the expected RAID-5. What is the likely cause?", "options": ["Force Provisioning is enabled on the vSAN storage policy.", "Host Rebuild Reserve is enabled on the vSAN ESA cluster.", "RAID-5 in vSAN ESA requires a minimum of four hosts.", "RAID-5 is only supported on a vSAN ESA storage cluster."], "correct": 2, "explanation": "Auto-Policy Management chooses the most space-efficient policy the cluster size can support. RAID-5 in vSAN ESA needs at least four hosts; with only three nodes the highest supportable policy is RAID-1, so Auto-Policy correctly fell back to mirroring.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "While reviewing cluster health in the vSphere Client, an operator sees a 'vSphere HA host status' alert on one host. Cycling vSphere HA off and back on produces a new host error: 'A general system error occurred: Failed to start fdm service on host.' What is the root cause?", "options": ["The vmware-fdm VIB is missing from the ESX host.", "vSphere HA Admission Control settings are misconfigured.", "The vmware-fdm service has been disabled on the ESX host.", "The vSphere HA startup policy is misconfigured."], "correct": 0, "explanation": "FDM (Fault Domain Manager) is the vSphere HA agent, delivered to each host as the vmware-fdm VIB. When the host cannot start the fdm service at all, the VIB itself is missing and must be reinstalled (re-enabling HA normally redeploys it).", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "A VCF administrator can no longer provision virtual machines onto a particular compute cluster. The cluster's vCLS agent VMs are powered off and refuse to power back on. Which action lets the administrator restore VM provisioning?", "options": ["Disable vSphere HA on the affected cluster.", "Delete every resource pool in the affected cluster.", "Set DRS automation to fully automated.", "Enable retreat mode on the affected cluster."], "correct": 3, "explanation": "When vCLS agent VMs are stuck powered off, enabling retreat mode lets vSphere tear down and recreate the vCLS VMs, clearing the cluster-services dependency that was blocking provisioning.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "An NSX Edge transport node appears in inventory but the NSX Manager UI flags it as 'Not Ready.' What should the administrator inspect first?", "options": ["The Edge node's uplink network configuration.", "Whether the Edge node has been added to an Edge cluster.", "The license key shown in the NSX Manager UI.", "The Edge node's CPU reservation."], "correct": 0, "explanation": "A 'Not Ready' Edge most often comes down to its data-plane uplinks: a mismatched VLAN, transport zone, or uplink profile prevents the node from reaching a ready state, so the uplink network configuration is the first thing to verify.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "During activation of a new vSphere Supervisor for use with VCF Automation, an engineer chooses 'VCF Networking with VPC.' On the workload-network page the Virtual Private Cloud (VPC) Connectivity Profile dropdown is blank, even though a VPC Connectivity Profile clearly exists in NSX. What causes the empty dropdown?", "options": ["No default VPC has been created.", "The Default NSX Project is the one currently selected.", "The Supervisor control plane is configured for high availability.", "The Tier-0 gateway is running in active/active mode."], "correct": 1, "explanation": "VPC Connectivity Profiles only exist within dedicated (non-default) NSX Projects. If the Default Project is the selected scope, the dropdown comes up empty even though a profile exists elsewhere in NSX.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "An architect plans to import an existing vSphere environment into VCF as a workload domain. The source environment runs vSphere 8.0 Update 3, a three-node vSAN OSA cluster with a single datastore, two vSphere Distributed Switches, and three VMkernel adapters that currently obtain their addresses via DHCP. What must be corrected before the import can proceed?", "options": ["Upgrade vCenter and ESXi to vSphere 9.0 first.", "Reconfigure the VMkernel adapters to use statically assigned IP addresses.", "Convert the vSAN datastore from OSA to ESA.", "Collapse the two distributed switches into a single VDS."], "correct": 1, "explanation": "A VCF-managed environment requires statically assigned VMkernel IP addresses; DHCP-assigned VMkernel adapters are not supported for import. The vSphere 8.0 U3, vSAN OSA, and dual-VDS attributes are all acceptable for the import workflow.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "An administrator is diagnosing an NSX data-plane problem on an ESX host and wants to confirm that the NSX VIBs are installed. Which command lists the installed VIBs on the host?", "options": ["esxcfg software list", "nsxcli get version", "esxtop -b -d 2 -n 100", "esxcli software vib list"], "correct": 3, "explanation": "'esxcli software vib list' enumerates every VIB installed on an ESX host, including the NSX kernel modules, which lets the administrator confirm the required NSX VIBs are present.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "An administrator wants to grow a vSAN cluster in a workload domain by adding a spare host through the vSphere Client, but the Add Host screen shows none available: 'No unassigned hosts available with storage type VSAN. Commission hosts with physical NICs 0 & 1 to Add Host from UI.' Where are hosts commissioned so they become available?", "options": ["In VCF Operations, under Fleet Management.", "In the vSphere Client, under Supervisor Management.", "In SDDC Manager, under Workload Domains.", "In the vSphere Client, under Global Inventory."], "correct": 0, "explanation": "Unassigned hosts are commissioned from VCF Operations under Fleet Management. Only after commissioning there do they appear as candidates that can be added to a cluster from the vSphere Client.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "After creating a VPC and a subnet backed by a DHCP server, an administrator finds that attached virtual machines receive an IP address but no DNS or NTP settings. How should the administrator deliver DNS and NTP to those clients?", "options": ["Enable DNS and NTP passthrough on the DHCP server.", "Switch the DHCP network mode from Distributed Connectivity to Centralized Connectivity.", "Change the DHCP server mode from DHCP Server to DHCP Relay.", "Add the DNS and NTP server addresses to the default VPC Service Profile."], "correct": 3, "explanation": "DNS and NTP for VPC subnets are sourced from the VPC Service Profile, not from the DHCP configuration itself. Populating the default VPC Service Profile with the correct DNS and NTP addresses lets the DHCP-served clients receive them.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "An operator attempts to change the vCenter root account password from VCF Operations. The job fails with: 'Failed to authenticate with the guest operating system using the supplied credentials.' What most likely caused the failure?", "options": ["The password was already changed directly on the vCenter appliance.", "The SSH service is not running.", "The new password does not meet the complexity policy.", "vCenter is offline."], "correct": 0, "explanation": "The authentication error means the credential VCF Operations holds no longer matches reality – which happens when the root password was previously changed directly on the vCenter appliance, leaving the management plane out of sync.", "priority": true}, {"section": "Objective 5.5 – License Management", "sectionClean": "Objective 5.5 – License Management", "question": "Developers ask an administrator to switch on the vDefend Distributed Firewall, but the feature is blocked because a license is missing. In which component must the new license be applied?", "options": ["VCF Automation.", "SDDC Manager.", "NSX Manager.", "VCF Operations."], "correct": 2, "explanation": "vDefend Distributed Firewall is an NSX security capability, so its license is applied in NSX Manager where NSX feature entitlements are managed.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A four-node vSAN cluster in a workload domain reports a 'vSAN cluster partition' warning; performance is degraded and objects show as non-compliant. No host has failed. Which change best explains the partition?", "options": ["IGMP snooping was disabled on the multicast group.", "The vSAN witness service was moved onto the vMotion network.", "Jumbo frames are configured on the vSphere Distributed Switch.", "The VLAN on a physical switch port was changed."], "correct": 3, "explanation": "Changing the VLAN on a physical switch port cuts the affected hosts' vSAN VMkernel adapters off from the rest of the cluster. The hosts can no longer reach each other over the vSAN network, which is exactly what produces a cluster partition.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "In VCF Automation, the administrator of a newly created organization tries to create a Namespace and, after selecting a region, receives the error 'Failed to list VPC.' Checking NSX Manager for that region shows no NSX Project for the organization. What could cause these symptoms?", "options": ["The organization administrator has not created a Project in the selected region.", "The provider administrator has not set up the organization's networking configuration for the selected region.", "The organization administrator has not created a VPC in the selected region.", "The provider administrator never granted the organization administrator role to the first user."], "correct": 1, "explanation": "Per-region networking, including the backing NSX Project, is set up by the provider administrator on the organization's behalf. The missing NSX Project shows that step was never completed, so the organization administrator cannot list any VPC.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "An administrator wants to add another organization in VCF Automation. Signed into the Provider Management Portal, the only option offered is to create organizations for All Apps. What action lets the administrator create an organization for VM Apps instead?", "options": ["Delete the existing All Apps organizations from the Provider Management Portal.", "Create the new VM Apps organization using the VCF Automation API.", "Enable VM Apps organization creation in the Provider Management Portal.", "Delete the existing VM Apps organization using the VCF Automation API."], "correct": 1, "explanation": "The Provider Management Portal UI can only create All Apps organizations. Creating a VM Apps organization is supported only through the VCF Automation API.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "To learn which identity actually drives actions issued from VCF Operations, an administrator powers a virtual machine on and off through VCF Operations, then checks the vCenter Recent Tasks pane. Which account appears as the task initiator?", "options": ["The service account between vCenter and SDDC Manager.", "The user currently signed in to VCF Operations.", "The service account between VCF Operations and vCenter.", "The administrator@vsphere.local account."], "correct": 2, "explanation": "Regardless of which user triggers the action in VCF Operations, the work is carried out against vCenter using the dedicated VCF Operations-to-vCenter service account, so that is the initiator recorded in the vCenter task pane.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "An administrator uploads a certificate chain into VCF Operations, and validation fails with 'The provided certificate content is invalid.' Which of these would produce that error?", "options": ["The certificates in the chain are in the wrong order.", "The chain is missing the root CA.", "The certificate is not PEM-encoded.", "The chain does not include the private key."], "correct": 0, "explanation": "VCF Operations expects the chain in the order server certificate → intermediate CA(s) → root CA. If the order is wrong the content is rejected as invalid even when every certificate in the file is otherwise correct.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "An administrator creating a new region through the VCF Automation Provider portal cannot find the workload domain's NSX Manager in the list of available NSX Managers. What must the administrator do to make it appear?", "options": ["Deploy a new VCF workload domain.", "Add the SDDC Manager integration for the VCF instance.", "Add another cluster to the VCF workload domain.", "Trigger an inventory sync in VCF Operations Fleet Management."], "correct": 1, "explanation": "VCF Automation only learns about a VCF instance once the SDDC Manager integration for that instance is added. With the integration in place, Automation can discover the NSX Managers belonging to the instance.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "An administrator configures an offline depot in VCF Operations Fleet Management in order to deploy VCF Operations for Logs:\n- Depot type: Web server\n- Repository URL: http://10.20.30.40/depot/\n- Username: depotuser / Password: (set)\nThe bundle was downloaded into /VCF/ and then copied to /depot/ on the web server. Configuration fails with: 'Either the depot URL provided is partial or invalid or not reachable or download token is invalid.' Which two changes resolve the issue? (Choose two.)", "options": ["Change the depot type to Local Path.", "Set the Repository URL to the web-server root, http://10.20.30.40.", "Re-share the original /VCF/ folder, which holds the correct depot structure.", "Set the Repository URL to https://10.20.30.40/depot/.", "Re-share the Fleet Manager appliance's /data/ folder."], "correct": [1, 2], "explanation": "Two things are wrong. First, the Repository URL should point at the web-server root (http://10.20.30.40) so VCF Operations can traverse the expected folder layout. Second, the folder that must be shared is the original /VCF/ directory that contains the proper depot structure – not the manually copied /depot/ path.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "An administrator has deployed and configured the Application Monitoring Telegraf agent on 30 virtual machines from VCF Operations. Twenty-four hours later, alerts report that no metrics have been collected since the agents were deployed. What is a likely cause?", "options": ["The Telegraf agent and the Cloud Proxy clocks are out of sync.", "The Service Discovery management pack has not been configured.", "Application monitoring uses a single Cloud Proxy instead of a Collector Group.", "There is a compatibility issue between the VM hardware version and VMware Tools."], "correct": 0, "explanation": "VCF Operations validates the timestamps on incoming Telegraf metrics. If the agent and the Cloud Proxy clocks have drifted apart, the metric timestamps fall outside the acceptable window and the data is silently rejected, so nothing is collected.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "From the NSX Manager UI, an administrator identifies a problem with BGP peering. Which command, run on the NSX Edge transport node, gives the most detailed insight into the BGP session?", "options": ["get edge-cluster status", "get logical-routers", "get edge-cluster history state", "get log-file routing follow"], "correct": 3, "explanation": "'get log-file routing follow' streams the live routing log on the Edge node, including the BGP daemon's output – neighbor state transitions, keepalives, and route-advertisement detail – which is what you need to diagnose a peering problem.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "The VCF Installer reports a time-synchronization problem affecting NSX Manager. The administrator has already confirmed all of the following: (1) the NTP server IPs are present in the Installer's NTP configuration, (2) DNS records for the NTP servers resolve correctly, (3) the NTP servers respond to ping by name and by IP from the Installer, and (4) the Installer's own clock is synchronized with the NTP servers. What additional step best helps isolate the cause?", "options": ["Confirm the ESX hosts are configured to use host-based time synchronization.", "Confirm an iptables rule on the Installer permits the NTP service.", "Confirm the NTP servers were entered in the parameter workbook using the required FQDN format.", "Confirm that the management-domain ESX hosts use the same NTP servers as the VCF Installer."], "correct": 3, "explanation": "NSX Manager derives its time from the ESX hosts it runs on. If the management-domain hosts are pointed at different NTP sources than the Installer, NSX Manager drifts and raises a time-sync error – so verifying the hosts use the same NTP servers is the logical next check.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "An administrator creates a tag for a virtual machine in VCF Operations. When they switch to vCenter to assign the tag to the VM, the tag cannot be found. What is the cause?", "options": ["The tag was not pushed to Custom Groups.", "The vCenter version is unsupported.", "The tag was not pushed to the vCenter instance.", "VMware Tools is not installed on the VM."], "correct": 2, "explanation": "Tags authored in VCF Operations do not appear in vCenter automatically; they have to be pushed (synchronized) to the target vCenter instance before they can be applied to objects there.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A vSAN administrator observes the following: usable cluster capacity has dropped, some virtual-machine components show as absent, and yet no host has failed. What is the most likely cause?", "options": ["A vSAN disk failed and was removed from its disk group.", "The vSAN license has expired.", "The vSAN network is partitioned.", "A vSAN host entered maintenance mode."], "correct": 0, "explanation": "When capacity falls and components go absent without any host failure, a single capacity device has failed and been dropped from its disk group. The components that lived on that disk become absent, and the lost device reduces total cluster capacity.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "An administrator adds a vSphere Supervisor (using NSX classic with Distributed Connectivity) to an existing VCF cluster. When enabling the Supervisor, the cluster is reported incompatible: 'No valid edge cluster for VDS 50:0b:4d:9a:cb:32:62:4d-76:78:6b:92:cd:87:c4:5a'. What is the cause?", "options": ["The NSX Edge cluster is missing the WCPReady tag.", "The NSX Edge transport nodes were deployed at the Large size.", "The Supervisor requires Centralized Connectivity.", "AVI load balancing is not enabled for the NSX Edge cluster."], "correct": 0, "explanation": "With NSX classic and Distributed Connectivity, the NSX Edge cluster must carry the WCPReady tag before vSphere will treat it as a valid edge cluster for Supervisor enablement. Without that tag the cluster is flagged incompatible.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "A user wants to publish a VCF Operations Orchestrator workflow to their VCF Automation project catalog but is blocked from publishing any workflows. Observations: in the organization portal the Workflows option is missing from Content Hub, and the organization is not a Provider Consumption organization. Which two are the likely causes? (Choose two.)", "options": ["No external VCF Operations Orchestrator is integrated with the organization.", "The user is signed in with Project User rights.", "The user is signed in with Project Advanced User rights.", "No embedded VCF Operations Orchestrator is integrated with the organization.", "The user is signed in with Project Administrator rights."], "correct": [0, 3], "explanation": "The Workflows option only appears when the organization has a VCF Operations Orchestrator integration – either embedded or external. If neither type is integrated, Content Hub shows no Workflows option and nothing can be published.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A remote-site VCF instance uses vSAN ESA with Auto-Policy Management, sized to tolerate a single failure. After a hardware failure, the affected objects remain in a 'Reduced availability with no rebuild' state. How can the administrator explain why vSAN did not rebuild them?", "options": ["The storage devices are not certified for vSAN.", "There are not enough hosts to rebuild the components while a host is down.", "The storage policy must be changed to allow forced provisioning.", "The disk groups need to be expanded to provide additional capacity."], "correct": 1, "explanation": "When the cluster has only the minimum host count to satisfy the policy (for example four hosts for RAID-5/FTT=1), losing a host leaves too few remaining hosts to place a compliant rebuild. vSAN therefore holds the objects in 'Reduced availability with no rebuild' until a host returns or is added.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "An administrator uploads a certificate chain into VCF Operations and validation fails with 'The provided certificate content is invalid.' The administrator has already confirmed that the file is PEM-encoded and that the chain order is correct. What else could trigger this error?", "options": ["The chain is missing the root CA certificate.", "The certificate uses a 2048-bit key.", "The certificate was issued by a third-party CA.", "The chain does not include the private key."], "correct": 0, "explanation": "The chain has to be complete – server certificate, every intermediate CA, and the root CA. With PEM encoding and ordering already ruled out, a missing root CA breaks the trust path and causes VCF Operations to reject the content as invalid.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "An administrator wants to know which Certificate Authorities VCF Operations can use to automate certificate issuance and renewal. Which two types of Certificate Authority are supported for that automation? (Choose two.)", "options": ["Microsoft Certificate Authority", "OpenSSL Certificate Authority", "Let's Encrypt Certificate Authority", "VMware Certificate Authority (VMCA)", "HashiCorp Vault Certificate Authority"], "correct": [0, 1], "explanation": "Among the listed options, Microsoft CA and OpenSSL CA are the external Certificate Authorities you can configure under Fleet Management > Certificates for automated issuance and auto-renewal. (VMCA exists as the built-in internal CA, but it is not the externally configured automation option being asked about here.)", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "An ESXi host in a VCF workload domain is showing as disconnected in vCenter. Which step should the administrator perform first?", "options": ["Remove the host from inventory.", "Reboot vCenter Server.", "Verify management network connectivity to the host.", "Replace the host certificate."], "correct": 2, "explanation": "A disconnected host is most commonly a management-network reachability problem, so verifying that connectivity comes first – it is the least disruptive check and the most frequent root cause. (VCF 9.0's automatic certificate renewal also makes an expired certificate a less likely culprit.)", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "New ESXi hosts need to be added to a workload domain. Which service manages the host-commissioning workflow?", "options": ["vCenter Server", "SDDC Manager", "NSX Manager", "The ESXi CLI"], "correct": 1, "explanation": "Host commissioning in VMware Cloud Foundation is owned by SDDC Manager (now part of VCF Operations). Hosts must be commissioned there before they can be assigned to a workload domain.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "During VCF 9.0 management-domain bring-up, the VCF Installer fails the network validation step. The deployment parameter workbook has placed the management, vMotion, and vSAN traffic types all on the same VLAN and subnet. What is the most likely cause of the failure?", "options": ["The host overlay (TEP) network must use DHCP addressing.", "Management, vMotion, and vSAN traffic must each use separate VLANs/subnets.", "The management network must be configured for jumbo frames.", "vSAN requires a routed default gateway on the management VLAN."], "correct": 1, "explanation": "VCF expects management, vMotion, and vSAN to be separated onto distinct VLANs and subnets. Collapsing them onto one VLAN trips the Installer's network validation.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "Bring-up of the management domain halts on a validation error concerning host time, even though the NTP servers are reachable. What must be true of the four management ESXi hosts before bring-up can continue?", "options": ["Their clocks must be synchronized to the same NTP source within the allowed tolerance.", "They must each have a TPM 2.0 module enabled.", "They must be running in maintenance mode.", "They must have identical CPU stepping."], "correct": 0, "explanation": "All management hosts must agree on time against the same NTP source. Reachability alone is not enough; the clocks must actually be in sync within tolerance, or distributed services (vCenter, NSX, vSAN) fail to form trust.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "After standing up a second VCF instance, an administrator cannot see it in VCF Operations Fleet Management. What step brings the new instance into the existing fleet view?", "options": ["Re-run Cloud Builder against the first instance.", "Enable vCenter Enhanced Linked Mode and nothing else.", "Register the new instance's SDDC Manager with VCF Operations Fleet Management.", "Redeploy the management domain of the first instance."], "correct": 2, "explanation": "A fleet is assembled by registering each instance's SDDC Manager with VCF Operations Fleet Management. Until the new instance is registered, the fleet view has no knowledge of it.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "VCF bring-up validation flags the prospective management hosts as unsupported hardware. Where should the administrator confirm the servers and their components are supported for VCF 9.0?", "options": ["The ESXi DCUI hardware status screen.", "The NSX Manager hardware dashboard.", "The vCenter licensing page.", "The Broadcom/VMware Compatibility Guide for VCF 9.0."], "correct": 3, "explanation": "Hardware support for a VCF release is defined in the Broadcom/VMware Compatibility Guide. The DCUI or vCenter cannot tell you whether a server and its I/O devices are certified for the target VCF version.", "priority": true}, {"section": "Objective 5.1 – Troubleshoot VCF Deployment", "sectionClean": "Objective 5.1 – Troubleshoot VCF Deployment", "question": "Management-domain bring-up fails validation on the vCenter and NSX hostnames. Which prerequisite should the administrator check first?", "options": ["Forward and reverse DNS records exist and resolve correctly for every component FQDN.", "vSAN deduplication is enabled on the cluster.", "The hosts each have at least four physical NICs.", "The management VLAN uses jumbo frames."], "correct": 0, "explanation": "Component hostnames must resolve in both directions before bring-up. Missing or mismatched forward/reverse DNS records are the most common reason the Installer rejects the vCenter and NSX names.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "An administrator is upgrading a VCF instance from 5.x to 9.0. In the supported lifecycle sequence, which layer does VCF upgrade first?", "options": ["The NSX Edge transport nodes.", "The ESXi hosts in every workload domain.", "The SDDC Manager / VCF Operations management components.", "VMware Tools inside the workload VMs."], "correct": 2, "explanation": "VCF upgrades the management/lifecycle components (SDDC Manager / VCF Operations) first so the platform can then orchestrate the remaining component and workload-domain upgrades in the correct order.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "A VCF workload-domain upgrade precheck fails, warning that there is not enough cluster capacity to evacuate a host. Why does VCF require spare capacity during the upgrade?", "options": ["Hosts are upgraded one at a time and their VMs are vMotioned off via DRS, which needs capacity headroom.", "vSAN must be fully rebuilt from scratch during the upgrade.", "vCenter clones every VM before patching it.", "NSX requires a second parallel cluster to be built."], "correct": 0, "explanation": "Workload-domain upgrades are rolling: each host enters maintenance mode while DRS evacuates its VMs to the remaining hosts. Without enough headroom to absorb those VMs, the rolling upgrade cannot proceed.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "The VCF upgrade precheck reports that the required upgrade bundles are unavailable, and the site has no internet access. What must the administrator configure to proceed?", "options": ["NSX Federation between sites.", "An offline depot in VCF Operations, downloading the bundles into it.", "A vSAN stretched cluster across the two sites.", "A second vCenter in Enhanced Linked Mode."], "correct": 1, "explanation": "In an air-gapped environment the upgrade bundles are staged on an offline depot configured in VCF Operations, so the lifecycle manager can pull them locally instead of from the online depot.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "An administrator plans to convert/import an existing standalone vSphere environment into a VCF 9.0 workload domain. Which networking prerequisite must the source environment satisfy?", "options": ["It must use only local VMFS datastores.", "It must have no running virtual machines.", "It must use a vSphere Distributed Switch with a supported uplink and VMkernel layout.", "It must already run NSX-T 2.x."], "correct": 2, "explanation": "Importing a vSphere environment into VCF requires a vSphere Distributed Switch in a supported configuration; standard switches are not eligible for the conversion.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "A VCF upgrade precheck fails on several components, citing expiring or expired credentials. What should the administrator do before retrying?", "options": ["Disable vSphere HA across the whole fleet.", "Delete and recreate the affected workload domain.", "Reinstall ESXi on the affected hosts.", "Rotate or update the flagged passwords and certificates so none are expired."], "correct": 3, "explanation": "Expired or soon-to-expire passwords and certificates block lifecycle operations. Remediating them through VCF Operations password/certificate management clears the precheck so the upgrade can run.", "priority": true}, {"section": "Objective 5.2 – VCF Upgrade & Conversion", "sectionClean": "Objective 5.2 – VCF Upgrade & Conversion", "question": "An administrator wants to jump straight from an older VCF release to 9.0, but the upgrade planner blocks the path. What does VCF require instead?", "options": ["Upgrading through the supported intermediate release(s) defined in the planner/BOM.", "A clean reinstall of the entire instance.", "Manually patching ESXi outside of lifecycle management.", "Turning off lifecycle management during the jump."], "correct": 0, "explanation": "VCF enforces a supported upgrade path. When a direct skip-level jump is not validated, you must step through the supported intermediate release(s) that the planner defines.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "Creation of a new VI workload domain fails while deploying the NSX Manager appliances. The logs show the NSX Manager VMs cannot reach DNS. What should the administrator verify first?", "options": ["The vSAN deduplication ratio on the cluster.", "Management-network DNS reachability and correct forward/reverse records for the NSX appliances.", "The DRS migration threshold on the cluster.", "The virtual hardware version of the NSX VMs."], "correct": 1, "explanation": "The NSX appliances need working DNS on the management network during deployment. Verifying reachability and the forward/reverse records for the NSX FQDNs is the right first check.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "An administrator must remove an ESXi host from a vSAN cluster in a workload domain without losing data. Which data-evacuation option should be selected before removing the host?", "options": ["No data migration.", "Ensure accessibility, then power the host off immediately.", "Full data migration (evacuate all data from the host).", "Delete the host's disk group first, then remove it."], "correct": 2, "explanation": "Choosing Full data migration evacuates all components from the host's devices to the rest of the cluster before removal, preserving redundancy and avoiding data loss.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "Adding a host to an existing vSAN workload-domain cluster fails because the host was commissioned with storage type NFS. What is the cause?", "options": ["The host's storage type must match the cluster's principal storage, which is vSAN.", "Hosts with NFS storage can never be commissioned in VCF.", "The host needs to be joined to a different vCenter first.", "The host has insufficient memory for vSAN."], "correct": 0, "explanation": "A host can only be added to a cluster whose principal storage type it matches. A host commissioned for NFS cannot join a vSAN cluster; it must be commissioned with the vSAN storage type.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "Before importing a running vSphere cluster as a VCF workload domain, the administrator confirms vCenter is on a supported version. What must also be true of the cluster's networking?", "options": ["It must disable vMotion during the import.", "It must use only vSphere Standard Switches.", "It must use a vSphere Distributed Switch with uplinks and VMkernel adapters in a supported layout.", "It must run a dedicated NSX-T 2.x manager."], "correct": 2, "explanation": "Import requires a vSphere Distributed Switch with a supported uplink and VMkernel arrangement so VCF can take over networking management of the imported domain.", "priority": true}, {"section": "Objective 5.3 – Troubleshoot VCF Workload Domains", "sectionClean": "Objective 5.3 – Troubleshoot VCF Workload Domains", "question": "After deleting a VI workload domain, the administrator finds the freed ESXi hosts are not available to build a new domain. What state must the hosts be returned to first?", "options": ["They must be reinstalled with a different hypervisor.", "They must be added to NSX Federation.", "They must be powered off permanently.", "They must be decommissioned/unassigned and then re-commissioned in VCF Operations."], "correct": 3, "explanation": "Hosts released from a deleted domain need to be returned to the unassigned pool (decommissioned) and re-commissioned before they can be assigned to another workload domain.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "A CSR generated in VCF Operations is rejected by the certificate authority because it lacks Subject Alternative Name entries. Why does this matter for VCF component certificates?", "options": ["Modern clients require the component FQDN(s) in the SAN field; the Common Name alone is no longer sufficient.", "CSRs are not allowed to contain SAN entries.", "SAN entries are only used for email signing certificates.", "The CA always ignores the SAN field anyway."], "correct": 0, "explanation": "Browsers and services now validate the hostname against the SAN, not just the CN. A VCF certificate without the correct FQDN(s) in the SAN will be rejected or distrusted.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "Automated certificate issuance against a Microsoft CA fails after the CA is configured in VCF. Which Microsoft CA prerequisite is most commonly missed?", "options": ["The Microsoft CA must be downgraded to a standalone root.", "A certificate template with the correct key usage must exist and be published for enrollment.", "The intermediate CA must be removed from the chain.", "The CA must be set to issue only self-signed certificates."], "correct": 1, "explanation": "VCF's automated enrollment relies on a properly configured and published certificate template on the Microsoft CA. Without a template that permits the required key usage, issuance fails.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "An administrator wants VCF to rotate component passwords automatically on a schedule. Where is this configured?", "options": ["In each ESXi host's DCUI.", "In the NSX Edge node CLI.", "In VCF Operations password management, by enabling scheduled auto-rotation.", "In the guest OS of each appliance VM."], "correct": 2, "explanation": "Password rotation for VCF components is centralized in VCF Operations password management, where auto-rotation can be scheduled rather than performed by hand on each component.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "After integrating VCF Identity Broker with an external identity provider, users cannot log in. The administrator suspects the federation trust. What should be verified first?", "options": ["The clock skew, metadata/redirect URLs, and signing certificate between the Identity Broker and the IdP.", "The vSAN storage policy on the management cluster.", "The DRS affinity rules.", "The virtual hardware version of the workload VMs."], "correct": 0, "explanation": "SAML/OIDC trust depends on aligned clocks, correct metadata and redirect URLs, and a valid signing certificate. A mismatch in any of these breaks the login flow through the Identity Broker.", "priority": true}, {"section": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "sectionClean": "Objective 5.4 – Operations Fleet Management (Certificates & Passwords)", "question": "After replacing the vCenter certificate through VCF Operations, other VCF components stop trusting vCenter. What was most likely missed?", "options": ["The vCenter appliance was renamed during the replacement.", "vSAN was disabled on the management cluster.", "The new CA's root and intermediate certificates were not added to the dependent components' trust stores.", "The vCenter license expired at the same time."], "correct": 2, "explanation": "When a certificate signed by a new CA is installed, the dependent components must trust that CA. If the root/intermediate certificates are not distributed to their trust stores, trust to vCenter breaks.", "priority": true}, {"section": "Objective 5.5 – License Management", "sectionClean": "Objective 5.5 – License Management", "question": "A cluster shows non-compliant in VCF after the administrator adds several hosts. VCF 9.0 uses a per-core subscription model. What is the most likely cause?", "options": ["NSX is unlicensed by default and must be relicensed.", "vSAN cannot be licensed on added hosts.", "The new hosts require vMotion to be enabled.", "The added CPU cores exceed the entitled core count of the subscription."], "correct": 3, "explanation": "With per-core subscription licensing, adding hosts increases the consumed core count. If that exceeds the entitlement, the cluster reports non-compliant until the subscription is expanded.", "priority": true}, {"section": "Objective 5.5 – License Management", "sectionClean": "Objective 5.5 – License Management", "question": "A VCF license has expired. What impact should the administrator expect?", "options": ["Existing workloads keep running, but configuration changes and new provisioning may be blocked until relicensed.", "All virtual machines power off immediately.", "vCenter is automatically uninstalled.", "The ESXi hosts are wiped and reset to defaults."], "correct": 0, "explanation": "License expiry typically does not stop running workloads, but it restricts management operations such as configuration changes and new provisioning until a valid license is applied.", "priority": true}, {"section": "Objective 5.5 – License Management", "sectionClean": "Objective 5.5 – License Management", "question": "An administrator enabled an NSX security add-on, but the feature remains inactive. Where must the add-on entitlement be applied?", "options": ["In the ESXi host BIOS.", "In NSX Manager, by applying the appropriate add-on license.", "In Cloud Builder before bring-up.", "In the guest OS of the protected VMs."], "correct": 1, "explanation": "NSX add-on features are licensed within NSX Manager. Until the add-on license is applied there, the capability stays inactive even though it was 'enabled.'", "priority": true}, {"section": "Objective 5.5 – License Management", "sectionClean": "Objective 5.5 – License Management", "question": "After expanding a vSAN datastore, vSAN raises a licensing warning. What should the administrator check?", "options": ["Whether DRS is enabled on the cluster.", "Whether HCX is installed in the domain.", "Whether the vSAN entitlement covers the new, larger capacity.", "Whether NSX is deployed in the workload domain."], "correct": 2, "explanation": "vSAN licensing is tied to capacity/cores. Growing the datastore can push consumption past the entitlement, so the administrator should confirm the vSAN entitlement covers the expanded capacity.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "A cluster is badly imbalanced, yet DRS is not migrating any VMs. DRS is enabled but set to Manual. What change lets DRS rebalance automatically?", "options": ["Disable vSphere HA on the cluster.", "Enable EVC at the highest baseline.", "Raise the virtual hardware version of the VMs.", "Set the DRS automation level to Fully Automated."], "correct": 3, "explanation": "In Manual mode DRS only makes recommendations. Setting the automation level to Fully Automated allows DRS to execute migrations on its own and rebalance the cluster.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "vMotion between two hosts fails with a CPU feature incompatibility error. The hosts are from different CPU generations. Which cluster feature resolves this?", "options": ["Enhanced vMotion Compatibility (EVC) set to a common baseline.", "A vSAN stretched-cluster configuration.", "A DRS anti-affinity rule between the hosts.", "A larger memory reservation on the VM."], "correct": 0, "explanation": "EVC presents a common CPU baseline across mixed processor generations, masking newer instruction sets so live migration between the hosts succeeds.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "The vCenter UI is unreachable, and the appliance management interface shows the vpxd service stopped and failing to start. Which dependency should the administrator check first?", "options": ["The NSX Edge uplink status.", "The embedded vCenter database (vPostgres) health and free disk space.", "The vSAN witness appliance.", "The HCX interconnect appliance."], "correct": 1, "explanation": "vpxd depends on the vCenter database. A stopped or full vPostgres, or exhausted disk, is a classic reason vpxd will not start, so that is the first dependency to inspect.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "A VM fails to power on with the message 'Insufficient resources to satisfy configured failover level for vSphere HA.' What is the cause?", "options": ["The VM has no virtual NIC attached.", "DRS is disabled on the cluster.", "HA Admission Control is reserving failover capacity that the cluster can no longer guarantee.", "The VM resides on an NFS datastore."], "correct": 2, "explanation": "HA Admission Control reserves enough capacity to honor the configured failover level. When the cluster cannot guarantee that reservation, it blocks new power-ons to protect failover capacity.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "An ESXi host shows 'Not responding' in vCenter immediately after a change to its management VMkernel. What should the administrator verify first?", "options": ["The vSAN deduplication ratio.", "The VM snapshot tree on the host.", "The NSX overlay segment configuration.", "The management VMkernel IP, VLAN, and gateway, and that the host is reachable on the management network."], "correct": 3, "explanation": "A host going 'Not responding' right after a management VMkernel change points to lost management connectivity. Verify the IP/VLAN/gateway and reachability before looking anywhere else.", "priority": true}, {"section": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "sectionClean": "Objective 5.6 – VCF Compute (ESX, vCenter, VMs, Clusters)", "question": "After placing a cluster into vCLS retreat mode to troubleshoot, the administrator notices DRS has stopped working. Why?", "options": ["The vCLS agent VMs provide the cluster-services quorum DRS relies on, and retreat mode removes them.", "Retreat mode deletes the cluster object.", "DRS requires NSX, which retreat mode disables.", "Retreat mode revokes the vMotion license."], "correct": 0, "explanation": "DRS depends on vSphere Cluster Services, which run in the vCLS agent VMs. Retreat mode tears those VMs down, so DRS (and other cluster services) are unavailable until retreat mode is cleared.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "Mounting a new NFS supplemental datastore on a workload-domain cluster succeeds on some hosts but fails on others. What is the most common cause?", "options": ["The NFS export's permitted-host list does not include every host's storage VMkernel IP.", "vSAN must be disabled before NFS can be mounted.", "The hosts require a TPM 2.0 module for NFS.", "NFS datastores require NSX to be deployed."], "correct": 0, "explanation": "An NFS export only mounts on hosts whose IPs are permitted on the array. When some hosts' storage VMkernel IPs are missing from the export access list, those hosts fail to mount it.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "After configuring an iSCSI supplemental datastore, roughly half the paths show as dead. What should the administrator check first?", "options": ["The DRS migration threshold.", "The NSX Distributed Firewall rules.", "The iSCSI VMkernel port binding, target IPs, and VLAN reachability to the array.", "The vCenter certificate expiry."], "correct": 2, "explanation": "Dead iSCSI paths usually trace back to network/initiator configuration: incorrect port binding, wrong target IPs, or a VLAN that cannot reach the array on the affected paths.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "A vSAN ESA cluster shows objects resyncing for a long time after a failed capacity device was replaced. What primarily determines how quickly the resync completes?", "options": ["The vCenter license tier.", "The number of management VMkernel adapters.", "The NSX Edge node form factor.", "Available network bandwidth, current cluster load, and the volume of data to rebuild."], "correct": 3, "explanation": "Resync duration is driven by how much data must be rebuilt and the resources available to move it: network bandwidth and cluster load. It is not tied to licensing or NSX/Edge sizing.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "In a vSAN stretched cluster using a site-mirroring policy (FTT=1 across sites), one entire site goes offline while the witness and the other site stay healthy. What happens to the VMs that were running at the failed site?", "options": ["They are restarted by vSphere HA at the surviving site.", "They are permanently lost.", "They continue running at the failed site.", "vSAN deletes their objects automatically."], "correct": 0, "explanation": "With a site-mirror policy and a healthy witness plus surviving site, the data remains available at the surviving site, and vSphere HA restarts the affected VMs there.", "priority": true}, {"section": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "sectionClean": "Objective 5.7 – VCF Storage (vSAN & Supplemental)", "question": "vSAN Skyline Health reports a hardware compatibility warning on the cluster's storage controllers. What is the recommended remediation?", "options": ["Update the controller driver and firmware to a combination listed on the vSAN HCL.", "Disable the vSAN health service to clear the warning.", "Lower the storage policy to FTT=0.", "Replace the vCenter appliance."], "correct": 0, "explanation": "Controller compatibility warnings are resolved by bringing the driver/firmware to a version certified on the vSAN HCL, not by silencing the health check or weakening the policy.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "VMs on different hosts that share an overlay (GENEVE) segment cannot communicate, but VLAN-backed traffic between the same hosts works. What should the administrator verify for the overlay?", "options": ["The DRS automation level on the cluster.", "Host TEP-to-TEP reachability with an MTU of at least 1600 across the transport VLAN.", "The vCenter certificate chain.", "The vSAN storage policy."], "correct": 1, "explanation": "Overlay traffic is encapsulated in GENEVE, which needs an MTU of at least 1600 end-to-end and working TEP-to-TEP reachability. VLAN-backed traffic working while overlay fails points straight at the TEP transport network/MTU.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "Which two settings must match the physical router for a Tier-0 gateway BGP neighbor to establish? (Choose two.)", "options": ["The neighbor IP address.", "The remote autonomous system (ASN) number.", "The Distributed Firewall default rule.", "The vSAN storage policy.", "The NSX Edge form factor (Small/Medium/Large)."], "correct": [0, 1], "explanation": "BGP peering requires the neighbor IP and the remote ASN (plus any configured BGP password) to match on both ends. Firewall rules, storage policy, and Edge sizing have no bearing on whether the session establishes.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "After enabling the Distributed Firewall, an application stops working. The DFW default rule is set to Drop. What is the cause?", "options": ["The VDS MTU is set too high.", "The Tier-0 gateway is in active/active mode.", "No explicit allow rules exist for the application's required flows, so the default Drop blocks them.", "The NSX license has expired."], "correct": 2, "explanation": "With a default Drop rule, any flow not explicitly permitted is blocked. The application breaks because its required traffic has no matching allow rule above the default.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "The NSX Manager cluster reports Degraded with one of three nodes down; management still works. What is the main risk of leaving it unrepaired?", "options": ["Losing another node would break cluster quorum and disrupt the management/control plane.", "All workload VMs will power off.", "vSAN will stop serving I/O.", "DRS will automatically disable itself."], "correct": 0, "explanation": "The three-node NSX Manager cluster relies on quorum. Running degraded on two nodes removes resiliency; a second node failure breaks quorum and impacts the management and control plane.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "After migrating hosts to a new VDS, several uplinks are down and the VMs lose connectivity. The physical switch ports are configured for LACP, but the VDS is not. What is the fix?", "options": ["Enable vSAN deduplication on the cluster.", "Raise the DRS migration threshold.", "Replace the NSX Edge nodes.", "Configure a matching LACP LAG on the VDS, or set the switch ports to match the VDS teaming policy."], "correct": 3, "explanation": "Link aggregation must match on both ends. With the switch in LACP and the VDS not, the bundle never forms. Align them, either by creating a LAG on the VDS or reconfiguring the switch ports to the VDS teaming mode.", "priority": true}, {"section": "Objective 5.8 – Networking (NSX, VDS, VPC)", "sectionClean": "Objective 5.8 – Networking (NSX, VDS, VPC)", "question": "Virtual machines in an NSX VPC subnet can reach each other but have no north-south (external) connectivity. Which VPC construct provides external reachability?", "options": ["A VPC connectivity profile that links the VPC (via the gateway) to external networks.", "Jumbo frames enabled on the management VLAN.", "A vSAN witness appliance.", "An HCX service mesh between sites."], "correct": 0, "explanation": "A VPC reaches external networks through its associated connectivity profile, which ties the VPC's gateway to the upstream Tier-0/external networking. Without it, the VPC stays internally reachable only.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "VCF Operations for Logs is receiving no events from a group of ESXi hosts. What configuration on those hosts should be verified?", "options": ["The hosts' syslog (loghost) target points at the Operations for Logs collector and the network/port is open.", "The hosts' vSAN storage policy.", "The hosts' DRS group membership.", "The hosts' virtual hardware version."], "correct": 0, "explanation": "An ESXi host forwards logs only if its syslog loghost is set to the collector and the path/port is reachable. Missing or wrong syslog configuration is why no events arrive.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "Broadcom support requests a support bundle that covers SDDC Manager and vCenter. Where does the administrator generate it in VCF 9.0?", "options": ["From the ESXi DCUI.", "From VCF Operations, using the support/log bundle (log assist) collection feature.", "From the guest OS of each appliance.", "From the NSX Edge boot menu."], "correct": 1, "explanation": "VCF Operations centralizes support-bundle collection (log assist) across fleet components such as SDDC Manager and vCenter, so the bundle is generated there rather than per-appliance.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "VCF Operations for Networks shows no flow data for a particular workload domain. What must be configured?", "options": ["A vSAN stretched cluster for the domain.", "An additional ESXi license.", "The relevant data sources (vCenter and NSX) added, with flow collection enabled for that domain.", "An iSCSI supplemental datastore."], "correct": 2, "explanation": "Operations for Networks needs the domain's vCenter and NSX added as data sources and flow collection enabled before it can display flows. Missing data sources mean no flow data.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "An administrator wants to be notified whenever a workload-domain cluster's memory usage exceeds 85%. What is the correct approach in VCF Operations?", "options": ["Edit the ESXi kernel parameters on each host.", "Disable DRS so memory stays below the threshold.", "Add a new NSX segment for the cluster.", "Create a symptom/alert definition on the cluster memory metric, with a notification."], "correct": 3, "explanation": "Proactive notification is built by defining a symptom/alert on the relevant metric (cluster memory) and attaching a notification, optionally surfaced on a dashboard.", "priority": true}, {"section": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "sectionClean": "Objective 5.9 – VCF Operations (Logs & Monitoring)", "question": "While troubleshooting a performance problem, an administrator wants to run ad-hoc queries across collected metrics in VCF Operations. Which capability is designed for this?", "options": ["The observability/metrics workbench for ad-hoc metric exploration.", "The vCenter DCUI.", "NSX Traceflow only.", "The Cloud Builder appliance."], "correct": 0, "explanation": "VCF Operations provides an observability/metrics workbench for ad-hoc exploration and correlation of metrics, which is the right tool for interactive performance troubleshooting.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "After enabling a vSphere Supervisor for VCF Automation, it stays in 'Configuring' and never reaches Running. What is the most common cause to check first?", "options": ["The control-plane VM networking, including management reachability, DNS, and NTP.", "The vSAN deduplication ratio.", "The HCX service mesh between sites.", "The virtual hardware version of workload VMs."], "correct": 0, "explanation": "A Supervisor stuck in Configuring usually has a control-plane networking problem: the control-plane VMs can't reach the management network, DNS, or NTP, so enablement never completes.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "A VCF Automation organization cannot see expected VM images. The provider published a content library, but it is unavailable to the organization. What should be verified?", "options": ["That DRS is fully automated.", "That the content library is associated with the organization's region and the sync has completed.", "That the DFW default rule is Allow.", "That the vCenter root password is current."], "correct": 1, "explanation": "Catalog content is exposed to an organization through its region. If the content library is not associated with that region, or its sync has not finished, the images will not appear.", "priority": true}, {"section": "Objective 5.10 – Identity Broker & VCF Automation", "sectionClean": "Objective 5.10 – Identity Broker & VCF Automation", "question": "Developers cannot select an expected VM class when deploying into a vSphere Namespace. What must the administrator do?", "options": ["Disable vSphere HA on the cluster.", "Add an NSX Edge node to the domain.", "Associate the required VM class with the namespace (and ensure it exists in the region).", "Expand the vSAN datastore."], "correct": 2, "explanation": "A VM class is only selectable in a namespace if it has been associated with that namespace. The administrator must add the VM class to the namespace (and confirm it exists in the region).", "priority": true}, {"section": "Objective 5.11 – Workload Mobility (HCX)", "sectionClean": "Objective 5.11 – Workload Mobility (HCX)", "question": "After deploying HCX at the source and destination, the Service Mesh appliances fail to form their tunnels. What should the administrator verify first?", "options": ["The required HCX transport ports/connectivity (for example UDP 4500) are open between the Interconnect and Network Extension appliances.", "The vSAN storage policy at both sites.", "The DRS migration threshold.", "The vCenter certificate rotation schedule."], "correct": 0, "explanation": "HCX tunnels rely on specific transport ports (such as UDP 4500) being open end-to-end between the appliances. Blocked transport ports are the usual reason a Service Mesh fails to establish tunnels.", "priority": true}, {"section": "Objective 5.11 – Workload Mobility (HCX)", "sectionClean": "Objective 5.11 – Workload Mobility (HCX)", "question": "An administrator needs to migrate a running VM between sites with effectively no downtime. Which HCX migration type fits?", "options": ["Cold migration.", "HCX vMotion (live migration).", "Bulk migration with a forced power-off.", "A Cloud Builder import."], "correct": 1, "explanation": "HCX vMotion performs a live migration of a running VM with effectively no downtime. Cold and forced-power-off migrations incur an outage, and Cloud Builder is unrelated to workload mobility.", "priority": true}, {"section": "Objective 5.11 – Workload Mobility (HCX)", "sectionClean": "Objective 5.11 – Workload Mobility (HCX)", "question": "To preserve a VM's existing IP address after migrating it to the destination site, which HCX capability is required?", "options": ["NSX Federation only.", "Assigning a new subnet at the destination.", "HCX Network Extension (Layer 2 extension of the source network).", "A vSAN stretched cluster across the sites."], "correct": 2, "explanation": "HCX Network Extension stretches the source Layer 2 network to the destination, letting the migrated VM keep its IP address and default gateway without re-addressing.", "priority": true}, {"section": "Objective 5.11 – Workload Mobility (HCX)", "sectionClean": "Objective 5.11 – Workload Mobility (HCX)", "question": "HCX Bulk migrations across the WAN are failing or extremely slow, and the underlay shows fragmentation errors at an MTU of 1500. What should the administrator check?", "options": ["The vCenter license tier.", "The DRS affinity rules.", "The NSX Distributed Firewall logging level.", "The end-to-end MTU and the HCX Network Extension/uplink MTU settings to avoid fragmentation."], "correct": 3, "explanation": "Fragmentation under load points to an MTU mismatch on the path or the HCX uplink/Network Extension. Aligning the end-to-end MTU (and HCX MTU settings) removes the fragmentation and restores throughput.", "priority": true}];
+
+const SECTION_CATEGORIES = {
+  "Section 5 — Troubleshoot & Optimize VCF": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  let matched = false;
+    if (s.startsWith("5.") || s.startsWith("Section 5") || s.startsWith("SECTION 5") || s.startsWith("Objective 5")) SECTION_CATEGORIES["Section 5 — Troubleshoot & Optimize VCF"].push(s);
+  else { let matched = false; for (const k in SECTION_CATEGORIES) { if (SECTION_CATEGORIES[k].length > 0) { matched = true; } } if (!matched) { const firstKey = Object.keys(SECTION_CATEGORIES)[0]; SECTION_CATEGORIES[firstKey].push(s); } }
+
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      const cbEl = item.querySelector('input');
+      cbEl.addEventListener('change', () => {
+        item.classList.toggle('selected', cbEl.checked);
+        updateCount();
+      });
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option' + (isMulti(q) ? ' multi' : '');
+    if (isRevealed) {
+      cls += ' disabled';
+      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+    } else {
+      if (optionIsSelected(q, i)) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = answerIsCorrect(q);
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function isMulti(q) { return Array.isArray(q.correct); }
+
+function optionIsCorrect(q, i) {
+  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
+}
+
+function optionIsSelected(q, i) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
+}
+
+function answerIsCorrect(q) {
+  const a = answers[q.id];
+  if (isMulti(q)) {
+    if (!Array.isArray(a)) return false;
+    const sel = [...new Set(a)].sort((x, y) => x - y);
+    const cor = [...q.correct].sort((x, y) => x - y);
+    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
+  }
+  return a === q.correct;
+}
+
+function hasSelection(q) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  if (isMulti(q)) {
+    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
+    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
+  } else {
+    answers[q.id] = i;
+  }
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (!hasSelection(q)) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answerIsCorrect(q)) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
+  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answerIsCorrect(q);
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
+      if (optionIsCorrect(q, i)) cls += ' correct';
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium','Calibri',sans-serif;">
+  <img src="assets/logo/itq-glasses-orange.png" alt="" style="height:22px;width:auto;opacity:.95;margin-bottom:6px;display:inline-block;"><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official VMware or ITQ material. For practice only.
+</footer>
+</body>
+</html>
