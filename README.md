@@ -13,6 +13,9 @@ The repository is published via GitHub Pages. The landing page (`index.html`) li
 - **Operations** (3V0-22.25) - VCAP Operations 9.0
 - **Storage** - VCAP Storage 9.0
 - **VKS** - VCAP VKS Administrator 9.0
+- **Architect** (2V0-13.25) - VCP-VCF Architect 9.0
+- **Support** (2V0-15.25) - VCP-VCF Support 9.0
+- **Administrator** (2V0-17.25) - VCP-VCF Administrator 9.0
 
 Some exams include customized versions with priority/strength tagging per section.
 
