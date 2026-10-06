@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVIDIA-Certified Professional: AI Infrastructure (NCP-AII) — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 1024px) {
+    .header h1 { font-size: 1.2rem; }
+    .score-breakdown { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .header { padding: 14px 16px; }
+    .header h1 { font-size: 1.1rem; }
+    .header-stats { gap: 12px; font-size: 0.82rem; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+    .score-breakdown { grid-template-columns: 1fr; }
+    .nav-bar { gap: 8px; }
+    .setup { padding: 20px; }
+    .setup h2 { font-size: 1.15rem; }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .option { padding: 14px 16px; }
+    .q-dot { width: 40px; height: 40px; font-size: 0.8rem; }
+    .btn { padding: 12px 24px; min-height: 44px; }
+    .btn-small { padding: 8px 16px; min-height: 44px; }
+    .section-item { padding: 12px 14px; min-height: 44px; }
+    .toggle { width: 50px; height: 28px; }
+    .toggle .slider:before { height: 22px; width: 22px; }
+    .toggle input:checked + .slider:before { transform: translateX(22px); }
+    .option:hover:not(.disabled) { border-color: transparent; background: var(--surface2); }
+    .option.selected:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
+.option.multi .option-letter { border-radius: 4px; }
+.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;font-family:'Titillium','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or NVIDIA. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
+  <h1>NVIDIA-Certified Professional: AI Infrastructure <span>(NCP-AII)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Domain 1 – System and Server Bring-up", "question": "A team receives a new batch of HGX servers for an AI cluster. Which bring-up sequence is MOST appropriate?", "options": ["Install OS and drivers, run multi-node NCCL tests, then configure BMC and update firmware once the cluster is in production", "Run HPL burn-in on each node first, then rack and cable, then configure BMC and OOB management access", "Rack and cable, BMC/OOB, firmware baseline, BIOS, OS and drivers, single-node tests, then cluster tests", "Configure Slurm partitions first, then update firmware from the running jobs, then validate cabling with NCCL"], "correct": 2, "explanation": "Bring-up goes bottom-up: physical install, management access, firmware baseline, BIOS, OS and drivers, single-node validation, and only then multi-node tests and burn-in. Testing before the firmware baseline wastes effort and hides faults."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Why is a consistent firmware baseline across all nodes (BMC, BIOS, GPU/HGX, NICs, switches) important before cluster validation?", "options": ["Firmware versions only affect boot time, so consistency matters mainly for faster provisioning of large clusters", "Identical firmware allows NVLink to span several servers without NVSwitch trays", "Mismatched firmware causes inconsistent behavior and failures that are hard to reproduce, and support often requires a validated combination", "A consistent baseline lets Slurm schedule jobs without needing GRES configuration"], "correct": 2, "explanation": "Validated firmware combinations avoid subtle interoperability issues (link training, ECC handling, power management) and are a prerequisite for vendor support. Firmware does not change Slurm GRES needs or NVLink topology."}, {"section": "Domain 1 – System and Server Bring-up", "question": "During initial BMC configuration of a new GPU server, which TWO actions are recommended? (Choose two.)", "options": ["Change default BMC credentials and restrict access to the OOB network", "Assign the BMC an address on the dedicated OOB management network", "Disable Redfish so that firmware updates must be done locally only", "Connect the BMC port to the compute fabric to share bandwidth with NCCL"], "correct": [0, 1], "explanation": "BMCs give full control of the server and must be secured (new credentials, isolated OOB network). They do not belong on the compute fabric, and Redfish is commonly used for remote firmware updates and automation."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which protocol do modern BMCs expose for RESTful, scriptable management of power, inventory, and firmware updates?", "options": ["PXE", "LLDP", "Redfish", "SNMPv1 traps"], "correct": 2, "explanation": "Redfish is the DMTF RESTful standard used by BMCs and by tools such as nvfwupd for firmware updates. SNMP is mostly monitoring, PXE is network boot, and LLDP is link-layer discovery."}, {"section": "Domain 1 – System and Server Bring-up", "question": "What is the role of the TPM during server bring-up in a security-conscious AI cluster?", "options": ["It is a hardware root of trust for measured boot and key storage, enabled in firmware", "It stores the GPU firmware images so that they can be restored after a failed update", "It replaces the BMC for out-of-band power control when the OOB network is down", "It accelerates encryption of NCCL traffic between nodes on the compute fabric"], "correct": 0, "explanation": "The Trusted Platform Module anchors measured/secure boot and protects keys. It is enabled and provisioned in BIOS/UEFI during bring-up. It does not encrypt fabric traffic or store GPU firmware."}, {"section": "Domain 1 – System and Server Bring-up", "question": "An engineer must update the firmware of an HGX baseboard (GPUs, NVSwitches, and related components). Which approach is MOST appropriate?", "options": ["Flash each GPU individually with nvidia-smi while training jobs keep running", "Use mlxfwmanager, because it updates GPUs and NVSwitches as well as NICs", "Use the validated HGX firmware bundle with BMC-based tooling such as nvfwupd over Redfish", "Update only the GPU driver, since it automatically updates all HGX firmware at boot"], "correct": 2, "explanation": "HGX firmware is updated as a validated bundle through BMC-based tooling. Driver installs do not flash baseboard firmware, and mlxfwmanager targets NVIDIA networking adapters (ConnectX/BlueField)."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which tool is typically used to query and update firmware on ConnectX and BlueField adapters?", "options": ["mlxfwmanager", "nvidia-smi -q", "ipmitool sdr", "dcgmi diag"], "correct": 0, "explanation": "MFT tools such as mlxfwmanager and flint manage NIC/DPU firmware. nvidia-smi queries GPUs, ipmitool sdr reads BMC sensors, and dcgmi diag runs GPU diagnostics."}, {"section": "Domain 1 – System and Server Bring-up", "question": "After a firmware update, a node boots but one GPU is missing from nvidia-smi. What should be checked FIRST?", "options": ["Whether the InfiniBand subnet manager has assigned a LID to the node", "Whether the GPU is enumerated on PCIe (lspci) and what the BMC log or dmesg reports", "Whether the NCCL version in the container matches the driver version", "Whether the Slurm configuration lists the correct number of GPUs for the node"], "correct": 1, "explanation": "Start at the lowest layer: is the device enumerated on PCIe, and do the BMC/SEL or dmesg show faults (for example an Xid or link training error)? Scheduler, NCCL, and fabric settings cannot make a GPU appear."}, {"section": "Domain 1 – System and Server Bring-up", "question": "An engineer runs 'lspci | grep -i nvidia' and sees all 8 GPUs, but 'nvidia-smi' returns 'NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver'. What is the MOST likely cause?", "options": ["The NVIDIA kernel module is not loaded (for example a kernel update without DKMS rebuild)", "One GPU has failed and blocks the driver from communicating with the other seven", "The BMC firmware is older than the GPU firmware", "The Fabric Manager service is stopped, which prevents nvidia-smi from starting"], "correct": 0, "explanation": "If PCIe sees the devices but nvidia-smi cannot talk to the driver, the kernel module is missing or failed to load. Check lsmod, dmesg, secure boot signing, and nouveau blacklisting. Fabric Manager does not prevent nvidia-smi from running."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO checks validate power and cooling parameters during server bring-up? (Choose two.)", "options": ["Check that the container image includes the CUDA compatibility package", "Confirm that GPUs are not reporting thermal or power-brake clock event reasons during a stress test", "Read PSU status, power draw, and inlet/GPU temperatures from BMC sensors under load", "Verify that the Slurm node weight matches the server power rating"], "correct": [1, 2], "explanation": "BMC sensors and GPU clock event reasons under load reveal insufficient power, failed PSUs, or cooling problems. Scheduler weights and container packages have no link to physical power and cooling."}, {"section": "Domain 1 – System and Server Bring-up", "question": "A DGX/HGX server has redundant power supplies. During acceptance, one PSU is pulled while the system is under full GPU load and the GPUs immediately slow down. What does this indicate?", "options": ["The remaining PSUs cannot carry the full load, so redundancy or input power must be reviewed", "The GPU driver is outdated and does not yet support PSU redundancy policies", "The InfiniBand transceivers draw too much power once one PSU is removed", "This is expected on every HGX system, since PSU redundancy only covers idle load"], "correct": 0, "explanation": "With true N+N or N+1 redundancy, losing one PSU should not throttle the GPUs. Throttling means the configuration (number of PSUs, input feeds, power policy) does not provide redundancy at full load."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which statement about installing physical SXM GPUs or GPU trays in an HGX system is correct?", "options": ["Thermal interface material is optional when the data center is below 25 °C", "Follow the vendor procedure, with ESD protection and the specified torque sequence", "SXM GPUs are hot-pluggable, so they can be replaced while the system is running jobs", "SXM modules can be moved freely between any HGX generation as long as the baseboard has a free slot"], "correct": 1, "explanation": "SXM modules require careful handling, torque specifications, and correct thermal interfaces. They are not hot-pluggable, are generation-specific, and always require the specified thermal solution."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO items identify an AI factory network topology? (Choose two.)", "options": ["GPU-to-GPU traffic inside the server routed through the top-of-rack switch", "Separate storage, in-band management, and OOB management networks", "A compute (east-west) fabric with one NIC per GPU, often rail-optimized", "A single shared network that carries compute, storage, and management traffic"], "correct": [1, 2], "explanation": "Reference AI factories separate compute, storage, in-band, and OOB networks, with a rail-optimized compute fabric. Intra-server GPU traffic uses NVLink, not the top-of-rack switch."}, {"section": "Domain 1 – System and Server Bring-up", "question": "In a rail-optimized topology with 8-GPU servers, how are the compute NICs of a scalable unit typically cabled?", "options": ["Each NIC connects to a spine switch, skipping leaf switches", "NIC N of every server connects to leaf switch N (rail N), so same-rank GPUs share a leaf", "All eight NICs of a server connect to the same leaf, and each server uses a different leaf", "NICs connect directly between servers in a ring without switches"], "correct": 1, "explanation": "Rails group same-index GPUs across servers on the same leaf, which keeps most collective traffic one hop away. Rings or leaf-skipping designs are not used in reference architectures."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which transceiver/cable form factor is used on ConnectX-7 NDR 400 Gb/s ports in many NVIDIA reference server designs, and how do switch ports typically differ?", "options": ["Servers and switches both use QSFP28 100G cages connected through breakout cables", "Servers use RJ-45 ports with Cat 8 cabling, while switches use OSFP ports", "Servers use SFP28 25G ports, while switches use QSFP-DD 400G ports", "OSFP 400G on the servers; twin-port OSFP (2 × 400G) on Quantum-2 switches"], "correct": 3, "explanation": "NDR reference designs use OSFP on the server side and twin-port 800G OSFP on Quantum-2 switches, split into two 400G links. QSFP28, SFP28, and RJ-45 are not used for NDR compute links."}, {"section": "Domain 1 – System and Server Bring-up", "question": "A cable run between a server and its leaf switch is 30 meters. Which cable type is MOST appropriate for a 400G link?", "options": ["Multimode optics with fiber, or an active optical cable", "Passive DAC copper cables rated for 400G", "A 400G-to-4×100G passive breakout DAC", "Cat 6A copper with 400G-capable RJ-45 modules"], "correct": 0, "explanation": "Passive copper is limited to a few meters at 400G. Multimode optics (or AOCs) cover tens of meters, and single-mode optics are used for longer distances. Cat 6A is not used for 400G."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO steps validate cabling and transceivers after racking? (Choose two.)", "options": ["Run a single-GPU HPL test on each node, since it exercises every network port", "Verify transceiver type, firmware, and signal quality/BER with tools such as mlxlink", "Check that nvidia-smi shows NVLink at full speed on every GPU", "Check link state and negotiated speed/width on every port (for example with ibstat or ibdiagnet)"], "correct": [1, 3], "explanation": "Link state, speed, width, cable type, and BER confirm the physical layer. Single-GPU HPL does not touch the network, and NVLink status says nothing about external cabling."}, {"section": "Domain 1 – System and Server Bring-up", "question": "An engineer runs 'ibstat' on a newly installed node and sees for one port: 'State: Initializing', 'Physical state: LinkUp', 'Rate: 400'. What does this mean?", "options": ["The port is fully operational and ready for NCCL and storage traffic", "The link is physically up at 400G, but no Subnet Manager has configured the port", "The cable is defective and must be replaced before the port can come up", "The port negotiated the wrong speed and should be running at 800 Gb/s"], "correct": 1, "explanation": "LinkUp with Initializing means physical training succeeded but the logical state is not Active because no Subnet Manager has assigned a LID or configured the port. Check that an SM (OpenSM/UFM or switch SM) is running and reachable."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Another port shows 'State: Active', 'Physical state: LinkUp', 'Rate: 200' on an NDR fabric where all links should be 400. What is the MOST likely next step?", "options": ["Restart the Subnet Manager, since the SM decides the speed of each link", "Reinstall the GPU driver, which negotiates the NIC link speed at boot", "Check the cable or transceiver (type, seating, firmware, BER), since speed dropped", "Ignore it, because NCCL automatically aggregates two 200G ports per GPU"], "correct": 2, "explanation": "A degraded speed usually points to a wrong, damaged, or poorly seated cable/transceiver, or mismatched firmware. The SM does not choose physical speed, and the GPU driver does not configure NIC speed."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO BIOS settings are commonly reviewed on GPU servers during bring-up for AI workloads? (Choose two.)", "options": ["Disabling all USB ports to reduce GPU interrupt latency", "Power/performance profile (for example maximum performance, C-state limits)", "PCIe settings such as link speed, bifurcation, and ACS/IOMMU options affecting peer-to-peer traffic", "Setting the boot order so the server boots from the InfiniBand port first"], "correct": [1, 2], "explanation": "PCIe configuration and performance profiles directly affect GPU and NIC performance. USB ports have no effect on GPU interrupts, and nodes usually PXE boot from the in-band management network, not the InfiniBand port."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Why is PCIe ACS (Access Control Services) often disabled on bare-metal GPU servers that use GPUDirect RDMA?", "options": ["ACS redirects peer-to-peer PCIe traffic to the root complex, hurting GPU-NIC transfers", "ACS prevents the BMC from reading GPU temperatures over the PCIe sideband", "ACS is only needed for NVLink traffic, which GPUDirect RDMA never uses", "ACS encrypts all PCIe traffic between devices and adds latency to every DMA transfer"], "correct": 0, "explanation": "With ACS enabled, P2P transactions are redirected through the root complex for isolation, which hurts GPUDirect RDMA. On bare metal, platform guidance often disables it. In virtualized setups ACS may be needed for isolation, so the decision depends on the use case."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which command shows the GPU-to-GPU and GPU-to-NIC topology (NVLink, PCIe switch, NUMA affinity) on a node?", "options": ["nvidia-smi -q -d CLOCK", "nvidia-smi topo -m", "ibv_devinfo -v", "lscpu --extended"], "correct": 1, "explanation": "nvidia-smi topo -m prints the connection matrix (NV#, PIX, PXB, PHB, NODE, SYS) and CPU/NUMA affinity. The other commands show clocks, NIC attributes, or CPUs only."}, {"section": "Domain 1 – System and Server Bring-up", "question": "In 'nvidia-smi topo -m' output on an HGX H100 system, GPU0 to GPU1 shows 'NV18'. What does this mean?", "options": ["The GPUs are connected by 18 bonded NVLink links", "The NVLink generation is 18", "The GPUs are on NUMA node 18", "There are 18 PCIe hops between the two GPUs"], "correct": 0, "explanation": "NV# indicates the number of bonded NVLink links between the GPUs. H100 SXM has 18 NVLink 4 links, giving 900 GB/s of total bandwidth per GPU."}, {"section": "Domain 1 – System and Server Bring-up", "question": "In 'nvidia-smi topo -m', a GPU and a NIC show 'SYS'. What does this imply for GPUDirect RDMA performance?", "options": ["The GPU and NIC are connected by NVLink", "The GPU and NIC are on the same PCIe switch, which is optimal for GPUDirect RDMA", "The NIC is unused by the system", "Traffic crosses the inter-socket link, so GPUDirect RDMA performance is poor"], "correct": 3, "explanation": "SYS means the path crosses the SMP interconnect between CPU sockets. PIX (same PCIe switch) is the best path for GPU-NIC traffic. Each GPU should use its nearest NIC."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO actions validate that installed hardware matches the bill of materials? (Choose two.)", "options": ["Compare BMC/Redfish inventory (CPUs, DIMMs, GPUs, NICs, drives) with the expected configuration", "Check that the node responds to ping on the in-band network", "Check GPU count, model, memory size, and VBIOS with nvidia-smi -q", "Run 'sinfo' to check that the node appears in the partition"], "correct": [0, 2], "explanation": "Inventory checks from the BMC and nvidia-smi confirm the hardware configuration. A node can appear in Slurm or answer pings while missing DIMMs or a GPU."}, {"section": "Domain 1 – System and Server Bring-up", "question": "On a node, 'nvidia-smi -q' reports for one GPU: 'PCIe Generation Current: 1, Max: 5' and 'Link Width Current: 16x' while idle. What is the correct interpretation?", "options": ["The BIOS has permanently forced this slot to Gen1 and must be reconfigured", "The GPU is defective, since any link below Gen5 means it must be replaced", "It can be normal power saving at idle; check that it reaches Gen5 x16 under load", "The NVLink connection has failed, so the GPU fell back to slow PCIe Gen1"], "correct": 2, "explanation": "GPUs downshift PCIe generation at idle. The meaningful check is under load (or with a bandwidth test). A link stuck at a lower generation or width under load would indicate a seating, riser, or BIOS problem."}, {"section": "Domain 1 – System and Server Bring-up", "question": "What must be configured initially for third-party high-performance storage used by the cluster?", "options": ["Client stack, storage network addressing, mount options, and RDMA/GDS if used", "MIG on all GPUs, so that each GPU instance gets its own storage path", "The Subnet Manager on each storage client, so the storage can be reached over InfiniBand", "The BMC of each compute node, so it can mount the file system over the OOB network"], "correct": 0, "explanation": "Storage integration requires client stack, network, mount options, and optional RDMA/GDS. Subnet managers run per fabric, not per client. MIG and BMCs do not provide storage access."}, {"section": "Domain 1 – System and Server Bring-up", "question": "What is the main purpose of running the vendor/NVIDIA single-node diagnostics before joining a node to the cluster?", "options": ["To install the Slurm daemon and register the node in the controller", "To generate the InfiniBand routing tables for the new node", "To catch faulty GPUs, memory, NVLink, or cooling before multi-node jobs", "To download the latest containers from NGC"], "correct": 2, "explanation": "Single-node diagnostics (for example DCGM diag level 3, vendor field diagnostics) catch faulty components early. They do not configure Slurm, the fabric, or containers."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO statements about the out-of-band network during bring-up are correct? (Choose two.)", "options": ["It allows remote power cycling and console access even when the host OS is down", "It must be connected to the InfiniBand compute fabric for the SM to see BMCs", "It is used for firmware updates through BMC interfaces such as Redfish", "It carries the GPUDirect RDMA traffic during burn-in"], "correct": [0, 2], "explanation": "OOB access is essential for bring-up and recovery. It is never used for RDMA traffic and is a separate Ethernet network."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO practices reduce the risk of errors during large-scale cabling of a GPU cluster? (Choose two.)", "options": ["Use a cable map with consistent labeling of both ends and port-level documentation", "Validate the topology automatically against the expected design (for example with ibdiagnet topology comparison or switch tools)", "Cable all ports first, then decide the rail assignment once traffic is visible", "Rely on LLDP on the BMC network to detect InfiniBand cabling errors"], "correct": [0, 1], "explanation": "Planned labeling and automated topology validation catch mis-cabling early. InfiniBand cabling is not visible through BMC LLDP, and rails must be designed before cabling."}, {"section": "Domain 1 – System and Server Bring-up", "question": "Which TWO statements about GPU server power feeds are correct? (Choose two.)", "options": ["Rack PDUs must be sized for the maximum system power, not the typical idle power", "PSUs should be distributed across independent feeds (A/B) so one feed failure does not drop the server", "Power feeds only matter for the head node, since compute nodes can be restarted", "GPU servers can share a single 16 A feed per rack because GPUs rarely reach their power limit"], "correct": [0, 1], "explanation": "AI servers run near their maximum power for long periods, so PDUs and feeds must be sized for peak draw and split across independent feeds for redundancy."}, {"section": "Domain 2 – Physical Layer Management", "question": "A BlueField-3 is installed in a server where the team only wants a high-speed NIC and no services on the Arm cores. What should be done?", "options": ["Set NIC mode with mlxconfig, then power cycle the host", "Uninstall the BFB image so that the Arm cores stop booting", "Disable the device in the BIOS and use the onboard 1 GbE port instead", "Run nvidia-smi -mig 1 on the DPU to disable the Arm cores"], "correct": 0, "explanation": "BlueField supports DPU mode (Arm cores own the embedded switch) and NIC mode. The mode is set through firmware configuration (mlxconfig) and requires a power cycle. MIG applies to GPUs only."}, {"section": "Domain 2 – Physical Layer Management", "question": "How is a new operating system image (BFB) typically installed on a BlueField DPU from the host?", "options": ["By flashing it through nvidia-smi on the host", "By running apt upgrade on the host, which updates the DPU automatically", "By copying it to the DPU over the InfiniBand fabric with scp", "By pushing the BFB bundle through the rshim interface (for example with bfb-install)"], "correct": 3, "explanation": "The rshim driver exposes a management interface to the DPU from the host or BMC, and bfb-install writes the BFB image (OS plus firmware). Host package updates and nvidia-smi do not reimage the DPU."}, {"section": "Domain 2 – Physical Layer Management", "question": "Which TWO statements about MIG configuration are correct? (Choose two.)", "options": ["MIG can be enabled while CUDA processes are running on the GPU", "MIG instances can span two physical GPUs connected by NVLink", "MIG mode is enabled per GPU (for example nvidia-smi -i 0 -mig 1) and may require a GPU reset before taking effect", "After enabling MIG, GPU instances and compute instances must be created from supported profiles"], "correct": [2, 3], "explanation": "Enabling MIG is a per-GPU mode change that needs the GPU idle (and sometimes a reset). Instances are then created from profiles (for example 1g.10gb on H100 80GB). An instance never spans GPUs."}, {"section": "Domain 2 – Physical Layer Management", "question": "An HPC center wants an H100 80GB GPU split into seven equal instances for small jobs. Which profile fits?", "options": ["1g.10gb (seven instances)", "7g.80gb (seven instances)", "3g.40gb (seven instances)", "2g.20gb (seven instances)"], "correct": 0, "explanation": "1g.10gb gives one compute slice and about 10 GB each, up to seven per H100 80GB. 2g.20gb allows three instances, 3g.40gb allows two, and 7g.80gb is the whole GPU."}, {"section": "Domain 2 – Physical Layer Management", "question": "After creating MIG instances, 'nvidia-smi -L' lists the GPU with MIG devices underneath. How does an application target a specific MIG device?", "options": ["Using the NUMA node number of the MIG device", "MIG devices are selected automatically by the first process that opens the GPU", "Using its MIG UUID in CUDA_VISIBLE_DEVICES (or through the scheduler/device plugin)", "Using the PCIe bus ID of the parent GPU followed by the slice index"], "correct": 2, "explanation": "MIG devices are addressed by their UUIDs (MIG-...) in CUDA_VISIBLE_DEVICES, or exposed by Slurm GRES or the Kubernetes device plugin. They are not selected by NUMA node or a PCIe suffix."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "What is the role of the head node in a Base Command Manager (BCM) cluster?", "options": ["It runs CMDaemon, holds node configuration and images, and provisions nodes", "It runs all training jobs so that compute nodes only provide GPU memory", "It is a temporary installer that is removed once the compute nodes are provisioned", "It acts as the InfiniBand Subnet Manager and nothing else"], "correct": 0, "explanation": "The BCM head node hosts CMDaemon, the configuration database, software images, and provisioning services (DHCP/PXE/TFTP). It stays in place for the lifetime of the cluster."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "Which TWO elements are required to configure BCM head node high availability? (Choose two.)", "options": ["A second head node with synchronized configuration and a mechanism to fail over the shared IP addresses", "Running the InfiniBand Subnet Manager on both head nodes simultaneously as masters", "Shared storage (or replicated storage) for data such as /cm/shared and /home, plus a fencing/power control method", "A separate Slurm controller on every compute node"], "correct": [0, 2], "explanation": "BCM HA (set up with cmha-setup) uses an active/passive head node pair, shared or replicated storage, and fencing (power control through BMCs) to avoid split brain."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "In BCM, how are groups of nodes with the same hardware or role configured consistently?", "options": ["By editing the configuration of each node manually through SSH", "By creating a separate head node for each hardware type", "By defining a Slurm partition, which BCM uses as its configuration unit", "By assigning them to a category that defines the software image, roles, and settings"], "correct": 3, "explanation": "Categories group nodes and define software image, roles, file system mounts, and settings. Nodes inherit category settings, and individual overrides are possible."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "An administrator needs a dedicated software image for GPU nodes with extra packages. Which BCM workflow is appropriate?", "options": ["Install packages directly on each GPU node over SSH, then back up the nodes", "Clone the default image, add packages in a chroot, and assign it to the GPU category", "Edit the head node's own root file system, then reboot all compute nodes", "Build a container image and set it as the boot image in each node's BIOS"], "correct": 1, "explanation": "Software images live on the head node (for example under /cm/images). Cloning, modifying in a chroot, and assigning to a category keeps nodes reproducible. Changes made directly on nodes are lost at reprovisioning."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "After modifying a software image, how are running nodes updated without a full reinstall?", "options": ["Running nodes cannot be updated; they must be reprovisioned from bare metal", "By running 'apt upgrade' on the head node only", "With imageupdate, which syncs the node file system with its image", "By rebooting the head node, which pushes changes to all nodes"], "correct": 2, "explanation": "BCM can synchronize running nodes from their software image (imageupdate) or apply changes on reboot through provisioning. Updating the head node OS does not update node images."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "Which BCM interfaces can administrators use to manage the cluster? (Choose two.)", "options": ["Base View, the web-based GUI", "cmsh, the cluster management shell", "ibdiagnet, which edits software images", "nvidia-smi, which configures node categories"], "correct": [0, 1], "explanation": "BCM is managed through cmsh (CLI) and Base View (web UI), plus APIs. nvidia-smi and ibdiagnet are GPU and fabric tools."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "Which BCM utility installs and configures a workload manager such as Slurm on the cluster?", "options": ["cm-kubernetes-setup", "cm-wlm-setup", "cmha-setup", "cm-chroot-sw-img"], "correct": 1, "explanation": "cm-wlm-setup configures workload managers (Slurm and others). cm-kubernetes-setup installs Kubernetes, cmha-setup configures head node HA, and cm-chroot-sw-img enters a software image."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "A Slurm cluster must run containers from NGC without Docker on the compute nodes. Which TWO components are typically used? (Choose two.)", "options": ["Pyxis, the Slurm SPANK plugin that adds --container-image to srun", "Enroot to import and run container images unprivileged", "Helm, to deploy the containers on the Slurm nodes", "The NVIDIA device plugin, which schedules containers in Slurm"], "correct": [0, 1], "explanation": "Enroot turns images into unprivileged sandboxes, and Pyxis integrates it with Slurm (srun --container-image=...). The device plugin and Helm are Kubernetes components."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "A user runs 'srun --container-image=nvcr.io/nvidia/pytorch:24.05-py3 python train.py' and the import fails with a registry error. Which change is MOST likely needed with Pyxis/Enroot?", "options": ["Convert the image to a VM template, since Enroot only runs VMs", "Add --gres=docker:1 so that Slurm starts a Docker daemon", "Use 'nvcr.io#nvidia/pytorch:24.05-py3' and configure NGC credentials for Enroot", "Replace srun with docker run, because Pyxis does not support NGC images"], "correct": 2, "explanation": "Enroot uses 'registry#image' notation, and private registries such as nvcr.io require credentials (for example in Enroot's credentials file with $oauthtoken as user and the NGC API key)."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "How should Slurm be configured so that jobs can request GPUs with '--gres=gpu:8'?", "options": ["GresTypes=gpu, Gres=gpu:8 on the nodes, and a gres.conf (for example AutoDetect=nvml)", "Install the NVIDIA Kubernetes device plugin on the Slurm controller node", "Create one Slurm partition per GPU index and let users pick a partition", "Set CUDA_VISIBLE_DEVICES=0-7 globally in /etc/environment on each node"], "correct": 0, "explanation": "Slurm GPUs are Generic Resources. slurm.conf declares the types and counts, and gres.conf maps devices (manually or with NVML autodetection) so Slurm can bind GPUs to jobs through cgroups."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "Which TWO statements about installing the NVIDIA GPU driver on compute nodes are correct? (Choose two.)", "options": ["Using packaged drivers with DKMS (or prebuilt kernel modules) helps the driver survive kernel updates", "The driver must be installed inside every container image", "The driver version must match the NCCL version exactly", "The driver branch must be compatible with the CUDA versions used in containers and with Fabric Manager on NVSwitch systems"], "correct": [0, 3], "explanation": "The host driver defines the maximum CUDA version supported and must match Fabric Manager exactly on NVSwitch systems. Containers carry user-space CUDA libraries, not the kernel driver, and NCCL has no exact driver version dependency."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "On an HGX system with NVSwitch, CUDA applications fail with 'system not yet initialized' (CUDA error 802). What is the MOST likely cause?", "options": ["MIG mode is enabled on all GPUs but no instances exist", "The container image is missing the cuDNN library", "The InfiniBand cables between the nodes are disconnected", "Fabric Manager is not running or mismatches the driver"], "correct": 3, "explanation": "On NVSwitch-based systems, Fabric Manager must configure the NVLink fabric before CUDA can use the GPUs. A stopped service or a version mismatch with the driver leaves the system 'not initialized'. Network cables and cuDNN do not cause this error."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "What is the purpose of the DOCA-OFED (or MLNX_OFED) host stack on GPU nodes?", "options": ["It provides RDMA drivers, libraries, and tools for ConnectX/BlueField adapters", "It configures the BMC network interfaces for the OOB management network", "It replaces the GPU driver on systems that include BlueField DPUs", "It provides the CUDA runtime that applications need to perform RDMA"], "correct": 0, "explanation": "The networking host stack installs RDMA drivers, libraries, and tools such as ibstat and perftest. CUDA comes from the GPU stack, and the BMC is configured separately."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "GPUDirect RDMA is configured, but NCCL logs show traffic staged through host memory. Which kernel module should be checked?", "options": ["ib_ipoib", "nvidia_peermem", "nouveau", "nvidia_drm"], "correct": 1, "explanation": "nvidia-peermem lets the RDMA stack register GPU memory. If it is not loaded, NCCL cannot use GPUDirect RDMA and falls back to staging through host memory. nouveau must not be loaded at all, nvidia_drm is for display, and IPoIB is IP over InfiniBand."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "What does the NVIDIA Container Toolkit do on a GPU host?", "options": ["It configures the container runtime to expose host GPUs and driver libraries to containers", "It replaces the host kernel driver with a containerized driver per container", "It schedules GPU containers across the nodes of the cluster based on load", "It downloads the matching CUDA toolkit into every container when it starts"], "correct": 0, "explanation": "The toolkit (nvidia-ctk, the runtime hook, and CDI support) exposes GPUs to Docker, containerd, or CRI-O. It does not install CUDA into images, replace the driver, or schedule workloads."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "A user runs 'docker run --gpus all nvcr.io/nvidia/cuda:12.4.0-base-ubuntu22.04 nvidia-smi' and gets 'could not select device driver \"\" with capabilities: [[gpu]]'. What is the fix?", "options": ["Upgrade the HGX baseboard firmware with nvfwupd, then reboot the node", "Load the nvidia_peermem kernel module and restart the Docker daemon", "Install the Container Toolkit, run nvidia-ctk runtime configure, and restart Docker", "Enable MIG on all GPUs so that Docker can select a GPU instance"], "correct": 2, "explanation": "This error means Docker has no GPU-capable runtime registered. Installing and configuring the Container Toolkit fixes it. Firmware, MIG, and peermem are unrelated."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "A container built with CUDA 12.6 fails with 'CUDA driver version is insufficient for CUDA runtime version' on a host whose nvidia-smi shows 'CUDA Version: 12.2'. Which statement is correct?", "options": ["The driver supports CUDA up to 12.2; upgrade it or use the forward-compatibility package", "This is a Fabric Manager error and requires restarting the service", "nvidia-smi shows the installed CUDA toolkit version; installing CUDA 12.6 on the host fixes it", "The container must be rebuilt with the cuDNN library from the host"], "correct": 0, "explanation": "The CUDA version in nvidia-smi is the highest CUDA version the installed driver supports, not an installed toolkit. A newer runtime needs a newer driver, or the CUDA forward-compatibility package where supported."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "Why is the NGC CLI installed on cluster hosts?", "options": ["To create and update BCM software images for categories", "To configure the InfiniBand Subnet Manager on the fabric", "To monitor GPU health and run diagnostics on each node", "To download containers, models, and resources from NGC with an API key"], "correct": 3, "explanation": "The NGC CLI accesses the NGC catalog and private registries. Monitoring is DCGM, the SM is OpenSM/UFM, and images are managed by BCM."}, {"section": "Domain 3 – Control Plane Installation and Configuration", "question": "How do users authenticate Docker to the NGC registry nvcr.io?", "options": ["docker login nvcr.io with username $oauthtoken and an NGC API key as password", "Anonymous pulls are mandatory; authentication is not supported", "docker login nvcr.io with their NVIDIA Developer email and password", "With an SSH key uploaded to the NGC portal"], "correct": 0, "explanation": "nvcr.io uses the literal username $oauthtoken and an API key generated in NGC. Public images can be pulled anonymously, but private or entitled content requires authentication."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What is the purpose of a single-node stress test before multi-node testing?", "options": ["To isolate faulty GPUs, memory, NVLink, power, or cooling on each node first", "To measure the bisection bandwidth of the InfiniBand compute fabric", "To pre-populate the local NGC container cache on each compute node", "To configure the Slurm partitions and GRES definitions automatically"], "correct": 0, "explanation": "Isolating node-level faults first makes multi-node failures easier to diagnose. Single-node tests do not exercise the fabric or configure the scheduler."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which DCGM diagnostic level is appropriate as part of node acceptance, rather than a quick health check?", "options": ["dcgmi diag -r 1, which completes in seconds", "dcgmi diag -r 3 (or level 4)", "dcgmi discovery -l, which lists GPUs", "dcgmi health -c, which checks the last recorded health status"], "correct": 1, "explanation": "Level 1 is a quick sanity check, level 2 a medium test, and level 3 (and the extended level 4) run longer stress, memory, and PCIe tests suitable for acceptance. Discovery and health queries are not diagnostics."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "A 'dcgmi diag -r 3' run reports PASS for all tests except 'Memory Bandwidth' on GPU 5, which shows FAIL. What is the BEST action?", "options": ["Enable MIG on GPU 5 to bypass the failing memory region", "Ignore it, since memory bandwidth is not used by training workloads", "Keep the node out, rerun, check thermals and ECC/remapping, then engage support", "Lower the batch size of all jobs on this node"], "correct": 2, "explanation": "A reproducible memory bandwidth failure points to a hardware or thermal problem. The node should stay out of production until diagnosed. MIG does not bypass faulty memory."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What does HPL (High-Performance Linpack) measure, and why is it used in AI cluster validation?", "options": ["The time needed to pull and load a model container from NGC", "Sustained FP64 performance on a dense system, stressing GPUs and cooling", "Inter-node latency for small messages over the compute fabric", "Storage throughput when writing large checkpoints in parallel"], "correct": 1, "explanation": "HPL solves a dense system and reports TFLOPS. Running it on every node exposes nodes that throttle or underperform. HPL multi-node runs also exercise the fabric, but its purpose is compute performance."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "HPL runs on 32 identical nodes. Thirty-one report about 450 TFLOPS each, while one reports 380 TFLOPS and passes the residual check. What is the MOST likely next step?", "options": ["Accept the node, since the residual check passed", "Replace the InfiniBand cable of that node", "Investigate that node for throttling, power capping, or a degraded GPU", "Lower the HPL problem size on all nodes so the results match"], "correct": 2, "explanation": "A correct but slower result often points to clock throttling (check clock event reasons, temperatures, power), a degraded GPU, or BIOS differences. Passing the residual only proves correctness, not performance."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which tool is typically used to run single-node and multi-node NCCL bandwidth tests?", "options": ["dcgmi stats -e", "nvidia-smi nvlink -s", "nccl-tests", "ib_write_bw (perftest)"], "correct": 2, "explanation": "nccl-tests runs real NCCL collectives and reports algorithm and bus bandwidth. ib_write_bw tests raw RDMA between two ports, nvidia-smi nvlink shows link status, and dcgmi stats collects job statistics."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "In nccl-tests output for all_reduce_perf, what is the difference between 'algbw' and 'busbw'?", "options": ["They are always identical; nccl-tests prints both for compatibility", "algbw is the theoretical maximum, while busbw is the measured value", "algbw measures NVLink bandwidth only, while busbw measures InfiniBand bandwidth only", "algbw is size/time; busbw corrects it (2(n-1)/n) to compare with link speeds"], "correct": 3, "explanation": "Bus bandwidth normalizes results so they can be compared with the hardware's peak bandwidth regardless of the number of ranks. That is the value to check against expectations."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "A single-node all_reduce_perf run on an 8-GPU HGX H100 system reports a peak busbw of about 20 GB/s. What is the MOST likely cause?", "options": ["NVLink is not being used (for example Fabric Manager down or P2P disabled)", "The test must be run with Docker, since Enroot limits NVLink usage", "This is the expected busbw for eight GPUs connected through NVSwitch", "The InfiniBand cables are too long for full-speed intranode traffic"], "correct": 0, "explanation": "Intranode all-reduce over NVSwitch should reach hundreds of GB/s. A result around PCIe levels means NVLink paths are not in use. Check Fabric Manager, nvidia-smi nvlink -s, and NCCL_DEBUG=INFO output."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "During a 2-node NCCL test, NCCL_DEBUG=INFO shows 'NET/Socket' instead of 'NET/IB' and bandwidth is very low. What should be checked?", "options": ["The NVLink status of each node, since NVLink handles inter-node traffic", "The GPU driver version, since sockets are used when the driver is too new", "The RDMA stack and devices, since NCCL fell back to TCP sockets", "The HPL configuration file, since NCCL reuses its settings"], "correct": 2, "explanation": "NCCL uses sockets only when it cannot use InfiniBand/RoCE: missing RDMA drivers, inactive ports, wrong HCA selection, or containers without RDMA devices. NVLink does not cross nodes in HGX systems."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO commands verify the state of NVLink on an HGX node? (Choose two.)", "options": ["sinfo -N (node NVLink health)", "nvidia-smi nvlink -s (link status and speed)", "ibstat (port state of each NVLink)", "nvidia-smi nvlink -e (error counters)"], "correct": [1, 3], "explanation": "nvidia-smi nvlink options show link status, speeds, and error counters. ibstat reports InfiniBand/RoCE ports, and Slurm does not track NVLink health."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "How is NVLink Switch connectivity verified in a single-node NCCL test on HGX?", "options": ["Run ib_write_bw between each pair of GPUs on the compute fabric", "Ping each GPU from the head node over the in-band management network", "Run all_reduce_perf on all 8 GPUs and check busbw and NVLink paths in NCCL logs", "Run single-GPU HPL on each GPU and compare TFLOPS across the GPUs"], "correct": 2, "explanation": "Collectives across all GPUs exercise every NVSwitch path. NCCL debug output shows whether P2P over NVLink (and NVLS on supported systems) is used. Ping and ib_write_bw do not use NVLink."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which tool performs a comprehensive InfiniBand fabric validation, including topology, link speeds, error counters, and routing?", "options": ["ethtool", "ibdiagnet", "iperf3", "ibping"], "correct": 1, "explanation": "ibdiagnet scans the whole fabric and reports discrepancies, errors, and topology issues. ibping tests reachability, iperf3 tests TCP throughput, and ethtool configures Ethernet interfaces."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "A cable shows link up at full speed, but 'mlxlink' reports a high raw physical BER and a non-zero effective BER. What does this mean?", "options": ["The GPU driver selected the wrong NCCL algorithm for this link", "The link is healthy, since FEC corrects all physical errors by design", "Errors are leaking past FEC; clean, reseat, or replace the cable or transceiver", "The Subnet Manager computed incorrect routes for this specific port"], "correct": 2, "explanation": "Some raw BER is expected and corrected by FEC, but an effective BER above zero (or symbol errors) indicates errors leaking past FEC. Typical causes are dirty connectors, damaged fiber, or faulty transceivers."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO checks confirm that cabling is correct across the fabric? (Choose two.)", "options": ["Check that nvidia-smi topo -m shows NV18 between every GPU pair", "Check that each GPU's NIC connects to the expected rail and leaf port", "Compare the discovered topology (ibdiagnet/ibnetdiscover or switch tools) with the planned cable map", "Check that all nodes have the same hostname prefix"], "correct": [1, 2], "explanation": "Topology discovery compared with the design, plus rail verification, catches swapped or misplaced cables. Hostnames and internal NVLink topology do not reveal external cabling errors."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Why must switch firmware and software (OS/NOS) be confirmed during cluster verification?", "options": ["Switch firmware determines the GPU driver version that nodes can install", "Switch firmware controls MIG profiles on the GPUs", "Switch software is only relevant for the OOB network", "Mismatched versions cause link issues and break features such as SHARP or adaptive routing"], "correct": 3, "explanation": "Fabric features and stability depend on the switch firmware/NOS versions validated with the adapters. Switches do not control GPU drivers or MIG."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What should be confirmed on BlueField-3 devices during cluster verification?", "options": ["That MIG is enabled on the DPU so that each tenant gets an isolated slice", "Firmware and BFB/DOCA versions match the baseline, and the mode (DPU or NIC) is correct", "That the DPU uplinks connect to the BMC network instead of the fabric", "That the DPU runs HPL on its Arm cores to validate its compute performance"], "correct": 1, "explanation": "BlueField verification covers firmware, the BFB/DOCA software, and the operating mode. DPUs do not run HPL or MIG."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Why should transceiver firmware be verified?", "options": ["Transceivers have no firmware, so this check is not applicable", "Transceiver firmware determines the number of GPUs per node", "Transceiver firmware can affect link stability, speed, and compatibility", "Transceiver firmware stores the GPU firmware"], "correct": 2, "explanation": "Modern optical transceivers have firmware that can affect link stability and compatibility. They do not store GPU firmware or affect GPU count."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What is NVIDIA ClusterKit used for during cluster validation?", "options": ["A multi-test node assessment that flags outlier nodes", "Provisioning software images to compute nodes", "Updating the firmware of switches and transceivers", "Installing the Slurm workload manager on all nodes"], "correct": 0, "explanation": "ClusterKit automates a battery of node and inter-node tests and reports outliers. It does not install schedulers, update firmware, or provision images."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "A multi-node NCCL all_reduce_perf across 16 nodes with 8×400G NICs per node reaches only about half the expected bus bandwidth. Which TWO causes are MOST likely? (Choose two.)", "options": ["Some nodes have links at reduced speed or high error rates", "GPU-NIC affinity is wrong (GPUs using a NIC on the other CPU socket) or not all NICs are used", "The cluster has too many GPUs for NCCL", "The test uses busbw instead of algbw"], "correct": [0, 1], "explanation": "Inter-node collectives are limited by the slowest link and by correct NIC selection and affinity. Busbw is the right metric, and NCCL scales to many thousands of GPUs."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What is the purpose of an NCCL burn-in test?", "options": ["Burning the NCCL configuration into the switch firmware", "Measuring the peak bandwidth in the first few seconds of the test", "Sustained collectives over hours to expose intermittent link, NIC, or GPU errors", "Testing the NCCL library compilation"], "correct": 2, "explanation": "Burn-in exercises the fabric over hours to catch intermittent faults (flapping links, rising error counters) that short tests miss."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Why does HPL burn-in run for an extended period across the cluster?", "options": ["To calibrate the adaptive routing tables of the InfiniBand fabric", "To populate the scheduler's job accounting and fair-share data", "To compute the peak FP4 Tensor Core throughput of each GPU", "To verify sustained performance under maximum power and thermal load"], "correct": 3, "explanation": "Long runs reveal thermal saturation, power delivery issues, and marginal hardware. HPL is FP64 and does not calibrate routing or accounting."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What is the purpose of a NeMo burn-in in cluster acceptance?", "options": ["Updating the NeMo framework containers on all compute nodes", "Validating only the storage tier with a synthetic I/O generator", "Validating the full stack with a realistic LLM training workload at scale", "Testing the speech recognition models deployed on the cluster"], "correct": 2, "explanation": "A NeMo training burn-in mirrors real AI workloads (compute, communication, checkpointing). Synthetic tests may miss issues that only appear with realistic training patterns."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO tests are appropriate to validate storage for an AI cluster? (Choose two.)", "options": ["ib_write_bw between two GPUs inside the same node", "GPUDirect Storage validation (for example gdscheck and gdsio) if GDS is used", "nvidia-smi -q to measure file system latency", "Parallel read/write throughput and IOPS tests from many clients (for example fio or the storage vendor's tools)"], "correct": [1, 3], "explanation": "Storage must be tested from many clients at once and, if used, with GDS paths. Intranode RDMA tests and nvidia-smi do not measure file system performance."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "In 'gdscheck -p' output, the nvidia-fs driver is reported as not loaded. What is the consequence?", "options": ["NCCL collectives stop working", "GDS falls back to compatibility mode through host memory", "The InfiniBand fabric goes into Initializing state", "The GPUs cannot run CUDA applications"], "correct": 1, "explanation": "The nvidia-fs kernel module provides the GDS direct path for supported file systems. Without it, cuFile falls back to compatibility mode. CUDA, the fabric, and NCCL are not affected."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What is the correct way to validate the east-west fabric bandwidth after deploying a scalable unit?", "options": ["Run multi-node NCCL collectives on all nodes and compare busbw", "Run iperf3 between the head node and one compute node over TCP", "Run HPL on a single node and extrapolate to the scalable unit", "Check that all link lights are green on the leaf and spine switches"], "correct": 0, "explanation": "NCCL collectives over all nodes and rails are the reference measure. iperf3 on the management network or single-node HPL do not test the compute fabric."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO statements about ib_write_bw (perftest) are correct? (Choose two.)", "options": ["It can test GPU memory directly with the --use_cuda option when built with CUDA support", "It measures raw RDMA write bandwidth between two endpoints and helps isolate link or NIC problems from NCCL issues", "It measures the bus bandwidth of NCCL all-reduce", "It validates the Slurm GRES configuration"], "correct": [0, 1], "explanation": "perftest tools test point-to-point RDMA, optionally from GPU memory (GPUDirect). They help locate problems below NCCL. They do not test collectives or scheduler configuration."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "A node passes all single-node tests but every multi-node job including it is slow. What is the MOST effective way to locate the problem?", "options": ["Rerun the full-cluster HPL repeatedly until the slowdown disappears", "Reinstall the GPU driver on every node to align the software stack", "Increase the NCCL timeout so that slow operations no longer fail", "Use pairwise NCCL/perftest runs to find the node, then check its links and affinity"], "correct": 3, "explanation": "Bisecting the cluster with pairwise tests isolates the problematic node or link. Global reinstalls or longer timeouts do not identify the root cause."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "What does a passing HPL residual check guarantee?", "options": ["That the node reached its peak theoretical FP64 performance", "That the result is correct, not that performance met expectations", "That the InfiniBand fabric had no errors during the run", "That none of the GPUs throttled at any point during the run"], "correct": 1, "explanation": "The residual validates correctness. Performance (TFLOPS) must be compared separately against expectations, and throttling must be checked separately."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO items should be recorded at the end of cluster acceptance? (Choose two.)", "options": ["Firmware/software baseline of nodes, switches, and DPUs", "The list of users who will submit jobs", "Test results (HPL, NCCL, storage, burn-in) with node-level outliers and actions taken", "The colors of cables used per rail"], "correct": [0, 2], "explanation": "An acceptance report captures the baseline and test evidence, which supports operations and support cases. User lists and cable colors are not acceptance criteria."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Why is it recommended to run NCCL tests inside the same container image that users will use for training?", "options": ["It validates the exact NCCL/CUDA versions and RDMA access used in production", "nccl-tests cannot be compiled or run outside of a container image", "Running in a container removes the need for a GPU driver on the host", "Containers give higher NCCL bandwidth than bare metal on the same node"], "correct": 0, "explanation": "Testing the production image validates the full software path, including container RDMA access and plugins. nccl-tests can run on bare metal, containers do not boost bandwidth, and the host driver is still required."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "An all_reduce_perf run prints '# Out of bounds values : 0 OK' and '# Avg bus bandwidth : 412.6'. What do these lines tell you?", "options": ["No GPUs exceeded their memory bounds, and the fabric latency was 412.6 microseconds", "The test found no network errors, and the peak NVLink bandwidth was 413 GB/s for the smallest messages", "The Subnet Manager reported no out-of-bound routes, and 412.6 is the number of active links", "Results were numerically correct (no corrupted data), and the average bus bandwidth across message sizes was about 413 GB/s"], "correct": 3, "explanation": "nccl-tests checks data correctness (#wrong / out of bounds) and summarizes the average bus bandwidth in GB/s across tested sizes. Compare peak busbw for large messages with the expected value."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "Which TWO NCCL environment variables are commonly used when troubleshooting fabric selection during tests? (Choose two.)", "options": ["NCCL_GPU_COUNT, to set the number of GPUs per node", "NCCL_DEBUG=INFO, to log the transports, interfaces, and topology NCCL selects", "NCCL_IB_HCA, to specify which InfiniBand/RoCE devices NCCL may use", "NCCL_SM_TIMEOUT, to raise the Subnet Manager timeout"], "correct": [1, 2], "explanation": "NCCL_DEBUG=INFO shows which network (IB or Socket) and which devices NCCL uses, and NCCL_IB_HCA restricts device selection. The other two variables do not exist."}, {"section": "Domain 4 – Cluster Test and Verification", "question": "During a 24-hour NCCL burn-in, the symbol error counter on one switch port keeps increasing while performance is still normal. What should be done?", "options": ["Treat it as a marginal link: clean, reseat, or replace the cable or transceiver, then re-test", "Lower the port speed permanently so that the symbol errors stop increasing on that link", "Ignore it, since performance is still normal and FEC handles any error rate on modern links", "Reset the counters and restart the burn-in repeatedly until the counter stays at zero"], "correct": 0, "explanation": "Rising error counters reveal a degrading link that can fail later or cause retransmissions under load. Fixing it during acceptance avoids production incidents."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "The kernel log shows 'NVRM: Xid (PCI:0000:3b:00): 79, GPU has fallen off the bus'. What is the appropriate response?", "options": ["Increase the NCCL timeout", "Disable ECC on the GPU", "Drain the node, collect nvidia-bug-report, check power, seating, and thermals", "Restart the training job; Xid 79 is a normal message during heavy load"], "correct": 2, "explanation": "Xid 79 means the GPU is no longer reachable on PCIe, often due to hardware, power, or thermal issues. The node should be removed from service and diagnosed. It is not a normal event."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "Which TWO Xid categories usually point to the application rather than hardware? (Choose two.)", "options": ["Xid 13 (graphics engine exception), often caused by out-of-range memory access in user code", "Xid 79 (GPU has fallen off the bus)", "Xid 48 (double-bit ECC error)", "Xid 31 (GPU memory page fault), often caused by an application bug"], "correct": [0, 3], "explanation": "Xid 13 and 31 are often triggered by bugs in user code, although they can also have other causes. Xid 79 and 48 indicate hardware-level problems."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "'nvidia-smi -q -d ROW_REMAPPER' shows 'Pending: Yes' for a GPU. What does this mean?", "options": ["The GPU is waiting for a firmware update from the BMC", "Row remapping is scheduled and needs a GPU reset to take effect", "The GPU has failed permanently and cannot be recovered", "MIG reconfiguration is pending"], "correct": 1, "explanation": "Row remapping replaces faulty memory rows. Pending remaps take effect after a GPU reset. If remapping fails or resources are exhausted, the GPU should be replaced."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "A GPU repeatedly shows 'HW Slowdown' and 'HW Power Brake Slowdown' as active clock event reasons. What is the MOST likely cause?", "options": ["A platform power or thermal event, such as PSU or power delivery problems", "The GPU is in MIG mode, which caps power for each instance", "A user job lowered the application clocks with nvidia-smi", "The NCCL version in the container is too old for the driver"], "correct": 0, "explanation": "Hardware slowdown and power brake are triggered by the platform (power supply or thermal signals). Users cannot set them, and NCCL or MIG do not trigger them."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "How should a faulty GPU in an HGX system be handled?", "options": ["Hot-swap the GPU while the node is running other jobs", "Disable it with nvidia-smi and keep the node in production with 7 GPUs indefinitely", "Move a GPU from another node to restore 8 GPUs", "Identify it, drain the node, replace it per the vendor procedure, then revalidate"], "correct": 3, "explanation": "Correct identification, vendor procedure, and post-replacement validation are essential. SXM GPUs are not hot-swappable, and moving parts between nodes breaks the validated configuration."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "Which TWO tools help identify a failed fan, PSU, or network card? (Choose two.)", "options": ["sacct job accounting", "BMC sensor readings and the system event log (SEL)", "Vendor or NVIDIA diagnostic tools and nvidia-bug-report/sosreport logs", "NGC CLI"], "correct": [1, 2], "explanation": "BMC sensors and SEL entries, along with vendor diagnostics, pinpoint failed components. Job accounting and the NGC CLI do not report hardware state."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "On an AMD EPYC GPU server, which BIOS setting affects NUMA layout and therefore GPU/NIC affinity performance?", "options": ["USB legacy support", "Serial console redirection", "Boot logo display", "NPS (NUMA nodes per socket)"], "correct": 3, "explanation": "NPS (NPS1/2/4) controls how each socket is split into NUMA domains, which affects memory locality and process placement next to GPUs and NICs."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "Which TWO actions typically improve performance on Intel-based GPU servers? (Choose two.)", "options": ["Disabling all memory channels except one to reduce latency", "Applying the vendor's high-performance BIOS profile (C-state limits, turbo enabled, performance power policy)", "Binding processes to the CPU cores and NUMA node closest to their GPU and NIC", "Setting the GPU to the lowest supported clock"], "correct": [1, 2], "explanation": "Performance BIOS profiles and correct NUMA binding reduce latency and jitter. Reducing memory channels lowers bandwidth, and lowering GPU clocks reduces performance."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "Training jobs show low GPU utilization while waiting on data. Which TWO storage optimizations are MOST relevant? (Choose two.)", "options": ["Lower the GPU power limit to reduce data demand", "Use local NVMe caching for frequently read datasets", "Tune the parallel file system or NFS client (striping, nconnect, RDMA) for the workload's I/O pattern", "Disable checkpoints entirely"], "correct": [1, 2], "explanation": "Caching hot data locally and tuning the storage client for the I/O pattern feed GPUs faster. Lowering power or removing checkpoints does not solve I/O starvation and creates other risks."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "NCCL logs on a node show the GPU using a NIC attached to the other CPU socket. What is the impact and fix?", "options": ["The node must be reprovisioned with a new software image to reset affinity", "No impact, because NCCL compensates automatically with gradient compression", "Bandwidth drops across sockets; fix NIC selection or affinity (for example NCCL_IB_HCA)", "It disables NVLink on that GPU, so the fix is to restart Fabric Manager"], "correct": 2, "explanation": "GPU-NIC pairs should share a PCIe switch (PIX). Crossing sockets lowers bandwidth and increases latency. Correct mapping is configured through topology awareness or NCCL variables."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "After replacing a ConnectX adapter, the node's link comes up but NCCL performance is lower than other nodes. What should be checked FIRST?", "options": ["The software image assigned on the head node", "The Slurm partition definition for the node", "The new adapter's firmware and mlxconfig settings", "The GPU driver version on all the other nodes"], "correct": 2, "explanation": "Replacement parts often ship with different firmware or default settings. Aligning them with the baseline is the first step."}, {"section": "Domain 5 – Troubleshoot and Optimize", "question": "Which TWO signs suggest a thermal problem on a GPU node? (Choose two.)", "options": ["Lower clocks and performance than identical nodes under the same workload", "A higher InfiniBand LID than other nodes", "GPU temperatures near the slowdown threshold with 'SW Thermal Slowdown' or 'HW Thermal Slowdown' active", "A newer driver version than other nodes"], "correct": [0, 2], "explanation": "Thermal throttling reasons and degraded clocks compared with peers indicate cooling issues (fans, airflow, coolant). LIDs and driver versions do not reflect temperature."}];
+
+const SECTION_CATEGORIES = {
+  "NCP-AII — Exam Blueprint Domains": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  SECTION_CATEGORIES["NCP-AII — Exam Blueprint Domains"].push(s);
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      const cbEl = item.querySelector('input');
+      cbEl.addEventListener('change', () => {
+        item.classList.toggle('selected', cbEl.checked);
+        updateCount();
+      });
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option' + (isMulti(q) ? ' multi' : '');
+    if (isRevealed) {
+      cls += ' disabled';
+      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+    } else {
+      if (optionIsSelected(q, i)) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = answerIsCorrect(q);
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function isMulti(q) { return Array.isArray(q.correct); }
+
+function optionIsCorrect(q, i) {
+  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
+}
+
+function optionIsSelected(q, i) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
+}
+
+function answerIsCorrect(q) {
+  const a = answers[q.id];
+  if (isMulti(q)) {
+    if (!Array.isArray(a)) return false;
+    const sel = [...new Set(a)].sort((x, y) => x - y);
+    const cor = [...q.correct].sort((x, y) => x - y);
+    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
+  }
+  return a === q.correct;
+}
+
+function hasSelection(q) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  if (isMulti(q)) {
+    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
+    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
+  } else {
+    answers[q.id] = i;
+  }
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (!hasSelection(q)) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answerIsCorrect(q)) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
+  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answerIsCorrect(q);
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
+      if (optionIsCorrect(q, i)) cls += ' correct';
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium','Calibri',sans-serif;">
+  <img src="assets/logo/itq-glasses-orange.png" alt="" style="height:22px;width:auto;opacity:.95;margin-bottom:6px;display:inline-block;"><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official NVIDIA or ITQ material. For practice only.
+</footer>
+</body>
+</html>

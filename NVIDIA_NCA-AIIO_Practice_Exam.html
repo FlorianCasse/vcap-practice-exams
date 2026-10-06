@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVIDIA-Certified Associate: AI Infrastructure and Operations (NCA-AIIO) — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 1024px) {
+    .header h1 { font-size: 1.2rem; }
+    .score-breakdown { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .header { padding: 14px 16px; }
+    .header h1 { font-size: 1.1rem; }
+    .header-stats { gap: 12px; font-size: 0.82rem; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+    .score-breakdown { grid-template-columns: 1fr; }
+    .nav-bar { gap: 8px; }
+    .setup { padding: 20px; }
+    .setup h2 { font-size: 1.15rem; }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .option { padding: 14px 16px; }
+    .q-dot { width: 40px; height: 40px; font-size: 0.8rem; }
+    .btn { padding: 12px 24px; min-height: 44px; }
+    .btn-small { padding: 8px 16px; min-height: 44px; }
+    .section-item { padding: 12px 14px; min-height: 44px; }
+    .toggle { width: 50px; height: 28px; }
+    .toggle .slider:before { height: 22px; width: 22px; }
+    .toggle input:checked + .slider:before { transform: translateX(22px); }
+    .option:hover:not(.disabled) { border-color: transparent; background: var(--surface2); }
+    .option.selected:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
+.option.multi .option-letter { border-radius: 4px; }
+.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;font-family:'Titillium','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or NVIDIA. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
+  <h1>NVIDIA-Certified Associate: AI Infrastructure and Operations <span>(NCA-AIIO)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Domain 1 – Essential AI Knowledge", "question": "A colleague claims that generative AI is a separate field that sits outside machine learning. Which statement correctly places generative AI?", "options": ["Generative AI is a branch of classical machine learning that avoids neural networks to stay explainable", "Generative AI is a subfield of AI that relies on rule-based expert systems rather than learned models", "Generative AI applications are mostly built on deep learning models, which are a subset of machine learning within AI", "Generative AI is a superset of AI that includes both machine learning and traditional analytics"], "correct": 2, "explanation": "AI contains ML, ML contains DL, and modern generative AI (LLMs, diffusion models) is built on deep neural networks. It is not rule-based, does not avoid neural networks, and is not a superset of AI."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A retailer groups customers into segments based on purchase behavior. No segment labels exist beforehand. Which learning approach fits?", "options": ["Unsupervised learning, for example clustering", "Supervised classification trained on historical segment labels", "Reinforcement learning with a reward for each correct segment", "Transfer learning from a labeled image model"], "correct": 0, "explanation": "Without labels, the model must discover structure on its own: that is unsupervised learning (clustering). Supervised learning needs labels, reinforcement learning needs an environment and rewards, and an image model is unrelated to purchase data."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which THREE factors are generally cited as the main reasons for the rapid acceleration of AI adoption over the last decade? (Choose three.)", "options": ["The availability of very large digital datasets", "Algorithmic advances such as deep neural networks and transformers", "GPU-accelerated computing making large-scale training economically feasible", "The widespread replacement of x86 CPUs by Arm CPUs in data centers"], "correct": [0, 1, 2], "explanation": "Data, algorithms, and accelerated compute converged to make modern AI practical. CPU instruction-set changes are not a recognized driver of AI adoption."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Why does a GPU outperform a CPU on deep learning training even though each GPU core runs at a lower clock speed?", "options": ["Deep learning is dominated by large matrix operations that can be split across thousands of cores executing in parallel", "GPUs have much larger per-core caches, which removes most of the need to fetch weights from external memory", "GPUs execute branch-heavy code more efficiently thanks to deeper out-of-order pipelines on each of their cores", "GPUs extract more instruction-level parallelism per core than server CPUs thanks to wider superscalar decoding"], "correct": 0, "explanation": "The workload is massively data-parallel (matrix multiplies), which maps to thousands of simpler cores and very high memory bandwidth. CPUs are optimized for low-latency, branchy, serial code with large caches and deep out-of-order pipelines."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which GPU unit is purpose-built to accelerate the matrix multiply-accumulate operations used in neural network training and inference?", "options": ["CUDA cores", "Streaming multiprocessor schedulers", "RT cores", "Tensor Cores"], "correct": 3, "explanation": "Tensor Cores perform mixed-precision matrix multiply-accumulate in hardware. CUDA cores handle general-purpose arithmetic, RT cores accelerate ray tracing, and schedulers dispatch work but do not compute."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "An architect compares training and inference infrastructure. Which statement is MOST accurate?", "options": ["Training and inference both need the same InfiniBand fabric, because inference requests are split across many nodes by default to reduce latency for each user", "Training is latency-bound and should be sized per individual request, while inference is sized for aggregate throughput of long-running batch jobs only", "Inference needs more total GPU memory than training for the same model, because the optimizer states must be loaded at serving time alongside the weights", "Training is usually throughput-bound and benefits from tightly coupled multi-GPU clusters; inference is usually sized around latency, concurrency, and memory for model weights and KV cache"], "correct": 3, "explanation": "Training runs long, tightly coupled jobs where interconnect bandwidth and aggregate compute matter. Inference is sized for latency SLAs, concurrency, and memory (weights plus KV cache). Optimizer states exist only during training, and inference rarely needs a multi-node fabric."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A team plans to serve a 70-billion-parameter LLM in FP16/BF16. Roughly how much GPU memory do the model weights alone require?", "options": ["About 140 GB", "About 70 GB", "About 35 GB", "About 280 GB"], "correct": 0, "explanation": "FP16/BF16 uses 2 bytes per parameter: 70 B × 2 bytes ≈ 140 GB, before KV cache and activations. FP8 would halve this to about 70 GB, FP32 would double it to about 280 GB."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Following the previous sizing, the same 70B model must be served on H100 80 GB GPUs in BF16. What is the minimum realistic deployment?", "options": ["Two H100s using tensor parallelism, with headroom for KV cache being limited", "One H100, because the KV cache is stored in host memory by default", "Four H100s, because each GPU can only use half of its memory for weights", "One H100 using MIG to create additional memory"], "correct": 0, "explanation": "About 140 GB of weights do not fit in 80 GB, so at least two GPUs are needed (tensor parallelism), and in practice more memory is often needed for KV cache at high concurrency. MIG partitions memory, it never adds any."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which NVIDIA component is the parallel computing platform and programming model on which frameworks such as PyTorch build their GPU support?", "options": ["cuDNN", "CUDA", "NCCL", "TensorRT"], "correct": 1, "explanation": "CUDA is the platform and programming model. cuDNN (deep learning primitives), NCCL (collective communication), and TensorRT (inference optimization) are libraries built on top of CUDA."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "During multi-GPU training, gradients must be summed across all GPUs after each step. Which library performs this all-reduce efficiently over NVLink and InfiniBand?", "options": ["NCCL", "cuDNN", "cuBLAS", "Triton Inference Server"], "correct": 0, "explanation": "NCCL implements topology-aware collectives (all-reduce, all-gather, broadcast) over NVLink, PCIe, InfiniBand, and RoCE. cuBLAS is linear algebra, cuDNN provides neural network primitives, and Triton serves models."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A team wants to lower inference latency for a trained model through layer fusion, kernel auto-tuning, and FP8/INT8 quantization. Which NVIDIA tool is designed for this?", "options": ["RAPIDS cuML", "DCGM", "NeMo Curator", "TensorRT"], "correct": 3, "explanation": "TensorRT (and TensorRT-LLM for LLMs) optimizes trained models for inference. NeMo Curator prepares training data, cuML accelerates classical ML, and DCGM manages GPUs."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which NVIDIA software serves models from several frameworks behind HTTP/gRPC endpoints and supports dynamic batching and concurrent model execution?", "options": ["NVIDIA NIM Operator", "Triton Inference Server", "NVIDIA Container Toolkit", "Base Command Manager"], "correct": 1, "explanation": "Triton Inference Server is the multi-framework serving engine with dynamic batching. The NIM Operator manages NIM deployments on Kubernetes, the Container Toolkit exposes GPUs to containers, and BCM manages clusters."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "An enterprise wants to deploy an LLM quickly, with an OpenAI-compatible API and an inference engine already optimized for the GPU it detects. Which offering fits BEST?", "options": ["CUDA-X libraries", "NVIDIA NIM microservices", "NGC CLI", "NVIDIA NeMo Framework"], "correct": 1, "explanation": "NIM packages a model, an optimized engine, and a standard API in a container that selects an optimized profile for the detected GPU. NeMo is for building and customizing models, CUDA-X is a library collection, and the NGC CLI downloads assets."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "How is NVIDIA AI Enterprise BEST described?", "options": ["The NVIDIA driver branch reserved for data center GPUs, distributed separately from consumer drivers", "A hardware certification program for OEM servers that ship with NVIDIA data center GPUs installed", "A licensed, supported software platform that bundles NVIDIA frameworks, NIM, and infrastructure components for production use", "A free collection of community containers published on NGC, with no enterprise support or security updates"], "correct": 2, "explanation": "NVIDIA AI Enterprise is a subscription software platform with enterprise support, security maintenance, and stable release branches. Hardware certification is the NVIDIA-Certified Systems program, and data center drivers are separate."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Where do administrators obtain GPU-optimized containers (for example PyTorch), pretrained models, and Helm charts published by NVIDIA?", "options": ["The DOCA SDK portal", "The NGC catalog", "The NVIDIA Licensing Portal", "The CUDA samples repository"], "correct": 1, "explanation": "The NGC catalog (nvcr.io registry) hosts containers, models, and Helm charts. The CUDA samples and DOCA SDK are developer resources, and the Licensing Portal manages entitlements."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A data team runs pandas and scikit-learn ETL on CPUs that takes hours. Which NVIDIA suite accelerates these workflows on GPUs with similar APIs?", "options": ["TensorRT", "Holoscan", "Riva", "RAPIDS"], "correct": 3, "explanation": "RAPIDS (cuDF, cuML, cuGraph) provides pandas- and scikit-learn-like APIs on GPUs. TensorRT optimizes inference, Riva is speech AI, and Holoscan targets sensor and medical streaming."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which NVIDIA framework is used to build, customize (pre-train, fine-tune, align), and evaluate large generative AI models?", "options": ["NVIDIA cuOpt", "NVIDIA Omniverse", "NVIDIA NeMo", "NVIDIA Metropolis"], "correct": 2, "explanation": "NeMo covers the generative AI model lifecycle. Omniverse is for 3D simulation and digital twins, Metropolis for vision AI, and cuOpt for route optimization."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which mechanism, introduced by the transformer architecture, lets a model weigh the relevance of every token in a sequence to every other token?", "options": ["Max pooling over tokens", "Recurrent state passing", "Convolution across tokens", "Self-attention"], "correct": 3, "explanation": "Self-attention is the core of transformers and allows parallel processing of the whole sequence. Convolutions capture local patterns, recurrence processes tokens sequentially, and pooling reduces dimensions."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which use case is the BEST fit for edge AI rather than a central data center?", "options": ["Pre-training a foundation model on a large corpus of public web data and code repositories", "Real-time defect detection on a production line with strict latency and intermittent connectivity", "Hyperparameter search across hundreds of experiments for a new research architecture", "Monthly batch retraining of a product recommendation model on a year of purchase history"], "correct": 1, "explanation": "Edge AI fits when decisions must be made locally in real time, close to sensors, with limited connectivity. The other workloads are batch and compute-heavy and belong in a data center or the cloud."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A radiology department uses AI to flag suspicious findings on CT scans before a radiologist reviews them. Which category of AI use case is this?", "options": ["Time-series forecasting", "Recommender systems", "Computer vision for medical imaging", "Generative AI for synthetic content"], "correct": 2, "explanation": "Detecting findings on images is computer vision applied to medical imaging. It is not about generating content, recommending items, or forecasting a time series."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A bank must score card transactions for fraud within milliseconds, before authorization completes. Which requirement is MOST critical for the serving infrastructure?", "options": ["Daily full retraining from scratch", "Low, predictable inference latency at high transaction throughput", "Very large GPU memory to hold optimizer states", "A multi-node InfiniBand fabric for every inference request"], "correct": 1, "explanation": "Real-time fraud scoring is an inference workload with strict latency SLAs at high throughput. Optimizer states only exist during training, a multi-node fabric per request is unnecessary, and daily retraining from scratch is not a serving requirement."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which sequence BEST describes a typical AI development lifecycle?", "options": ["Deployment, then data preparation, then training, then evaluation once a year when the model is retired from production", "Optimization, then training, then data collection, then deployment to production without any further monitoring step", "Data collection and preparation, training or fine-tuning, evaluation and optimization, deployment, then monitoring and retraining", "Training, then deployment, then data preparation to explain model outputs, then optimization when users report slowness"], "correct": 2, "explanation": "The lifecycle starts with data, then training or fine-tuning, evaluation and optimization (for example with TensorRT), deployment (NIM, Triton), and continuous monitoring with retraining when data drifts."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which TWO NVIDIA tools are mainly used at the deployment/inference stage of the AI lifecycle? (Choose two.)", "options": ["NeMo Curator", "Triton Inference Server", "NVIDIA NIM", "RAPIDS cuDF"], "correct": [1, 2], "explanation": "Triton and NIM serve models in production. NeMo Curator and cuDF are used upstream, for data curation and data processing."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Why do data center GPUs such as H100, H200, and B200 use HBM instead of GDDR or DDR memory?", "options": ["HBM lets the GPU share a single coherent memory pool with the host CPU over PCIe", "HBM provides much higher memory bandwidth, which keeps Tensor Cores fed with data", "HBM is non-volatile memory, so model weights stay in place after a reboot or power loss", "HBM is significantly cheaper per gigabyte than GDDR, which reduces the cost of large GPUs"], "correct": 1, "explanation": "HBM is stacked next to the GPU die and delivers terabytes per second of bandwidth, which memory-bound AI workloads need. It is volatile, more expensive per gigabyte, and does not implement CPU memory sharing."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which statement about H100, H200, and B200 is correct?", "options": ["H200 is a Blackwell GPU that replaces B200 for inference, and H100 is its Hopper predecessor", "H100, H200, and B200 are all Ampere GPUs that differ only by clock speed and power limit", "B200 is a Hopper GPU with the same memory as H100, and H200 is the Ampere entry model", "H100 and H200 are Hopper GPUs (H200 has more and faster HBM3e), and B200 is a Blackwell GPU"], "correct": 3, "explanation": "H100 and H200 share the Hopper architecture (H200 has 141 GB of HBM3e). B200 belongs to the Blackwell generation, with more memory, fifth-generation NVLink, and FP4 support."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which Hopper feature speeds up transformer models by dynamically choosing between FP8 and 16-bit precision for each layer?", "options": ["Transformer Engine", "Confidential Computing", "Multi-Instance GPU", "NVLink Switch System"], "correct": 0, "explanation": "The Transformer Engine manages FP8/FP16 precision per layer to maximize throughput while preserving accuracy. Blackwell's second-generation Transformer Engine adds FP4. MIG partitions GPUs and does not change precision."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A team trains in FP32 and wants more throughput and a smaller memory footprint without significant accuracy loss. What should they adopt?", "options": ["Mixed-precision training (BF16/FP16 or FP8, with higher-precision accumulation and master weights)", "Disabling Tensor Cores so that all computation runs on CUDA cores at full FP32 precision", "Reducing the batch size to one so that the model and activations fit entirely in L2 cache", "INT4 quantization of all weights, activations, and gradients for the entire duration of training"], "correct": 0, "explanation": "Mixed precision uses Tensor Cores at lower precision while keeping critical values at higher precision. INT4 is an inference-time technique, disabling Tensor Cores reduces throughput, and a batch size of one does not fit a model in L2 cache."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "What is the main goal of fine-tuning a pretrained foundation model?", "options": ["Converting the model to a format that runs only on CPUs to avoid needing GPUs in production", "Retraining the model from random weights on proprietary data so that no public data influences it", "Reducing model size by removing whole layers, without any further training or evaluation step", "Adapting the model to a domain or task with a much smaller dataset and compute budget than pre-training"], "correct": 3, "explanation": "Fine-tuning (full or parameter-efficient such as LoRA) adapts existing weights to a domain or task at a fraction of the cost of pre-training. Retraining from scratch is pre-training, and pruning or format conversion are optimization steps."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A company wants its LLM assistant to answer from internal documents that change daily, without retraining the model. Which technique fits BEST?", "options": ["Quantizing the model to FP4 so that it can read more documents per request", "Retrieval-augmented generation (RAG) with an embedding model and a vector database", "Raising the model's temperature so that it explores more possible answers", "Weekly full fine-tuning of the model on the complete set of internal documents"], "correct": 1, "explanation": "RAG retrieves relevant, current passages at query time and adds them to the prompt. Frequent fine-tuning is costly and lags behind changes, temperature only affects randomness, and quantization only affects efficiency."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Why does LLM pre-training usually require a multi-node cluster with a high-speed interconnect, while inference of the same model often does not?", "options": ["Training does not use GPU memory for activations, so it relies on the network to stream them between nodes instead", "Inference cannot use NVLink at all, so it is limited to whatever fits on a single GPU and never needs more than one", "Inference requires a CPU-only architecture for tokenization, which prevents it from spreading across GPU nodes", "Training must process trillions of tokens and synchronize gradients across many GPUs every step, while inference processes independent requests"], "correct": 3, "explanation": "Pre-training is compute-intensive and tightly coupled (gradient synchronization), which needs a fast fabric. Inference requests are independent and often fit on one node, sometimes one GPU. Inference can use NVLink, for example for tensor parallelism inside a server."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "What is the difference between an NVIDIA HGX platform and a DGX system?", "options": ["HGX is NVIDIA's complete turnkey system with software and support, while DGX is the bare baseboard that OEMs buy", "HGX is a cloud service operated by NVIDIA, while DGX is the on-premises version of exactly the same service", "HGX uses PCIe GPUs only and targets standard servers, while DGX uses SXM GPUs only and targets NVIDIA systems", "HGX is the GPU baseboard (SXM GPUs plus NVSwitch) that OEMs build servers around; DGX is NVIDIA's complete system"], "correct": 3, "explanation": "OEMs such as Dell, HPE, Supermicro, or Lenovo build servers around the HGX baseboard. DGX is NVIDIA's turnkey system with DGX OS and support. Both use SXM GPUs."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which TWO statements about the NVIDIA Grace CPU are correct? (Choose two.)", "options": ["It connects to Hopper or Blackwell GPUs through the coherent NVLink-C2C interconnect", "It is an x86 CPU co-developed with AMD for HGX servers", "It connects to GPUs only through PCIe Gen5 lanes", "It is an Arm-based data center CPU designed by NVIDIA"], "correct": [0, 3], "explanation": "Grace is NVIDIA's Arm Neoverse-based CPU. In Grace Hopper and Grace Blackwell superchips, it is linked to the GPU by NVLink-C2C, which is coherent and much faster than PCIe."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which ordering of the NVIDIA software stack is correct, from the hardware up?", "options": ["GPU driver, then frameworks (PyTorch), then CUDA runtime and libraries, then applications and microservices", "CUDA runtime and libraries, then GPU driver, then frameworks (PyTorch), then applications and microservices", "Frameworks (PyTorch), then CUDA libraries, then GPU driver, then applications and microservices", "GPU driver, then CUDA runtime and libraries (cuDNN, cuBLAS, NCCL), then frameworks (PyTorch), then applications and microservices"], "correct": 3, "explanation": "The kernel driver exposes the GPU, the CUDA runtime and libraries sit on top, frameworks call those libraries, and applications or microservices run on the frameworks."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "What is MLOps primarily concerned with?", "options": ["Managing the InfiniBand subnet manager, routing tables, and fabric partitions", "Applying DevOps practices such as CI/CD, versioning, and monitoring to the ML lifecycle", "Designing the physical layout of GPU racks, power distribution, and liquid cooling loops", "Writing and tuning custom CUDA kernels for new model architectures and operators"], "correct": 1, "explanation": "MLOps industrializes the ML lifecycle: data and model versioning, pipelines, deployment, monitoring, and retraining. Rack design, kernel development, and fabric management are separate disciplines."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which NVIDIA offering provides GPU-accelerated speech recognition, text-to-speech, and translation microservices?", "options": ["NVIDIA Riva", "NVIDIA Clara", "NVIDIA Isaac", "NVIDIA Metropolis"], "correct": 0, "explanation": "Riva provides speech and translation AI. Isaac is for robotics, Metropolis for video analytics, and Clara for healthcare."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "A customer asks whether it can run inference for a small classification model on existing CPU-only virtualization hosts. What is the MOST balanced answer?", "options": ["No, neural networks cannot execute on CPUs, so a GPU is required even for a small classification model", "Only if the CPU hosts are interconnected with InfiniBand, since inference must be spread across nodes", "Yes, CPUs always deliver lower latency than GPUs for neural networks, so GPUs only help with training", "It can work for small models and low traffic; GPUs become necessary as size, concurrency, or latency needs grow"], "correct": 3, "explanation": "CPU inference is viable for small models and modest traffic. Large models, high concurrency, and tight latency targets favor GPUs. CPUs can run neural networks, but they are not faster at scale."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "Which statement about generative AI model types is correct?", "options": ["Generative models can only classify existing data into categories; they cannot create new content", "LLMs generate text token by token, while diffusion models typically generate images by iteratively denoising random noise", "Diffusion models generate text token by token, while LLMs generate images by iteratively denoising noise", "LLMs and diffusion models are both classical decision-tree ensembles trained on tabular data"], "correct": 1, "explanation": "LLMs are autoregressive transformers that predict the next token. Diffusion models learn to reverse a noising process to create images (and video or audio). Both are deep learning models that create new content."}, {"section": "Domain 1 – Essential AI Knowledge", "question": "During LLM inference, what is the KV cache and why does it matter for infrastructure sizing?", "options": ["It caches the model weights on local NVMe to speed up container start; it has no impact on GPU memory sizing", "It holds attention keys and values of past tokens; it grows with context length and concurrency, consuming GPU memory", "It stores optimizer states for each request and is released once the response is sent to the user", "It is a CPU-side cache of the tokenizer vocabulary; its size is negligible compared with the weights"], "correct": 1, "explanation": "The KV cache avoids recomputing attention for previous tokens. Its size scales with context length, batch size, and concurrency, so it can rival the weights in GPU memory and drives the choice of GPU memory capacity."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is the main purpose of NVLink inside an 8-GPU HGX server?", "options": ["Carrying BMC management traffic between GPU baseboards and the host management controller", "Connecting the GPUs to the local NVMe drives used for checkpointing and dataset caching", "Linking GPUs located in different racks without using network adapters or switches", "High-bandwidth, low-latency GPU-to-GPU communication that does not go through PCIe"], "correct": 3, "explanation": "NVLink is the scale-up interconnect between GPUs within an NVLink domain. Storage uses PCIe/NVMe, inter-rack traffic uses the network fabric (except for rack-scale NVLink systems such as NVL72), and management uses the OOB network."}, {"section": "Domain 2 – AI Infrastructure", "question": "In an HGX 8-GPU system, what does NVSwitch add compared with point-to-point NVLink?", "options": ["A connection from each GPU directly to the top-of-rack Ethernet switch for inter-node traffic", "Translation of NVLink traffic into InfiniBand packets so that multi-node jobs bypass NICs", "All-to-all connectivity so every GPU can talk to every other GPU at full NVLink bandwidth simultaneously", "Hardware partitioning of each GPU into up to seven isolated instances for multi-tenancy"], "correct": 2, "explanation": "NVSwitch builds a non-blocking NVLink fabric across all GPUs in the domain. It is not a network switch, does not partition GPUs (that is MIG), and does not convert to InfiniBand."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement about the GB200 NVL72 is correct?", "options": ["It is an air-cooled 8U server that links 72 GPUs through PCIe switches on a single baseboard", "It links 72 GPUs through InfiniBand only, without any NVLink connection between the trays", "It is a liquid-cooled rack-scale system in which 72 Blackwell GPUs form a single NVLink domain", "It is a reference architecture made of nine independent 8-GPU servers sharing a rack"], "correct": 2, "explanation": "NVL72 connects 36 Grace CPUs and 72 Blackwell GPUs through NVLink switch trays in one rack, which requires direct liquid cooling and very high rack power. It is a single NVLink domain, not nine separate servers."}, {"section": "Domain 2 – AI Infrastructure", "question": "In a DGX SuperPOD, which network carries GPU-to-GPU traffic between nodes during distributed training?", "options": ["The storage fabric, which is shared with dataset reads and checkpoint traffic", "The compute (east-west) fabric, typically InfiniBand or Spectrum-X Ethernet", "The out-of-band network that connects the BMCs and switch management ports", "The in-band management network used for provisioning and user access"], "correct": 1, "explanation": "The dedicated compute fabric carries NCCL collectives with RDMA. Storage, in-band management, and OOB management are kept on separate networks to avoid interference."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which TWO characteristics make InfiniBand well suited to AI training fabrics? (Choose two.)", "options": ["Mandatory use of TCP/IP for all collective operations", "Lossless operation through credit-based flow control", "Reliance on Spanning Tree Protocol to avoid loops", "Native RDMA with very low latency"], "correct": [1, 3], "explanation": "InfiniBand provides native RDMA and lossless, credit-based flow control, with a subnet manager computing routes. It does not use Spanning Tree, and NCCL uses verbs/RDMA rather than TCP on InfiniBand."}, {"section": "Domain 2 – AI Infrastructure", "question": "Why is RDMA important for multi-node AI training?", "options": ["It lets adapters move data directly between remote memories without involving the remote CPU, reducing latency and CPU overhead", "It replicates each checkpoint to several remote nodes so that training can resume after a failure", "It compresses gradients before they leave the GPU to reduce the volume of data sent between nodes", "It encrypts gradients in transit between nodes so that training data stays confidential on shared fabrics"], "correct": 0, "explanation": "Remote Direct Memory Access bypasses the kernel and CPU on the data path. Combined with GPUDirect RDMA, data goes straight to GPU memory. RDMA itself does not encrypt, compress, or replicate data."}, {"section": "Domain 2 – AI Infrastructure", "question": "A customer has standardized on Ethernet but needs RDMA performance for AI. Which technology provides RDMA over Ethernet?", "options": ["iSCSI with jumbo frames enabled", "NVMe over TCP with multipathing", "RoCE (RDMA over Converged Ethernet)", "VXLAN with EVPN control plane"], "correct": 2, "explanation": "RoCE v2 carries RDMA over routable Ethernet and requires congestion control (for example ECN/PFC or Spectrum-X adaptive routing). NVMe/TCP is a storage protocol and VXLAN is an overlay without RDMA."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is NVIDIA Spectrum-X?", "options": ["An InfiniBand switch family with SHARP in-network computing, designed for HPC and AI fabrics", "A storage platform that exposes NVMe over Fabrics targets directly to GPUs through BlueField", "A monitoring suite for Ethernet switches that collects telemetry from enterprise campus networks", "An Ethernet platform for AI combining Spectrum-4 switches and BlueField-3 SuperNICs with adaptive routing"], "correct": 3, "explanation": "Spectrum-X optimizes RoCE for AI with end-to-end adaptive routing, congestion control, and performance isolation. NVIDIA's InfiniBand switches are the Quantum family."}, {"section": "Domain 2 – AI Infrastructure", "question": "What does GPUDirect RDMA provide?", "options": ["A direct DMA path between a GPU and local NVMe drives that skips the CPU bounce buffer", "Peer-to-peer memory access between GPUs in the same server over NVLink or PCIe", "Remote access to a GPU from a virtual machine on another host over the network", "A direct data path between a network adapter and GPU memory, without staging data in host memory"], "correct": 3, "explanation": "GPUDirect RDMA lets ConnectX NICs read and write GPU memory directly. GPUDirect Storage handles storage, NVLink peer-to-peer handles GPU-to-GPU traffic inside a node, and remote GPU access is a different concept."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is the main benefit of GPUDirect Storage (GDS)?", "options": ["A direct DMA path between storage and GPU memory, avoiding a bounce buffer in CPU memory", "A software RAID controller implemented on the GPU to protect local NVMe drives", "Replacement of the parallel file system by a cache held entirely in GPU memory", "On-the-fly compression of datasets on the storage side to reduce the capacity needed"], "correct": 0, "explanation": "GDS lets local NVMe or remote storage (through supported file systems) DMA directly into GPU memory, which raises throughput and reduces CPU load for I/O-heavy workloads."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is an NVIDIA BlueField DPU primarily used for?", "options": ["Offloading and isolating networking, storage, and security services from the host CPU", "Replacing the server BMC for out-of-band power control, console, and firmware updates", "Running training and inference workloads when no GPU is installed in the host server", "Converting PCIe GPUs into SXM GPUs so that they can join the server's NVLink domain"], "correct": 0, "explanation": "A DPU combines a ConnectX adapter with Arm cores and accelerators to run infrastructure services in a separate trust domain. It is not a training accelerator or a BMC."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which TWO benefits does a DPU bring to a multi-tenant AI cloud? (Choose two.)", "options": ["Offload of networking, storage, and security processing from host CPU cores", "Elimination of the need for a compute fabric", "Additional HBM memory for tenant GPUs", "Isolation of infrastructure services from tenant workloads running on the host"], "correct": [0, 3], "explanation": "Running the infrastructure stack on the DPU frees host cores for tenants and keeps the control plane outside the tenant's reach. It does not add GPU memory or replace the fabric."}, {"section": "Domain 2 – AI Infrastructure", "question": "How is PUE (Power Usage Effectiveness) calculated?", "options": ["Total facility energy divided by IT equipment energy", "IT equipment energy divided by cooling energy", "IT equipment energy divided by total facility energy", "Cooling energy divided by IT equipment energy"], "correct": 0, "explanation": "PUE = total facility energy / IT energy, so 1.0 is ideal. The inverse is DCiE. Cooling divided by IT is a partial metric, not PUE."}, {"section": "Domain 2 – AI Infrastructure", "question": "A data center room provides about 15 kW per rack with air cooling. A customer wants four HGX H100-class 8-GPU servers per rack. What is the MOST likely conclusion?", "options": ["Each server can draw around 10 kW, so the rack would need about 40 kW; power and cooling must be upgraded or the servers spread over more racks", "The rack is sufficient if the servers use PCIe GPUs instead of SXM, because NVLink is what drives power consumption", "The rack is sufficient, because GPU servers rarely exceed 3 kW each even under full training load, so four fit easily", "Only floor loading needs to be checked, because the facility power distribution scales automatically with the load"], "correct": 0, "explanation": "8-GPU HGX/DGX H100-class systems are in the 10 kW range, so four of them far exceed 15 kW. Typical answers are fewer servers per rack, higher-density power, or liquid or rear-door cooling."}, {"section": "Domain 2 – AI Infrastructure", "question": "Why are the latest rack-scale AI systems moving to direct liquid cooling?", "options": ["Rack power densities of 100 kW and more exceed what air cooling can practically remove", "Liquid cooling removes the need for redundant power supplies in each compute tray", "Liquid cooling is needed to reduce the network latency between GPUs in the rack", "Air cooling is not covered by NVIDIA warranty terms on any current data center GPU"], "correct": 0, "explanation": "Systems such as GB200 NVL72 reach well above 100 kW per rack, beyond air-cooling limits. Cooling has no effect on network latency, and liquid cooling does not remove power redundancy needs."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which THREE facility aspects must be validated before installing high-density GPU racks? (Choose three.)", "options": ["Cooling capacity for the heat load (air, rear-door, or liquid)", "The number of DHCP scopes on the corporate network", "Floor loading and rack dimensions", "Power capacity and redundancy (feeds, PDUs, UPS)"], "correct": [0, 2, 3], "explanation": "Power, cooling, and floor or space are the core facility checks for AI racks. DHCP scopes are a network configuration detail, not a facility requirement."}, {"section": "Domain 2 – AI Infrastructure", "question": "A company compares on-premises GPU infrastructure with cloud GPU instances. Which statement is MOST accurate?", "options": ["On-premises is always cheaper, because the hardware is depreciated over five years regardless of how much it is used", "On-premises can be more cost-effective at sustained high utilization; cloud favors bursty or experimental workloads and fast access to new GPUs", "Cloud is always cheaper, because GPUs are billed only while jobs run and idle time is never charged to the customer", "Cost does not depend on utilization at all; only the GPU model determines whether cloud or on-premises is cheaper"], "correct": 1, "explanation": "The break-even depends on utilization, duration, and operational skills. Sustained heavy use favors owned infrastructure; short or bursty needs favor the cloud."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which TWO factors commonly favor on-premises AI infrastructure? (Choose two.)", "options": ["Data sovereignty or regulatory constraints on where data is processed", "No in-house team to operate infrastructure", "Large datasets that are costly or slow to move (data gravity)", "A one-week proof of concept with uncertain follow-up"], "correct": [0, 2], "explanation": "Regulation and data gravity push workloads on-premises. Short experiments and the lack of operational staff favor the cloud."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which TWO statements describe advantages of cloud GPU infrastructure? (Choose two.)", "options": ["Fast access to recent GPUs without capital expenditure", "Elastic capacity for bursty or experimental workloads", "Guaranteed lower cost for workloads running at full utilization for five years", "Full physical control over hardware and firmware"], "correct": [0, 1], "explanation": "The cloud trades capital expenditure for operational expenditure and elasticity. It does not guarantee lower long-term cost at full utilization, and physical control is an on-premises advantage."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which hardware characteristic matters MOST when choosing GPUs to serve a very large LLM at long context lengths?", "options": ["GPU memory capacity and bandwidth", "Base clock of the CPU", "Number of PCIe slots on the server", "Number of video encoders"], "correct": 0, "explanation": "Weights plus KV cache must fit in GPU memory, and token generation is largely memory-bandwidth-bound. Video encoders, CPU clocks, and slot counts are secondary."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which infrastructure is MOST appropriate to pre-train a model with hundreds of billions of parameters?", "options": ["A single DGX system with MIG enabled to multiply its effective GPU capacity by seven", "A large virtualization cluster using time-sliced vGPU so that many VMs share the training workload", "A few PCIe GPU servers connected through the existing corporate 25 GbE network, with data on a NAS", "Many NVLink 8-GPU or rack-scale systems on a non-blocking RDMA fabric, with fast shared storage"], "correct": 3, "explanation": "Large-scale pre-training needs many GPUs, fast scale-up (NVLink) and scale-out (InfiniBand or Spectrum-X) interconnects, and fast storage for data and checkpoints. MIG and time-slicing divide GPUs, they do not add capacity."}, {"section": "Domain 2 – AI Infrastructure", "question": "What does a rail-optimized compute fabric mean?", "options": ["Storage traffic uses a dedicated rail of the PCIe switch so that it never competes with GPU traffic", "Each rack has two power rails that feed alternating servers so a single feed failure affects half the rack", "Every server connects all of its NICs to a single leaf switch, which simplifies cabling and troubleshooting", "GPU N of every server connects through its own NIC to the same leaf switch (rail N), shortening the path for collectives"], "correct": 3, "explanation": "In rail-optimized designs, same-index GPUs across servers share a leaf, so most NCCL traffic crosses a single switch hop. It is a network topology concept, not a power or PCIe concept."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement about scale-up and scale-out is correct?", "options": ["Scale-up and scale-out both refer to adding GPU memory, either per GPU or per server", "Scale-out is only possible with PCIe GPUs, because SXM GPUs cannot connect to network adapters", "Scale-up adds racks connected over Ethernet; scale-out adds more GPUs inside each server chassis", "Scale-up grows the NVLink domain; scale-out adds nodes connected by the network fabric"], "correct": 3, "explanation": "Scale-up means a bigger NVLink domain (8 GPUs, NVL72). Scale-out means more nodes on InfiniBand or Ethernet. Both apply to SXM systems."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is the role of high-performance shared storage in an AI training cluster?", "options": ["Feeding training data fast enough to keep GPUs busy and absorbing large, frequent checkpoint writes", "Storing only logs and metrics, since datasets are always loaded once into GPU memory", "Extending GPU memory when models are too large, through transparent paging over the network", "Holding the operating system images that the compute nodes boot from during provisioning"], "correct": 0, "explanation": "Storage that is too slow leaves GPUs idle and lengthens checkpoints. OS images usually come from the provisioning system, and storage cannot replace GPU memory."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which storage tiering approach is common in AI clusters?", "options": ["Tape libraries as the primary tier for training data, with a small disk cache in front of them", "Object storage only, mounted directly by every GPU node for small random reads during training", "A single NFS server on the in-band management network serving all datasets and checkpoints", "Local NVMe cache for hot data, a fast shared file system for active data, object storage for capacity"], "correct": 3, "explanation": "Combining local NVMe, a fast shared file system, and object storage balances performance and cost. Direct random reads from object storage, a single NFS server on the management network, or tape would starve GPUs."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement BEST contrasts inference infrastructure with training infrastructure?", "options": ["Inference needs a larger checkpoint storage tier than training, because each request writes a checkpoint of the model state", "Inference is sized for concurrency, latency SLAs, availability, and autoscaling; training is sized for throughput of long-running, tightly coupled jobs", "Inference requires an InfiniBand fabric between all serving nodes, because each request is split across several servers", "Inference never needs high availability, because clients can always retry their requests later when capacity frees up"], "correct": 1, "explanation": "Inference is a production service with SLAs and elasticity. Checkpoints are a training concern, InfiniBand is rarely needed between serving nodes, and production inference usually needs high availability."}, {"section": "Domain 2 – AI Infrastructure", "question": "In a Spectrum-X deployment, what is the role of a BlueField-3 SuperNIC?", "options": ["Hosting the storage controller and RAID logic for the server's local NVMe drives", "Accelerating GPU-to-GPU RoCE traffic on the compute fabric, including adaptive routing support", "Running the InfiniBand subnet manager that assigns LIDs and computes routes for the fabric", "Acting as the server's BMC for out-of-band power control, console access, and firmware"], "correct": 1, "explanation": "The SuperNIC is optimized for east-west AI traffic, including packet reordering for adaptive routing. It is not a storage controller or BMC, and Spectrum-X is Ethernet, so it has no InfiniBand subnet manager."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which component of an InfiniBand fabric discovers the topology, assigns addresses (LIDs), and computes routing tables?", "options": ["A DHCP server on the fabric", "The BMC of each managed switch", "The NCCL bootstrap process", "The Subnet Manager (OpenSM or UFM)"], "correct": 3, "explanation": "Without an active Subnet Manager, ports stay in the Initializing state. It can run on a switch, a host (OpenSM), or UFM. NCCL uses the fabric but does not configure it."}, {"section": "Domain 2 – AI Infrastructure", "question": "What does NVIDIA SHARP provide?", "options": ["A diagnostic tool that reports the signal quality and error rate of each transceiver", "In-network computing that performs collective reductions in the switches, reducing data movement and latency", "A protocol that lets several virtual machines share one physical GPU through the fabric", "Hardware encryption of all InfiniBand traffic between hosts, enforced by the switches"], "correct": 1, "explanation": "SHARP (Scalable Hierarchical Aggregation and Reduction Protocol) offloads parts of all-reduce operations to Quantum switches. It does not encrypt traffic, test cables, or virtualize GPUs."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is the out-of-band (OOB) management network used for in an AI cluster?", "options": ["Replicating training checkpoints between racks so that jobs can restart anywhere", "Reaching BMCs and switch management ports for power, console, and firmware, independently of the host OS", "Provisioning node OS images over PXE and providing user SSH access to the login nodes", "Carrying NCCL collective traffic automatically whenever the compute fabric is congested"], "correct": 1, "explanation": "OOB connects BMCs and switch management ports. Provisioning and SSH use the in-band management network, NCCL uses the compute fabric, and checkpoints use the storage network."}, {"section": "Domain 2 – AI Infrastructure", "question": "A customer wants one GPU model for AI inference, rendering, and virtual workstations in a standard air-cooled data center. Which choice fits BEST?", "options": ["A GB200 NVL72 rack, which combines the highest AI performance with virtual workstation support", "A Jetson Orin module per user, deployed as a compact edge appliance in the data center", "A universal PCIe data center GPU such as the L40S or RTX PRO server class", "An HGX B200 baseboard, which provides display outputs for rendering and virtual workstations"], "correct": 2, "explanation": "Universal PCIe GPUs combine AI performance, RT cores for graphics, and vGPU support in air-cooled servers. NVL72 and HGX target large-scale AI, and Jetson targets edge devices."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement about SXM and PCIe GPU form factors is correct?", "options": ["SXM and PCIe versions of the same GPU have identical power limits, memory bandwidth, and NVLink connectivity", "PCIe cards always deliver higher training performance than SXM modules because they sit closer to the CPU in standard slots", "SXM modules mount on a baseboard with NVLink/NVSwitch and support higher power; PCIe cards fit standard slots with lower power and limited NVLink", "SXM modules connect to the CPU only through NVLink and never use PCIe, which is why they need a special baseboard"], "correct": 2, "explanation": "SXM enables high power envelopes and full NVLink connectivity. PCIe versions are easier to deploy but have lower power and fewer GPU-to-GPU links. SXM GPUs still connect to the host over PCIe."}, {"section": "Domain 2 – AI Infrastructure", "question": "How much east-west bandwidth is typically provisioned per GPU in an NVIDIA reference training cluster?", "options": ["One 25 GbE port per server", "One 100 GbE port shared by all eight GPUs", "None; GPUs communicate only through NVLink", "About one 400 Gb/s (or faster) NIC per GPU"], "correct": 3, "explanation": "Reference designs pair each GPU with a dedicated 400G (or 800G) NIC so that inter-node collectives are not bottlenecked. Shared low-speed ports would starve multi-node training."}, {"section": "Domain 2 – AI Infrastructure", "question": "What is the purpose of reference architectures such as DGX BasePOD and DGX SuperPOD?", "options": ["Licensing the NVIDIA software stack for a fixed number of GPUs and nodes in a cluster", "Defining the rules and submission categories of the MLPerf training benchmark suite", "Providing validated, prescriptive designs for compute, networking, storage, and software at a given scale", "Certifying individual engineers on the design and operation of NVIDIA infrastructure"], "correct": 2, "explanation": "Reference architectures reduce risk and deployment time by prescribing tested components and topologies. Licensing, certification, and benchmark rules are separate topics."}, {"section": "Domain 2 – AI Infrastructure", "question": "A cluster must grow from 4 to 128 GPU nodes. Which compute network design property matters MOST?", "options": ["A non-blocking or low-oversubscription fat-tree (leaf-spine) topology", "Routing compute traffic through the in-band management network", "Disabling RDMA to simplify troubleshooting", "A single large switch with high oversubscription to reduce cost"], "correct": 0, "explanation": "All-reduce traffic is bandwidth-hungry and synchronized, so oversubscription directly slows training. Fat-tree designs scale while keeping bisection bandwidth."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which TWO metrics drive the electrical and thermal design of an AI rack? (Choose two.)", "options": ["Heat rejection capacity of the cooling solution", "Number of logical CPU threads per server", "Number of InfiniBand ports per switch", "Maximum power draw per system multiplied by systems per rack"], "correct": [0, 3], "explanation": "Rack design starts from the total power (and therefore heat) per rack, and from how much heat the cooling solution can remove. Thread or port counts do not drive power and cooling design."}, {"section": "Domain 2 – AI Infrastructure", "question": "What must be present on a host so that containers can use its NVIDIA GPUs?", "options": ["A Kubernetes cluster, because Docker on its own cannot pass GPUs through to containers", "Only the CUDA toolkit inside the container image; the host does not need any NVIDIA driver at all", "A BlueField DPU in each host, which exposes the GPUs to the container runtime over PCIe", "The NVIDIA kernel driver on the host and the NVIDIA Container Toolkit configured for the container runtime"], "correct": 3, "explanation": "The driver is always on the host. The Container Toolkit injects the user-space driver libraries and devices into containers. CUDA inside the image does not replace the host driver, and Docker can use GPUs directly with --gpus."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement about ConnectX adapters is correct?", "options": ["ConnectX adapters are dedicated to out-of-band management and never carry data traffic", "ConnectX adapters provide InfiniBand and/or Ethernet connectivity with RDMA and GPUDirect support", "ConnectX is the cooling distribution unit used in liquid-cooled NVL72 racks", "ConnectX is NVIDIA's family of Arm-based system-on-chips for edge and embedded devices"], "correct": 1, "explanation": "ConnectX (for example ConnectX-7, ConnectX-8) are the high-speed NICs used for compute and storage fabrics. BlueField adds Arm cores to a ConnectX core."}, {"section": "Domain 2 – AI Infrastructure", "question": "Which statement about InfiniBand and Ethernet for AI fabrics is MOST accurate?", "options": ["InfiniBand and Ethernet cannot coexist in the same data center, so customers must standardize on one fabric for all traffic types", "Ethernet cannot support RDMA in any form, so Ethernet-based clusters are limited to inference workloads and cannot run distributed training", "InfiniBand requires TCP offload engines on every adapter to run NCCL, which adds latency compared with RoCE on modern Ethernet", "Both can deliver high-performance AI fabrics: InfiniBand is natively lossless with RDMA, while Ethernet relies on RoCE with advanced congestion control and adaptive routing"], "correct": 3, "explanation": "Both are valid choices. InfiniBand has native RDMA and lossless flow control; Ethernet achieves comparable AI performance with RoCE plus advanced congestion control. They often coexist (InfiniBand compute, Ethernet storage and management)."}, {"section": "Domain 2 – AI Infrastructure", "question": "A design uses DAC copper cables for links inside a rack and optical transceivers between rows. Why?", "options": ["DAC cables are needed for RDMA traffic, while optics can only carry TCP traffic", "Optical links are required by InfiniBand while copper links are required by Ethernet", "Passive copper is cheap and low-power but limited to a few meters; optics are needed for longer distances", "Copper offers higher bandwidth than optics at 400G, so it is preferred wherever it physically fits"], "correct": 2, "explanation": "Direct-attach copper is the lowest-cost, lowest-power option for very short runs. Beyond a few meters, active or optical cables are needed. The choice depends on distance, not on protocol or RDMA support."}, {"section": "Domain 3 – AI Operations", "question": "Which NVIDIA tool provides cluster-wide GPU monitoring, health checks, diagnostics, and policy management?", "options": ["nvidia-smi run from a cron job", "DCGM (Data Center GPU Manager)", "The NGC command-line interface", "The NCCL tests suite"], "correct": 1, "explanation": "DCGM runs as a host engine with active health checks, diagnostics (dcgmi diag), and exporters. nvidia-smi is a per-node CLI, NCCL tests measure collective bandwidth, and the NGC CLI downloads assets."}, {"section": "Domain 3 – AI Operations", "question": "An administrator wants a quick look at utilization, memory, temperature, power, and running processes on the GPUs of one node. Which command fits?", "options": ["ibstat", "sinfo", "nvidia-smi", "dcgmi discovery -l"], "correct": 2, "explanation": "nvidia-smi gives a per-node snapshot including processes. ibstat shows InfiniBand ports, sinfo shows Slurm node states, and dcgmi discovery lists GPUs without the process view."}, {"section": "Domain 3 – AI Operations", "question": "Which TWO GPU metrics BEST indicate whether a training job is using the GPU efficiently? (Choose two.)", "options": ["Tensor Core activity and memory bandwidth utilization", "SM activity/occupancy (not only the coarse GPU utilization percentage)", "The number of processes listed in nvidia-smi", "GPU serial number and VBIOS version"], "correct": [0, 1], "explanation": "GPU utilization only means a kernel was running, not how much of the GPU it used. DCGM profiling metrics (SM activity, Tensor Core activity, DRAM bandwidth) show actual efficiency. Serial numbers and process counts do not."}, {"section": "Domain 3 – AI Operations", "question": "How is Slurm BEST described in an AI cluster?", "options": ["A monitoring agent that collects GPU metrics and exports them to Prometheus", "A provisioning tool that installs operating system images on bare-metal compute nodes", "A container orchestration platform that keeps long-running inference services available", "An open-source workload manager that queues batch jobs and allocates nodes and GPUs according to policies"], "correct": 3, "explanation": "Slurm schedules batch jobs (partitions, fairshare, QoS, GRES). Kubernetes is the orchestrator, BCM provisions, and DCGM Exporter exports metrics."}, {"section": "Domain 3 – AI Operations", "question": "Which statement BEST contrasts Slurm and Kubernetes for AI workloads?", "options": ["Slurm cannot run containers at all, so it is limited to bare-metal binaries compiled for each cluster", "Kubernetes cannot schedule GPU workloads unless Slurm is installed underneath it to allocate the devices", "Slurm excels at batch scheduling of tightly coupled multi-node training; Kubernetes excels at long-running containerized services", "Both tools are interchangeable and provide the same scheduling, scaling, and self-healing features"], "correct": 2, "explanation": "Slurm offers gang scheduling, fairshare, and topology awareness for HPC-style jobs. Kubernetes handles service lifecycle, scaling, and self-healing. Slurm can run containers (for example with Enroot/Pyxis), and Kubernetes schedules GPUs through the device plugin."}, {"section": "Domain 3 – AI Operations", "question": "What is the primary purpose of NVIDIA Run:ai?", "options": ["Running burn-in diagnostics on GPU hardware before nodes are handed over to users", "Pooling GPUs on Kubernetes and sharing them between teams with quotas and fractional GPUs", "Provisioning bare-metal nodes, their operating system images, and their firmware levels", "Optimizing trained models for inference through quantization and layer fusion"], "correct": 1, "explanation": "Run:ai is a GPU orchestration layer for Kubernetes. Provisioning is BCM, diagnostics are DCGM, and model optimization is TensorRT."}, {"section": "Domain 3 – AI Operations", "question": "What is NVIDIA Base Command Manager (BCM) primarily used for?", "options": ["Running the InfiniBand subnet manager on the fabric switches and computing routes", "Hosting the container images and Helm charts that NVIDIA publishes in the NGC registry", "Serving trained models to applications through an OpenAI-compatible inference API", "Provisioning and managing AI/HPC clusters: node images, categories, workload managers, and monitoring"], "correct": 3, "explanation": "BCM deploys and manages clusters from a head node (cmsh, Base View) and installs workload managers such as Slurm or Kubernetes. It is not a registry, inference server, or subnet manager."}, {"section": "Domain 3 – AI Operations", "question": "Several small inference services must share one large GPU, each with guaranteed memory and fault isolation. Which feature fits?", "options": ["NVLink peer-to-peer", "CUDA MPS without MIG", "Time-slicing", "Multi-Instance GPU (MIG)"], "correct": 3, "explanation": "MIG partitions the GPU in hardware (compute, memory, cache) with isolation. Time-slicing and MPS share the GPU without hardware memory isolation, and NVLink connects GPUs rather than dividing them."}, {"section": "Domain 3 – AI Operations", "question": "A VMware private cloud must share NVIDIA GPUs across several virtual machines. What is required?", "options": ["Slurm GRES configured on each of the ESXi hosts", "NCCL installed and configured in each guest VM", "NVIDIA vGPU software with licensed guest drivers", "A BlueField DPU assigned to each virtual machine"], "correct": 2, "explanation": "NVIDIA vGPU (part of NVIDIA AI Enterprise for compute workloads) shares GPUs across VMs, in time-sliced or MIG-backed mode, with licensing. NCCL and Slurm do not virtualize GPUs."}, {"section": "Domain 3 – AI Operations", "question": "Which TWO statements about GPU virtualization options are correct? (Choose two.)", "options": ["PCIe passthrough dedicates an entire GPU to one VM with near-native performance", "MIG-backed vGPU gives each VM a hardware-isolated slice of a GPU", "Time-sliced vGPU provides the same memory bandwidth isolation as MIG", "Passthrough allows one GPU to be shared by several VMs simultaneously"], "correct": [0, 1], "explanation": "Passthrough is one GPU per VM. MIG-backed vGPU adds hardware isolation. Time-sliced vGPU shares the engines in turns without MIG's isolation of memory bandwidth and cache."}, {"section": "Domain 3 – AI Operations", "question": "Which component exposes DCGM metrics in a format that Prometheus can scrape, for example on Kubernetes?", "options": ["Node Feature Discovery", "DCGM Exporter", "GPU Feature Discovery", "NVIDIA device plugin"], "correct": 1, "explanation": "DCGM Exporter publishes GPU metrics on an HTTP endpoint. Node and GPU Feature Discovery create node labels, and the device plugin advertises GPUs as schedulable resources."}, {"section": "Domain 3 – AI Operations", "question": "What does the NVIDIA GPU Operator automate on Kubernetes?", "options": ["The configuration of InfiniBand switches and the subnet manager for the cluster", "Deploying and upgrading the GPU stack: driver, toolkit, device plugin, DCGM Exporter, and MIG manager", "The installation of Kubernetes itself on bare-metal nodes, including the control plane", "The scheduling of training jobs between teams with quotas and fair-share policies"], "correct": 1, "explanation": "The GPU Operator deploys and upgrades the GPU components as containers. Installing Kubernetes, multi-team scheduling (Run:ai), and switch configuration are out of its scope. Network components are handled by the Network Operator."}, {"section": "Domain 3 – AI Operations", "question": "A GPU reports a rising count of uncorrectable ECC errors. What is the MOST appropriate response?", "options": ["Lower the GPU power limit to reduce memory stress, and keep the node in the scheduler", "Drain the node from the scheduler, run DCGM diagnostics, check row-remapping status, and engage hardware support if confirmed", "Reset the GPU and return the node to production immediately, since a reset clears the error counters", "Disable ECC on that GPU so that the errors no longer interrupt jobs, and monitor job failures"], "correct": 1, "explanation": "Uncorrectable errors can corrupt results and crash jobs. The node should be removed from scheduling and diagnosed before any decision. Disabling ECC hides real faults, and power limits do not fix memory errors."}, {"section": "Domain 3 – AI Operations", "question": "Which statement BEST contrasts job scheduling and container orchestration?", "options": ["Scheduling runs finite batch jobs to completion; orchestration keeps services running, scaled, and healthy", "They are two names for the same function, implemented by different vendors with different syntax", "Orchestration only applies to virtual machines, while job scheduling only applies to containers", "Job scheduling is mainly used for inference services, while orchestration is mainly used for training jobs"], "correct": 0, "explanation": "Schedulers like Slurm manage queues of jobs with a beginning and an end. Orchestrators like Kubernetes maintain the desired state of long-running services."}, {"section": "Domain 3 – AI Operations", "question": "Which TWO metrics help detect GPU thermal or power problems? (Choose two.)", "options": ["Container image size", "Power draw compared with the enforced power limit", "Number of Slurm accounts on the cluster", "GPU temperature together with clock event (throttle) reasons"], "correct": [1, 3], "explanation": "Clock event reasons such as HW Slowdown, SW Thermal Slowdown, or SW Power Cap explain why clocks dropped. Comparing power draw with the limit reveals power capping."}, {"section": "Domain 3 – AI Operations", "question": "A platform team must monitor the health and utilization of GPUs on hundreds of nodes. Which approach fits BEST?", "options": ["DCGM with exporters feeding a time-series database and dashboards, with alerts on health and Xid events", "Monitoring host CPU and RAM usage with the existing tools, since GPU issues show up there as well", "Relying on users to report slow or failed jobs, then investigating the affected nodes one by one", "A daily script that runs nvidia-smi on every node over SSH and emails the collected output to the team"], "correct": 0, "explanation": "Centralized, continuous telemetry with alerting scales and catches problems early. Manual or user-reported approaches miss transient faults, and CPU metrics do not reveal GPU issues."}, {"section": "Domain 3 – AI Operations", "question": "What is the main benefit of GPU pooling and fractioning (for example with Run:ai)?", "options": ["Guaranteeing each user a dedicated physical GPU at all times, regardless of demand", "Removing the need to install GPU drivers on the worker nodes of the Kubernetes cluster", "Higher overall GPU utilization, because idle or partially used capacity is shared dynamically between teams", "Bypassing team quotas so that any team can use all GPUs whenever it submits a job"], "correct": 2, "explanation": "Pooling turns static allocations into a shared, policy-driven resource, which raises utilization. Quotas and fairness still apply, and drivers are still needed."}, {"section": "Domain 3 – AI Operations", "question": "Which statement about GPU time-slicing in Kubernetes is correct?", "options": ["Time-slicing gives each pod a guaranteed share of memory bandwidth", "Time-slicing requires NVSwitch to work", "Several pods share a GPU in turns, without memory or fault isolation between them", "Time-slicing provides hardware memory isolation equivalent to MIG"], "correct": 2, "explanation": "Time-slicing oversubscribes a GPU by advertising replicas, but pods share the same memory and can affect each other. MIG is the option for isolation. NVSwitch is unrelated."}, {"section": "Domain 3 – AI Operations", "question": "How is NVIDIA Mission Control BEST described?", "options": ["The firmware image that runs on BlueField DPUs to provide networking and storage offloads", "Software for operating AI factories at scale, combining cluster management, orchestration, and automated recovery", "A tool for overclocking and fan-tuning GPUs in engineering workstations and desktops", "A dashboard bundled with consumer GeForce drivers for game settings and recordings"], "correct": 1, "explanation": "Mission Control integrates components such as BCM and Run:ai with health monitoring and automated job recovery for large deployments such as NVL72-based clusters."}, {"section": "Domain 3 – AI Operations", "question": "Which TWO points are important when virtualizing accelerated infrastructure? (Choose two.)", "options": ["Compatibility between the hypervisor's vGPU manager, guest drivers, and the licensing service", "Disabling ECC on virtualized GPUs to increase memory", "Choosing between passthrough, time-sliced vGPU, and MIG-backed vGPU based on isolation and density needs", "Removing the GPU driver from guest VMs to reduce overhead"], "correct": [0, 2], "explanation": "vGPU host and guest driver versions must match supported combinations, and licensing must be in place. The sharing mode depends on isolation and density needs. Guests need drivers, and disabling ECC is not a virtualization requirement."}, {"section": "Domain 3 – AI Operations", "question": "One node repeatedly fails during a long multi-node training job, forcing restarts. Which operational practice limits the impact?", "options": ["Restarting the job manually on the same allocation without investigating the failing node", "Increasing the number of nodes so that the job finishes before the next failure happens", "Regular checkpointing plus automated health checks that exclude unhealthy nodes before jobs restart", "Disabling checkpoints to save storage bandwidth so that the job runs faster between failures"], "correct": 2, "explanation": "Checkpoints limit lost work, and health checks (DCGM, prolog/epilog scripts) keep bad nodes out of the allocation. More nodes increase the probability of failure, and manual restarts without diagnosis repeat the problem."}, {"section": "Domain 3 – AI Operations", "question": "Which TWO statements about the networks in a typical AI cluster are correct? (Choose two.)", "options": ["All traffic types should share one network to simplify operations", "The OOB network carries NCCL traffic when the compute fabric fails", "The storage network is often separated from the compute fabric so data loading does not disturb collectives", "The in-band management network carries provisioning, monitoring, and user access traffic"], "correct": [2, 3], "explanation": "Separating compute, storage, in-band, and OOB networks isolates performance and failure domains. NCCL does not fall back to the OOB network."}];
+
+const SECTION_CATEGORIES = {
+  "NCA-AIIO — Exam Blueprint Domains": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  SECTION_CATEGORIES["NCA-AIIO — Exam Blueprint Domains"].push(s);
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      const cbEl = item.querySelector('input');
+      cbEl.addEventListener('change', () => {
+        item.classList.toggle('selected', cbEl.checked);
+        updateCount();
+      });
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option' + (isMulti(q) ? ' multi' : '');
+    if (isRevealed) {
+      cls += ' disabled';
+      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+    } else {
+      if (optionIsSelected(q, i)) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = answerIsCorrect(q);
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function isMulti(q) { return Array.isArray(q.correct); }
+
+function optionIsCorrect(q, i) {
+  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
+}
+
+function optionIsSelected(q, i) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
+}
+
+function answerIsCorrect(q) {
+  const a = answers[q.id];
+  if (isMulti(q)) {
+    if (!Array.isArray(a)) return false;
+    const sel = [...new Set(a)].sort((x, y) => x - y);
+    const cor = [...q.correct].sort((x, y) => x - y);
+    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
+  }
+  return a === q.correct;
+}
+
+function hasSelection(q) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  if (isMulti(q)) {
+    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
+    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
+  } else {
+    answers[q.id] = i;
+  }
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (!hasSelection(q)) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answerIsCorrect(q)) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
+  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answerIsCorrect(q);
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
+      if (optionIsCorrect(q, i)) cls += ' correct';
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium','Calibri',sans-serif;">
+  <img src="assets/logo/itq-glasses-orange.png" alt="" style="height:22px;width:auto;opacity:.95;margin-bottom:6px;display:inline-block;"><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official NVIDIA or ITQ material. For practice only.
+</footer>
+</body>
+</html>
