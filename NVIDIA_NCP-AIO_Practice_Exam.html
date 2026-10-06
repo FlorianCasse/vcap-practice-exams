@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVIDIA-Certified Professional: AI Operations (NCP-AIO) — Interactive Practice Exam</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #334155;
+    --border: #475569; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #3b82f6; --accent-hover: #2563eb;
+    --green: #22c55e; --green-bg: #052e16; --green-border: #166534;
+    --red: #ef4444; --red-bg: #2a0a0a; --red-border: #991b1b;
+    --orange: #f59e0b; --orange-bg: #1a1200; --orange-border: #92400e;
+    --priority: #ef4444; --strength: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 2px solid var(--accent); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 1.4rem; color: white; }
+  .header h1 span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; font-size: 0.9rem; color: var(--text2); }
+  .header-stats .stat { display: flex; align-items: center; gap: 6px; }
+  .header-stats .stat b { color: var(--text); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .setup { background: var(--surface); border-radius: 12px; padding: 30px; }
+  .setup h2 { margin-bottom: 20px; font-size: 1.3rem; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-group h3 { color: var(--accent); font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .filter-group h3 .badge { font-size: 0.75rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; }
+  .section-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+  .section-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .section-item:hover { border-color: var(--accent); }
+  .section-item.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .section-item input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .section-item label { cursor: pointer; flex: 1; font-size: 0.85rem; }
+  .section-item .count { color: var(--text2); font-size: 0.8rem; white-space: nowrap; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .priority-dot.red { background: var(--priority); }
+  .priority-dot.green { background: var(--strength); }
+  .priority-dot.blue { background: var(--accent); }
+  .setup-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+  .setup-actions .info { color: var(--text2); font-size: 0.85rem; }
+  .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-small { padding: 6px 14px; font-size: 0.82rem; }
+  .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .toggle { position: relative; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+  .toggle .slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px; background: var(--text2); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .slider:before { transform: translateX(20px); background: white; }
+  .question-card { background: var(--surface); border-radius: 12px; padding: 28px; margin-bottom: 20px; border: 1px solid var(--surface2); }
+  .question-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .question-num { font-size: 0.82rem; color: var(--text2); }
+  .question-section { font-size: 0.78rem; padding: 3px 10px; border-radius: 12px; }
+  .question-section.priority { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .question-section.strength { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 2px solid transparent; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--green); background: var(--green-bg); }
+  .option.incorrect { border-color: var(--red); background: var(--red-bg); }
+  .option.was-correct { border-color: var(--green); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-letter { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; color: var(--text2); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+  .option.correct .option-letter { background: var(--green); color: white; }
+  .option.incorrect .option-letter { background: var(--red); color: white; }
+  .option-text { font-size: 0.92rem; padding-top: 3px; }
+  .explanation { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.88rem; line-height: 1.5; display: none; }
+  .explanation.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: #bbf7d0; }
+  .explanation.incorrect { background: var(--red-bg); border: 1px solid var(--red-border); color: #fecaca; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--green); }
+  .explanation.incorrect strong { color: var(--red); }
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 0.85rem; color: var(--text2); }
+  .nav-buttons { display: flex; gap: 8px; }
+  .score-card { background: var(--surface); border-radius: 12px; padding: 30px; text-align: center; }
+  .score-card h2 { font-size: 1.5rem; margin-bottom: 20px; }
+  .score-big { font-size: 4rem; font-weight: 800; margin: 10px 0; }
+  .score-big.pass { color: var(--green); }
+  .score-big.fail { color: var(--red); }
+  .score-detail { color: var(--text2); margin-bottom: 20px; font-size: 1rem; }
+  .score-breakdown { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 24px 0; text-align: left; }
+  .score-section { background: var(--surface2); padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .score-section .name { font-size: 0.82rem; flex: 1; }
+  .score-section .result { font-weight: 700; font-size: 0.9rem; }
+  .score-section .result.good { color: var(--green); }
+  .score-section .result.bad { color: var(--red); }
+  .score-section .result.ok { color: var(--orange); }
+  .q-map { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; justify-content: center; }
+  .q-dot { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); }
+  .q-dot.answered { background: var(--accent); color: white; border-color: var(--accent); }
+  .q-dot.correct-dot { background: var(--green); color: white; border-color: var(--green); }
+  .q-dot.incorrect-dot { background: var(--red); color: white; border-color: var(--red); }
+  .q-dot.current { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px rgba(59,130,246,0.3); }
+  .q-dot:hover { transform: scale(1.1); }
+  @media (max-width: 1024px) {
+    .header h1 { font-size: 1.2rem; }
+    .score-breakdown { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .header { padding: 14px 16px; }
+    .header h1 { font-size: 1.1rem; }
+    .header-stats { gap: 12px; font-size: 0.82rem; }
+    .container { padding: 12px; }
+    .question-card { padding: 18px; }
+    .section-list { grid-template-columns: 1fr; }
+    .score-big { font-size: 3rem; }
+    .progress-bar { width: 120px; }
+    .score-breakdown { grid-template-columns: 1fr; }
+    .nav-bar { gap: 8px; }
+    .setup { padding: 20px; }
+    .setup h2 { font-size: 1.15rem; }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .option { padding: 14px 16px; }
+    .q-dot { width: 40px; height: 40px; font-size: 0.8rem; }
+    .btn { padding: 12px 24px; min-height: 44px; }
+    .btn-small { padding: 8px 16px; min-height: 44px; }
+    .section-item { padding: 12px 14px; min-height: 44px; }
+    .toggle { width: 50px; height: 28px; }
+    .toggle .slider:before { height: 22px; width: 22px; }
+    .toggle input:checked + .slider:before { transform: translateX(22px); }
+    .option:hover:not(.disabled) { border-color: transparent; background: var(--surface2); }
+    .option.selected:hover { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  }
+  .hidden { display: none !important; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+  
+  .question-section.section-default { background: rgba(59,130,246,0.1); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .priority-dot.blue { background: var(--accent); }
+
+
+  /* ===== ITQ Design System theme (AI re-skin) ===== */
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --accent-hover:#1b1c7a;
+    --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1;
+    --orange:#B26A00; --orange-bg:#FBF1E0; --orange-border:#E8C98A;
+    --priority:#FF4F41; --strength:#1F8A5B;
+  }
+  body{font-family:'Titillium','Calibri',system-ui,sans-serif !important;}
+  .header{background:#040559 !important;border-bottom:3px solid #FF4F41 !important;padding:16px 30px !important;}
+  .header h1{font-weight:700;}
+  .header h1 span{color:#FF4F41 !important;}
+  .header .itq-logo{height:28px;width:auto;display:block;flex-shrink:0;}
+  .setup,.question-card,.score-card{box-shadow:0 2px 16px rgba(4,5,89,0.07) !important;}
+  .filter-group h3{color:#040559 !important;font-weight:700;}
+  .filter-group h3 .badge{background:#FF4F41 !important;}
+  .btn{font-weight:600;}
+  .btn-primary{background:#FF4F41 !important;color:#fff !important;}
+  .btn-primary:hover:not(:disabled){background:#e8463a !important;}
+  .btn-primary:disabled{opacity:.45 !important;}
+  .btn-secondary{background:#fff !important;color:#040559 !important;border:1px solid #CDE3F7 !important;}
+  .btn-secondary:hover{background:#EEF4FB !important;}
+  .option-letter{background:#E6EBEB !important;}
+  .toggle input:checked + .slider{background:#040559 !important;border-color:#040559 !important;}
+  .section-item.selected{background:rgba(4,5,89,0.06) !important;}
+  .option.selected{background:rgba(4,5,89,0.06) !important;}
+  .option:hover:not(.disabled){background:rgba(4,5,89,0.04) !important;}
+  .explanation.correct{color:#14532d !important;}
+  .explanation.incorrect{color:#7f1d1d !important;}
+  .explanation.correct strong{color:#1F8A5B !important;}
+  .explanation.incorrect strong{color:#c81e10 !important;}
+  .question-section.section-default{background:rgba(4,5,89,0.07) !important;color:#040559 !important;border:1px solid rgba(4,5,89,0.18) !important;}
+  .priority-dot.blue{background:#040559 !important;}
+  ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
+.option.multi .option-letter { border-radius: 4px; }
+.multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;font-family:'Titillium','Calibri',sans-serif;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or NVIDIA. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
+  <h1>NVIDIA-Certified Professional: AI Operations <span>(NCP-AIO)</span> — Practice Exam</h1>
+  <div class="header-stats" id="headerStats">
+    
+  </div>
+</div>
+
+<div class="container">
+  <div id="setupScreen" class="setup">
+    <h2>Configure Your Practice Session</h2>
+    <div class="quick-btns">
+      <button class="btn btn-secondary btn-small" onclick="selectAll()">Select All</button>
+      <button class="btn btn-secondary btn-small" onclick="selectNone()">Deselect All</button>
+      
+    </div>
+    <div id="filterGroups"></div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="randomizeToggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:0.9rem;">Randomize question order</span>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" id="startBtn" onclick="startExam()">Start Practice Exam</button>
+      <span class="info" id="selectedCount">0 questions selected</span>
+    </div>
+  </div>
+
+  <div id="examScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">0 / 0</span>
+        <span class="progress-text" style="color:var(--green)" id="scoreRunning"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary btn-small" onclick="prevQuestion()">&larr; Prev</button>
+        <button class="btn btn-secondary btn-small" onclick="nextQuestion()">Next &rarr;</button>
+        <button class="btn btn-primary btn-small" id="finishBtn" onclick="finishExam()">Finish Exam</button>
+      </div>
+    </div>
+    <div class="q-map" id="questionMap"></div>
+    <div id="questionContainer"></div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="score-card">
+      <h2>Exam Results</h2>
+      <div class="score-big" id="scoreBig">0%</div>
+      <div class="score-detail" id="scoreDetail"></div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="reviewExam()">Review Answers</button>
+        <button class="btn btn-secondary" onclick="retryWrong()">Retry Wrong Answers</button>
+        <button class="btn btn-secondary" onclick="resetExam()">New Session</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reviewScreen" class="hidden">
+    <div class="nav-bar">
+      <div class="progress">
+        <span class="progress-text" id="reviewTitle" style="font-weight:600;color:var(--text)">Review Mode</span>
+        <span class="progress-text" id="reviewFilter">
+          <button class="btn btn-secondary btn-small" onclick="filterReview('all')" style="margin-left:12px">All</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('wrong')">Wrong Only</button>
+          <button class="btn btn-secondary btn-small" onclick="filterReview('correct')">Correct Only</button>
+        </span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="backToResults()">Back to Results</button>
+    </div>
+    <div id="reviewContainer"></div>
+  </div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [{"section": "Domain 1 – Installation and Deployment", "question": "What is NVIDIA Mission Control in relation to Base Command Manager (BCM)?", "options": ["A BCM plug-in that only manages firmware updates of InfiniBand and Spectrum-X switches", "A replacement for BCM that removes the need for head nodes and software images in AI factories", "Software for operating AI factories that builds on BCM with orchestration, telemetry, and automated recovery", "A hardware controller installed in each rack that replaces the BMCs of all compute trays"], "correct": 2, "explanation": "Mission Control is a full-stack operations layer for AI factories (for example NVL72-based clusters). It integrates BCM-based cluster management with workload orchestration, health monitoring, and automated job recovery."}, {"section": "Domain 1 – Installation and Deployment", "question": "An operator wants a real-time graphical view of node health, GPU utilization, and resource usage across a BCM cluster. Which tool fits?", "options": ["The Slurm sview client", "Base View", "nvidia-smi on the head node", "cmsh in batch mode"], "correct": 1, "explanation": "Base View is BCM's web interface for monitoring and management. cmsh is the CLI, nvidia-smi only sees local GPUs, and sview only shows Slurm state."}, {"section": "Domain 1 – Installation and Deployment", "question": "In cmsh, which mode is used to view and manage individual nodes (status, power, settings)?", "options": ["softwareimage", "device", "monitoring setup", "partition"], "correct": 1, "explanation": "cmsh is organized in modes. Nodes are managed in device mode (for example 'device; power reset node001'). Software images, partitions, and monitoring each have their own modes."}, {"section": "Domain 1 – Installation and Deployment", "question": "A BCM administrator must power-cycle node005 remotely. Which cmsh command is appropriate?", "options": ["softwareimage reboot node005", "partition power node005", "device power reset node005", "category restart node005"], "correct": 2, "explanation": "Power operations are done in device mode through the BMC (IPMI/Redfish). The other modes do not perform power actions on nodes."}, {"section": "Domain 1 – Installation and Deployment", "question": "BCM shows a node in the 'INSTALLING' state for an unusually long time after a reboot. What does this state indicate?", "options": ["The Slurm daemon on the node is being reinstalled from the head node repository", "The node is being provisioned: its file system is synchronized from the software image", "The node is installing a new BIOS version through its BMC before it boots the OS", "The GPU driver on the node is compiling its DKMS kernel module after a kernel update"], "correct": 1, "explanation": "During provisioning, the node image is synchronized from the head node. A long INSTALLING phase may indicate network or provisioning issues, or a full sync instead of an incremental one."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO BCM features are used to apply patches and keep software consistent across compute nodes? (Choose two.)", "options": ["Assigning nodes to categories so they share the same software image", "Updating the software image (for example inside a chroot) and pushing it with imageupdate", "Using Slurm partitions to distribute package updates", "Running 'apt upgrade' on every node individually over SSH"], "correct": [0, 1], "explanation": "Patching the image and syncing nodes keeps the fleet consistent. Manual per-node updates create drift and are overwritten at reprovisioning. Slurm partitions do not distribute packages."}, {"section": "Domain 1 – Installation and Deployment", "question": "How does BCM help keep firmware consistent across cluster nodes?", "options": ["It pulls firmware from the NGC registry into every container that runs on the node", "It provides cluster-wide node and BMC management in which vendor firmware tools are applied and tracked", "It embeds firmware images in the Slurm configuration so they are flashed at job start", "It cannot help; firmware is only updated from each server's front panel by an operator"], "correct": 1, "explanation": "BCM provides the cluster-wide context (nodes, categories, BMC access) in which vendor firmware tooling is run and verified. Slurm and containers do not manage firmware."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO tasks are part of administering user access securely in BCM? (Choose two.)", "options": ["Sharing one administrator account across the operations team", "Assigning BCM roles/profiles to limit which administrators can change cluster configuration", "Creating users and groups in the cluster's directory service (for example the BCM-managed LDAP)", "Giving every user root access on the head node to simplify support"], "correct": [1, 2], "explanation": "BCM manages users (often through its LDAP) and administrator profiles with limited permissions. Shared or root accounts break accountability and security."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO network-related items can be configured and monitored through BCM? (Choose two.)", "options": ["The vector database used by a RAG application", "Node network interfaces, IP addressing, and network definitions (internal, IPMI, fabric)", "The NCCL algorithm used by each training job", "Managed switches and DPUs as devices, including their status"], "correct": [1, 3], "explanation": "BCM manages networks, interfaces, and devices such as switches. NCCL algorithms are chosen at runtime, and application databases are out of scope."}, {"section": "Domain 1 – Installation and Deployment", "question": "Users report jobs failing on a group of nodes. Which BCM capability helps locate the cause quickly?", "options": ["Per-node health checks and monitoring in Base View or cmsh", "The BCM license file and its feature list", "The BCM software image cloning function in cmsh", "The cmha-setup high-availability configuration wizard"], "correct": 0, "explanation": "Health checks and monitoring show which nodes are failing which checks (GPU, disk, network, services). Cloning images, HA setup, or licensing do not diagnose failures."}, {"section": "Domain 1 – Installation and Deployment", "question": "An administrator wants different software images and settings for H100 nodes and L40S nodes. What is the BEST BCM approach?", "options": ["Use Slurm features to change the software image at job start", "Create two node categories, each with its own software image and settings", "Use one category and edit settings manually on each node", "Create two head nodes, one for each GPU type"], "correct": 1, "explanation": "Categories are the unit of configuration for groups of similar nodes. One head node can manage many categories, and manual per-node edits cause drift."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO items are typically included in BCM cluster reports used for capacity and operations reviews? (Choose two.)", "options": ["Job and node failure statistics or health events", "Resource and GPU utilization over time", "Users' personal NGC API keys", "The source code of user training scripts"], "correct": [0, 1], "explanation": "Usage, performance, and incident data drive capacity and reliability decisions. User code and secrets must not be collected in reports."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which BCM tool installs Kubernetes on cluster nodes?", "options": ["cm-chroot-sw-img", "cm-wlm-setup", "cm-kubernetes-setup", "cmha-setup"], "correct": 2, "explanation": "cm-kubernetes-setup deploys Kubernetes (and can add GPU and network operators). cm-wlm-setup installs workload managers such as Slurm, and cmha-setup configures head node HA."}, {"section": "Domain 1 – Installation and Deployment", "question": "When installing Kubernetes on NVIDIA GPU nodes with BCM, which component should be deployed so pods can request nvidia.com/gpu?", "options": ["The Slurm GRES plug-in deployed on the Kubernetes control plane", "The NVIDIA GPU Operator (or the device plugin with driver and toolkit)", "Pyxis and Enroot installed on the Kubernetes control plane", "The NGC CLI installed and configured on each worker node"], "correct": 1, "explanation": "The device plugin advertises GPUs as schedulable resources, and the GPU Operator manages it along with drivers, toolkit, and monitoring. Slurm GRES and Pyxis are Slurm components."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO components are deployed by the NVIDIA GPU Operator? (Choose two.)", "options": ["The Kubernetes API server", "GPU Feature Discovery, which labels nodes with GPU attributes", "The InfiniBand Subnet Manager", "DCGM Exporter, which exposes GPU metrics to Prometheus"], "correct": [1, 3], "explanation": "The GPU Operator deploys driver, toolkit, device plugin, GFD, DCGM Exporter, MIG manager, and validators. The API server and fabric SM are outside its scope."}, {"section": "Domain 1 – Installation and Deployment", "question": "Nodes already have the NVIDIA driver installed in their BCM image. How should the GPU Operator be deployed?", "options": ["Install the operator twice, once with and once without its driver container", "Uninstall the host driver first, since the operator always installs its own copy", "Deploy the operator only on control-plane nodes so it skips GPU workers", "Disable the operator's driver component (driver.enabled=false) to use the host driver"], "correct": 3, "explanation": "The GPU Operator can use a preinstalled host driver by disabling its driver container. Running two drivers would conflict."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO steps are part of deploying DOCA services on a BlueField DPU's Arm cores? (Choose two.)", "options": ["Installing the services inside the host's GPU containers", "Deploying the service containers on the DPU (for example through its container runtime and service configuration files)", "Enabling MIG on the DPU to reserve Arm cores", "Ensuring the DPU runs a supported BFB/DOCA image in DPU mode"], "correct": [1, 3], "explanation": "DOCA services run as containers on the DPU's Arm OS in DPU mode. They do not run in host GPU containers, and MIG is a GPU feature."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO prerequisites are typically required before installing the Run:ai cluster component? (Choose two.)", "options": ["A Slurm controller running on the same nodes", "A working Kubernetes cluster with the NVIDIA GPU Operator", "An ingress/load balancer and a monitoring stack such as Prometheus", "MIG enabled on every GPU in the cluster"], "correct": [1, 2], "explanation": "Run:ai installs on Kubernetes with GPUs exposed by the GPU Operator, and needs ingress and metrics. Slurm and MIG are not prerequisites."}, {"section": "Domain 1 – Installation and Deployment", "question": "How is the Run:ai cluster component typically installed?", "options": ["As a Slurm SPANK plug-in on the controller and all compute nodes", "With Helm into the Kubernetes cluster, then connected to the Run:ai control plane", "Through the BMC of each node, using Redfish to push the installer", "As RPM packages on each GPU node, outside of the Kubernetes cluster"], "correct": 1, "explanation": "Run:ai's cluster component is deployed with Helm and registered with a control plane. It is Kubernetes-native."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO steps are needed to install Slurm on a BCM-managed cluster? (Choose two.)", "options": ["Run cm-wlm-setup and select Slurm, choosing the server (controller) and client nodes or categories", "Deploy Run:ai on the head node", "Install the Kubernetes device plugin on each node", "Configure GPU GRES so Slurm can schedule GPUs"], "correct": [0, 3], "explanation": "cm-wlm-setup deploys Slurm roles, and GRES configuration makes GPUs schedulable. Kubernetes components and Run:ai are not required for Slurm."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which component lets Slurm users run NGC containers with 'srun --container-image'?", "options": ["The GPU Operator", "The NIM Operator", "Helm", "Pyxis (with Enroot)"], "correct": 3, "explanation": "Pyxis is a Slurm SPANK plugin that uses Enroot to run container images. The other components are Kubernetes-based."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO practices help keep a BCM-managed cluster secure? (Choose two.)", "options": ["Exposing BMC interfaces on the corporate network for easier access", "Disabling health checks to reduce the attack surface", "Isolating the internal provisioning and BMC networks from user and external networks", "Restricting administrative access to cmsh/Base View with dedicated profiles and certificates"], "correct": [2, 3], "explanation": "Least privilege for administrators and network isolation reduce risk. Exposing BMCs is dangerous, and health checks do not add meaningful attack surface."}, {"section": "Domain 1 – Installation and Deployment", "question": "After BCM installs Kubernetes, how should an administrator verify that GPUs are schedulable?", "options": ["Run ibstat on each worker node and check that all ports are Active", "Run sinfo on the head node and compare the GPU count per node", "Check that the head node itself has a GPU visible in nvidia-smi", "Check allocatable nvidia.com/gpu on nodes and run a test pod with nvidia-smi"], "correct": 3, "explanation": "Allocatable nvidia.com/gpu resources and a test pod confirm the device plugin, driver, and toolkit work end to end. Slurm and InfiniBand tools do not reflect Kubernetes scheduling."}, {"section": "Domain 1 – Installation and Deployment", "question": "What is the role of the head node's provisioning network in BCM?", "options": ["Connecting GPUs to each other inside a compute node", "Providing external SSH access for users from the corporate LAN", "Carrying NCCL collective traffic between compute nodes", "Booting nodes over PXE and synchronizing their software images"], "correct": 3, "explanation": "The internal (provisioning) network delivers boot and image data from the head node. NCCL uses the compute fabric, and user access typically uses an external or login network."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO statements about BCM software images are correct? (Choose two.)", "options": ["Different categories can use different software images", "Software images are stored in the NGC registry", "They are stored on the head node as directory trees that represent node file systems", "Each node must have its own unique software image"], "correct": [0, 2], "explanation": "Images are file system trees on the head node (for example under /cm/images), assigned per category. Sharing images across nodes is the point, and they are not stored in NGC."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which statement BEST describes how BCM organizes compute nodes for different workloads, for example Slurm nodes versus Kubernetes nodes?", "options": ["Through Slurm partitions, which BCM also uses to define Kubernetes namespaces", "Through BIOS profiles that select the workload manager when each node boots", "Through categories and roles: nodes inherit roles such as Slurm client or Kubernetes worker", "Through separate head nodes, one for each workload manager running in the cluster"], "correct": 2, "explanation": "Roles assigned to categories (or nodes) determine which services a node runs. A single head node can manage both workload managers."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO items should be verified after installing Slurm with GPU support? (Choose two.)", "options": ["kubectl get nodes shows the Slurm nodes", "The NIM Operator is running", "A test job with --gres=gpu:1 sees exactly one GPU", "'scontrol show node' shows the expected Gres=gpu entries"], "correct": [2, 3], "explanation": "Node GRES and a test job confirm the scheduler and GPU binding work. Kubernetes and NIM are not involved in Slurm validation."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which statement BEST describes the relation between the NVIDIA Network Operator and the GPU Operator on Kubernetes?", "options": ["The Network Operator deploys RDMA networking components, complementing the GPU Operator", "They are two names for the same operator, used in different product versions", "The Network Operator installs the GPU driver on BlueField DPUs instead of hosts", "The Network Operator replaces the GPU Operator on clusters that use InfiniBand"], "correct": 0, "explanation": "Multi-node training on Kubernetes needs both: GPU stack from the GPU Operator and RDMA networking from the Network Operator (for GPUDirect RDMA)."}, {"section": "Domain 1 – Installation and Deployment", "question": "An administrator wants Base View to display GPU metrics collected by DCGM. What should be confirmed?", "options": ["That every node has the NGC CLI installed and configured", "That DCGM runs on the nodes and BCM GPU monitoring is enabled", "That MIG is enabled on all GPUs so metrics are per instance", "That the Subnet Manager runs on the head node"], "correct": 1, "explanation": "BCM gathers GPU metrics through DCGM. NGC CLI, MIG, and the SM are not needed for GPU monitoring."}, {"section": "Domain 1 – Installation and Deployment", "question": "Which TWO actions are appropriate when deploying a new set of GPU nodes into an existing BCM cluster? (Choose two.)", "options": ["Install the nodes manually from an ISO, then register them", "Add the nodes as devices with their MAC/BMC information and assign them to the right category", "Copy the head node's database to each new node", "Run node health checks and GPU diagnostics before adding them to workload manager partitions"], "correct": [1, 3], "explanation": "Registering nodes and assigning categories lets BCM provision them automatically. Validating them before user access prevents job failures."}, {"section": "Domain 1 – Installation and Deployment", "question": "A BCM administrator must group 16 new GB200 compute trays so they receive a dedicated image and Slurm client role. Which TWO actions are needed? (Choose two.)", "options": ["Install Slurm manually on each tray after provisioning", "Assign the Slurm client role to that category (for example through cm-wlm-setup or cmsh)", "Create a second head node dedicated to the GB200 trays", "Create (or clone) a category with the dedicated software image and assign the nodes to it"], "correct": [1, 3], "explanation": "Categories carry the image and roles, so new nodes inherit them at provisioning. One head node can manage several categories, and manual installs create drift."}, {"section": "Domain 2 – Administration", "question": "Which command shows Slurm partitions and node states such as idle, alloc, mix, drain, and down?", "options": ["squeue", "sacctmgr", "sacct", "sinfo"], "correct": 3, "explanation": "sinfo shows partitions and node states. squeue shows jobs, sacct shows accounting records, and sacctmgr manages the accounting database."}, {"section": "Domain 2 – Administration", "question": "'sinfo' shows node gpu07 in state 'drain'. Which command shows why it was drained?", "options": ["sacct -N gpu07 --state=drain", "scontrol show node gpu07", "srun -w gpu07 hostname", "squeue -w gpu07 --long"], "correct": 1, "explanation": "The Reason field of scontrol show node explains why a node is drained or down. squeue and sacct show jobs, and srun would fail on a drained node."}, {"section": "Domain 2 – Administration", "question": "After fixing a hardware issue on gpu07, how does an administrator return it to service in Slurm?", "options": ["scontrol update nodename=gpu07 state=resume", "sinfo --resume gpu07", "squeue --release gpu07", "sacctmgr modify node gpu07 set state=idle"], "correct": 0, "explanation": "scontrol update with state=resume clears the drain/down state. sinfo and squeue are read-only tools for this purpose, and sacctmgr does not manage node state."}, {"section": "Domain 2 – Administration", "question": "Which Slurm tool manages accounts, users, QOS, and fair-share associations?", "options": ["sacctmgr", "sstat", "sbatch", "scontrol"], "correct": 0, "explanation": "sacctmgr operates on the accounting database (slurmdbd). scontrol changes live configuration, sbatch submits jobs, and sstat shows running job statistics."}, {"section": "Domain 2 – Administration", "question": "Which TWO Slurm mechanisms help share GPUs fairly between teams? (Choose two.)", "options": ["Fair-share scheduling based on account usage", "Disabling backfill scheduling", "Running all jobs in one account", "QOS limits such as maximum GPUs per user or group"], "correct": [0, 3], "explanation": "Fair-share adjusts priority by past usage, and QOS enforces limits. Backfill improves utilization, and a single account removes fairness controls."}, {"section": "Domain 2 – Administration", "question": "A high-priority team must be able to preempt low-priority jobs on GPU nodes. Which Slurm features are used?", "options": ["An additional GRES type reserved for the high-priority team", "Preemption through QOS or partition priority (PreemptType/PreemptMode)", "A longer default time limit for the high-priority partition", "A higher node weight on GPU nodes for the high-priority team"], "correct": 1, "explanation": "Slurm preemption uses QOS or partition priority with a preemption mode (requeue, cancel, suspend). Node weight, time limits, and GRES types do not provide preemption."}, {"section": "Domain 2 – Administration", "question": "Which TWO Slurm settings ensure that jobs only see the GPUs they requested? (Choose two.)", "options": ["Correct GRES configuration so Slurm knows each GPU's device file", "Setting CUDA_VISIBLE_DEVICES=all in every job script", "Disabling task affinity in slurm.conf", "Cgroup-based device constraint (ConstrainDevices=yes in cgroup.conf)"], "correct": [0, 3], "explanation": "Slurm binds GPUs through GRES and enforces isolation with cgroup device constraints. Exposing all GPUs or disabling affinity removes isolation."}, {"section": "Domain 2 – Administration", "question": "Which TWO statements about MIG administration are correct? (Choose two.)", "options": ["GPU instances and compute instances are created with nvidia-smi mig (for example -cgi and -cci)", "MIG instances persist automatically after the MIG mode is disabled", "Available profiles can be listed with nvidia-smi mig -lgip", "MIG profiles can be changed while jobs are running on the GPU"], "correct": [0, 2], "explanation": "MIG instances are created from profiles listed with -lgip. Disabling MIG removes instances, and reconfiguration requires the GPU to be idle."}, {"section": "Domain 2 – Administration", "question": "In Kubernetes with the GPU Operator, how is a node's MIG layout changed declaratively?", "options": ["Change the Slurm GRES configuration and restart slurmd on the node", "Edit /etc/fstab on the node and reboot it to apply MIG profiles", "Label the node with nvidia.com/mig.config=&lt;profile&gt; for the MIG manager", "Run nvidia-smi mig inside a user pod scheduled on that node"], "correct": 2, "explanation": "The MIG manager watches the mig.config label and applies the matching configuration from its ConfigMap. Users should not change MIG from pods."}, {"section": "Domain 2 – Administration", "question": "Which TWO GPU Operator MIG strategies exist for exposing MIG devices to Kubernetes? (Choose two.)", "options": ["mixed, where each profile is a distinct resource such as nvidia.com/mig-1g.10gb", "single, where all MIG devices are the same type and exposed as nvidia.com/gpu", "dynamic, where pods create MIG instances on demand", "shared, where MIG instances span several GPUs"], "correct": [0, 1], "explanation": "The device plugin supports single and mixed strategies. Instances are not created by pods on demand by the device plugin, and they never span GPUs."}, {"section": "Domain 2 – Administration", "question": "Which TWO Run:ai objects are used to organize GPU quotas? (Choose two.)", "options": ["Departments", "Partitions", "Projects", "Accounts"], "correct": [0, 2], "explanation": "Run:ai uses departments (groups of projects) and projects with GPU quotas. Partitions and accounts are Slurm concepts."}, {"section": "Domain 2 – Administration", "question": "In Run:ai, what happens to a workload running 'over quota' when another project needs its guaranteed quota?", "options": ["It is converted to a CPU-only workload until GPUs become free", "It continues indefinitely, since over-quota workloads cannot be stopped", "It is moved automatically to a Slurm partition with free GPUs", "It can be preempted so the owning project gets its guaranteed quota back"], "correct": 3, "explanation": "Over-quota capacity is opportunistic. When owners reclaim their deserved quota, the scheduler preempts over-quota workloads."}, {"section": "Domain 2 – Administration", "question": "What is the purpose of node pools in Run:ai?", "options": ["Defining Slurm partitions directly from the Kubernetes cluster", "Grouping nodes, for example by GPU type, to manage quotas and placement", "Creating a separate Kubernetes cluster for each team or department", "Pooling the memory of several GPUs so they appear as one large GPU"], "correct": 1, "explanation": "Node pools let administrators manage heterogeneous hardware (H100, L40S) with separate quotas and policies. They do not merge GPU memory or create clusters."}, {"section": "Domain 2 – Administration", "question": "Which TWO Kubernetes administration tasks are common on GPU clusters? (Choose two.)", "options": ["Setting resource quotas per namespace to limit GPU requests", "Disabling the kubelet on GPU nodes", "Removing the device plugin to save memory", "Tainting GPU nodes so that only workloads with matching tolerations land there"], "correct": [0, 3], "explanation": "Taints keep non-GPU pods off GPU nodes, and namespace quotas limit consumption. The kubelet and device plugin are required."}, {"section": "Domain 2 – Administration", "question": "Which statement describes a typical data center architecture for AI workloads that an administrator should know?", "options": ["A single node per rack, which avoids the need for any compute network design", "All servers on a single flat network, with the GPUs installed in the storage servers", "GPU nodes connected only through the BMC network, with storage attached locally", "GPU nodes on a dedicated RDMA fabric, separate storage and management networks, and a control plane"], "correct": 3, "explanation": "Separate networks and a control plane are standard for AI clusters. Flat networks or BMC-only connectivity cannot support distributed training."}, {"section": "Domain 2 – Administration", "question": "Which TWO actions are part of rolling a driver upgrade across a Slurm GPU cluster with minimal disruption? (Choose two.)", "options": ["Drain nodes in batches, wait for running jobs to finish, then update the image and reboot", "Skip validation since drivers are backward compatible", "Validate the new driver on a few nodes (including Fabric Manager match) before the full rollout", "Upgrade all nodes at once while jobs are running"], "correct": [0, 2], "explanation": "Batch draining and canary validation limit risk. Upgrading under running jobs kills them, and Fabric Manager must match the driver on NVSwitch systems."}, {"section": "Domain 2 – Administration", "question": "Which command lists the MIG instances currently configured on GPU 0?", "options": ["dcgmi diag -i 0", "nvidia-smi -i 0 -q -d CLOCK", "nvidia-smi topo -i 0", "nvidia-smi mig -i 0 -lgi"], "correct": 3, "explanation": "nvidia-smi mig -lgi lists GPU instances (and -lci lists compute instances). The other commands show clocks, run diagnostics, or display topology."}, {"section": "Domain 2 – Administration", "question": "What is the effect of enabling GPU persistence mode (or running nvidia-persistenced) on compute nodes?", "options": ["GPU memory contents are saved to disk between jobs", "MIG mode is enabled automatically on all GPUs", "The driver stays loaded while the GPU is idle, so jobs start faster", "Running jobs survive a node reboot and resume automatically"], "correct": 2, "explanation": "Persistence keeps the driver loaded between jobs, which shortens job start and avoids repeated initialization. It does not preserve jobs or memory across reboots."}, {"section": "Domain 2 – Administration", "question": "Which TWO Run:ai capabilities help increase GPU utilization? (Choose two.)", "options": ["Fractional GPU allocation for small workloads", "Disabling preemption for all projects", "Pinning each user to a dedicated GPU permanently", "Over-quota scheduling of idle capacity"], "correct": [0, 3], "explanation": "Fractions and over-quota scheduling let idle capacity be used. Static pinning and no preemption reduce utilization."}, {"section": "Domain 2 – Administration", "question": "How should an administrator apply a Kubernetes configuration so that GPUs are shared by time-slicing on some nodes?", "options": ["Set time-slicing replicas in the device plugin config and label the nodes", "Set CUDA_VISIBLE_DEVICES to the same GPU index in every pod spec", "Install Slurm on those nodes and set OverSubscribe=YES in the partition", "Enable MIG on those nodes and set the profile to 7g.80gb on every GPU"], "correct": 0, "explanation": "Time-slicing is configured in the device plugin with a replica count, applied per node through labels. MIG and Slurm are different mechanisms, and forcing environment variables bypasses scheduling."}, {"section": "Domain 2 – Administration", "question": "Which TWO statements about Slurm partitions are correct? (Choose two.)", "options": ["Partitions define which GPU driver a node uses", "A partition is the same as a Kubernetes namespace", "A partition groups nodes and can define limits such as maximum time and allowed accounts", "A node can belong to several partitions"], "correct": [2, 3], "explanation": "Partitions are queues with node sets and limits, and nodes can belong to multiple partitions. They do not map to namespaces or drivers."}, {"section": "Domain 2 – Administration", "question": "Which TWO items should be configured to administer NGC access for users on a Slurm cluster? (Choose two.)", "options": ["One shared API key embedded in the system-wide slurm.conf", "Anonymous access to private NGC content", "NGC API keys stored per user in their Enroot credentials file", "Optionally, a local registry mirror or cache to reduce repeated pulls"], "correct": [2, 3], "explanation": "Each user should use their own key, and a cache reduces bandwidth and start time. Shared keys in config files are a security risk, and private content requires authentication."}, {"section": "Domain 2 – Administration", "question": "On a Hopper GPU, an administrator enables MIG with 'nvidia-smi -i 0 -mig 1' and gets a message that the change is pending. What should be done?", "options": ["Ignore it; MIG activates when the next job starts", "Run the same command again with sudo to force it", "Install the GPU Operator so it applies the pending change", "Stop processes using the GPU, then reset it (or reboot)"], "correct": 3, "explanation": "MIG mode changes require the GPU to be idle and often a reset. Monitoring agents or persistenced holding the GPU can block the change."}, {"section": "Domain 3 – Workload Management", "question": "Which Kubernetes resource request lets a pod get one full GPU through the NVIDIA device plugin?", "options": ["nodeSelector: gpu=true only", "env: CUDA_VISIBLE_DEVICES=0 only", "resources.limits: nvidia.com/gpu: 1", "resources.requests: gpu.nvidia/count: 1"], "correct": 2, "explanation": "GPUs are extended resources set in limits (nvidia.com/gpu). A node selector or environment variable alone does not allocate a GPU."}, {"section": "Domain 3 – Workload Management", "question": "A pod stays Pending with the event '0/6 nodes are available: 6 Insufficient nvidia.com/gpu'. Which TWO checks are MOST relevant? (Choose two.)", "options": ["Check the InfiniBand LIDs of the nodes", "Check that GPU nodes advertise nvidia.com/gpu in allocatable (device plugin running)", "Check that the pod's image includes nvidia-smi", "Check whether existing pods already consume all GPUs"], "correct": [1, 3], "explanation": "The scheduler sees no free GPUs: either the device plugin does not advertise them, or they are all allocated. LIDs and image contents do not affect scheduling."}, {"section": "Domain 3 – Workload Management", "question": "Which approach is MOST appropriate to deploy an LLM inference service on Kubernetes with NVIDIA NIM?", "options": ["A Kubernetes Job running the NIM container that exits after each inference request", "A DaemonSet running NIM on every node of the cluster, including CPU-only nodes", "A NIM installed directly on the host OS of each GPU node, outside Kubernetes", "A NIM Deployment with an NGC key secret, GPU limits, a model cache, and a Service"], "correct": 3, "explanation": "NIM runs as a long-running Deployment with GPU resources, credentials to pull models, a cache volume, and a Service. Jobs end, and DaemonSets on CPU nodes cannot serve GPU models."}, {"section": "Domain 3 – Workload Management", "question": "After deploying a NIM for an LLM, which TWO checks confirm it is ready? (Choose two.)", "options": ["A test request to the OpenAI-compatible endpoint (for example /v1/chat/completions) returns a valid response", "nvidia-smi on the head node shows the model name", "The readiness endpoint (for example /v1/health/ready) returns success", "sinfo shows the inference pod"], "correct": [0, 2], "explanation": "NIM exposes health endpoints and an OpenAI-compatible API. The head node and Slurm do not see Kubernetes pods."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO metrics are MOST useful to autoscale an LLM inference service? (Choose two.)", "options": ["Request queue length or concurrency per replica", "The GPU VBIOS version", "Latency metrics such as time-to-first-token", "The number of Slurm accounts"], "correct": [0, 2], "explanation": "LLM serving scales on load and latency signals. Static attributes like VBIOS or Slurm accounts are unrelated."}, {"section": "Domain 3 – Workload Management", "question": "How does a user submit an inference workload in Run:ai so it gets half a GPU?", "options": ["Set nvidia.com/gpu: 0.5 in a plain pod spec without Run:ai", "Request the MIG profile 7g.80gb on the target node", "Submit it with sbatch --gres=gpu:0.5 to the GPU partition", "Submit it in a Run:ai project with a GPU fraction of 0.5"], "correct": 3, "explanation": "Run:ai supports fractional GPUs through its scheduler. Plain Kubernetes does not accept fractional nvidia.com/gpu values, Slurm GRES counts are integers, and 7g.80gb is a full GPU."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO statements about training workloads in Run:ai are correct? (Choose two.)", "options": ["Run:ai training requires Slurm on the same nodes", "Training workloads in over-quota capacity can be preempted", "Training workloads cannot use GPUs", "Distributed training workloads (for example PyTorch) can be submitted with multiple workers and gang scheduling"], "correct": [1, 3], "explanation": "Run:ai supports distributed training with gang scheduling, and over-quota workloads are preemptible. Slurm is not required."}, {"section": "Domain 3 – Workload Management", "question": "A user must run an 8-node PyTorch training job under Slurm with 8 GPUs per node. Which submission is appropriate?", "options": ["sbatch with --nodes=8, --ntasks-per-node=8, --gpus-per-node=8, launched with srun", "kubectl apply -f job.yaml on the Slurm controller, which forwards it to Slurm", "srun --gres=gpu:8 started eight times from the login node in separate terminals", "sbatch with --nodes=1 and --gres=gpu:64 so Slurm spreads GPUs automatically"], "correct": 0, "explanation": "One task per GPU on each of 8 nodes, launched with srun, lets the framework set up distributed training. A single node cannot provide 64 GPUs, and separate sruns are not one job."}, {"section": "Domain 3 – Workload Management", "question": "A Slurm job script uses 'srun --container-image=nvcr.io#nvidia/pytorch:24.05-py3 --container-mounts=/data:/data python train.py'. What do the options do?", "options": ["Docker pulls the image on the controller and streams it to the nodes", "Kubernetes schedules the container onto the Slurm nodes for the job", "Pyxis/Enroot runs the NGC image and bind-mounts /data into the container", "Slurm converts the container into a VM and copies /data into its disk"], "correct": 2, "explanation": "Pyxis adds container options to srun, and Enroot runs the image unprivileged with bind mounts. No VM, Docker daemon, or Kubernetes is involved."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO practices make long Slurm training jobs resilient? (Choose two.)", "options": ["Disabling time limits so jobs never end", "Periodic checkpointing to shared storage", "Using --requeue and job dependencies or restart logic to resume from the last checkpoint", "Running with --exclusive=no on shared GPUs"], "correct": [1, 2], "explanation": "Checkpoints plus requeue/restart logic recover from node failures. Unlimited time and shared GPUs do not improve resilience."}, {"section": "Domain 3 – Workload Management", "question": "How can resources be divided between two teams using both Slurm and Kubernetes clusters?", "options": ["A separate GPU driver version installed for each team on the nodes", "Kubernetes namespaces that automatically map to Slurm accounts and QOS", "Slurm accounts, QOS, and partitions; Kubernetes namespaces with quotas or Run:ai projects", "One Slurm partition shared with Kubernetes through the NVIDIA device plugin"], "correct": 2, "explanation": "Each platform has its own allocation mechanisms. They do not share configuration automatically, and drivers do not partition resources."}, {"section": "Domain 3 – Workload Management", "question": "Which command shows GPU utilization of a running Slurm job's processes on its node?", "options": ["squeue -j &lt;id&gt; --gpu-util", "sinfo -j &lt;id&gt; --gpu --long --all", "sacctmgr show job &lt;id&gt; format=gpu", "srun --jobid=&lt;id&gt; --overlap nvidia-smi"], "correct": 3, "explanation": "Attaching a step to the job (with --overlap) runs nvidia-smi inside its allocation. sinfo and sacctmgr do not show GPU usage, and kubectl is for Kubernetes."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO Kubernetes objects are commonly used to run distributed training? (Choose two.)", "options": ["Indexed Jobs or JobSets with gang scheduling support", "A DaemonSet on all nodes", "PyTorchJob (Kubeflow Training Operator) or similar job CRDs", "A Service of type LoadBalancer only"], "correct": [0, 2], "explanation": "Training operators and job APIs coordinate multiple workers. DaemonSets run one pod per node for agents, and a Service alone runs nothing."}, {"section": "Domain 3 – Workload Management", "question": "How should an NGC container be deployed when nodes have no internet access?", "options": ["Copy the NGC API key to each node so that pulls work without connectivity", "Disable image pulls in the runtime and let containers start without images", "Mirror the images into an internal registry (or pre-load them) and pull from there", "Route the pulls through the BMC network, which usually has internet access"], "correct": 2, "explanation": "Air-gapped clusters use a local registry or pre-staged images (for Enroot, squashfs files). API keys do not provide connectivity, and BMC networks must not be used."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO system management tools help troubleshoot a slow training workload on a GPU node? (Choose two.)", "options": ["kubectl get namespaces", "DCGM metrics (SM activity, Tensor Core activity, NVLink and PCIe throughput)", "sacctmgr list users", "nvidia-smi dmon or pmon for live per-GPU or per-process metrics"], "correct": [1, 3], "explanation": "DCGM and nvidia-smi monitoring modes reveal underutilization, I/O stalls, or communication bottlenecks. Listing users or namespaces does not."}, {"section": "Domain 3 – Workload Management", "question": "An inference team needs predictable latency for several small models on one H100. Which configuration fits BEST?", "options": ["Time-slicing with 7 replicas and no memory limits", "Placing the models on CPU-only nodes", "MIG instances sized for each model, exposed as separate resources", "One process per model on the full GPU without isolation"], "correct": 2, "explanation": "MIG provides isolation of compute, memory, and cache, which gives predictable latency. Time-slicing and unisolated processes interfere with each other."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO steps deploy a training job with Run:ai from the CLI? (Choose two.)", "options": ["Submit the workload with the image, GPU request, and command (for example runai training submit or the equivalent)", "Install the GPU Operator from the user's laptop", "Create a Slurm reservation for the project", "Authenticate to the Run:ai control plane and select the target project"], "correct": [0, 3], "explanation": "Users log in, choose a project, and submit. Slurm reservations and operator installation are administrative tasks unrelated to submission."}, {"section": "Domain 3 – Workload Management", "question": "Which statement about deploying containers from NGC on Kubernetes is correct?", "options": ["NGC images must be converted to Enroot squashfs format before Kubernetes can run them", "Kubernetes cannot pull images from nvcr.io, so images must be rebuilt locally", "Each pod must run 'ngc config set' in an init container before the main container starts", "Private NGC images need an imagePullSecret for nvcr.io ($oauthtoken + API key)"], "correct": 3, "explanation": "Kubernetes pulls nvcr.io images with a docker-registry secret. Enroot is Slurm-side, and pods do not need the NGC CLI."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO techniques reduce cold-start time for large LLM inference containers? (Choose two.)", "options": ["Using CPU-only nodes for model download", "Disabling health checks", "Pre-pulling images on GPU nodes or using a local registry", "A persistent volume to cache downloaded model weights"], "correct": [2, 3], "explanation": "Caching weights and images avoids repeated downloads. Disabling health checks hides problems, and CPU nodes do not help a GPU pod start."}, {"section": "Domain 3 – Workload Management", "question": "Two teams share a Kubernetes GPU cluster. Team A must always get 16 GPUs, and team B may use idle GPUs. Which setup fits?", "options": ["Run:ai projects: a guaranteed quota of 16 for team A, over-quota use for team B", "MIG enabled on all GPUs with the 1g.10gb profile for both teams", "One shared namespace for both teams, with no quotas configured", "A separate GPU driver version installed for each of the two teams"], "correct": 0, "explanation": "Guaranteed quotas with preemptible over-quota usage satisfy both needs. No quotas give no guarantee, and MIG or drivers do not express team policies."}, {"section": "Domain 3 – Workload Management", "question": "How can a Slurm administrator see which GPUs a job was allocated?", "options": ["sinfo -G -j &lt;id&gt; --long", "scontrol show job &lt;id&gt; -d", "sacctmgr show gres job=&lt;id&gt;", "squeue --gpus-only -j &lt;id&gt;"], "correct": 1, "explanation": "Detailed job output shows GRES indices per node. The other options do not exist or do not provide per-job allocation details."}, {"section": "Domain 3 – Workload Management", "question": "Which TWO statements about Kubernetes inference deployments are correct? (Choose two.)", "options": ["A Deployment with multiple replicas behind a Service provides load balancing and availability", "GPU limits are ignored for Deployments", "A Horizontal Pod Autoscaler (or KEDA) can scale replicas on custom metrics", "Inference pods must run as privileged containers"], "correct": [0, 2], "explanation": "Replicas, Services, and autoscalers are the standard pattern. Privileged mode is not required, and GPU limits apply to all pod controllers."}, {"section": "Domain 3 – Workload Management", "question": "Which statement describes how Slurm and Run:ai allocate resources between teams differently?", "options": ["Neither supports quotas, so teams must agree on usage outside the platforms", "Both rely on Slurm accounts, which Run:ai imports from the Slurm database", "Slurm uses accounts, QOS, and fair-share; Run:ai uses projects, departments, quotas, and preemption", "Both rely on Kubernetes namespaces and ResourceQuota objects for team allocation"], "correct": 2, "explanation": "Each platform has its own model. Both support quotas or limits, but with different objects."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "'docker run --gpus all ...' fails with 'could not select device driver \"\" with capabilities: [[gpu]]'. What is the cause?", "options": ["The NGC API key used to pull the image has expired", "The image was built from a non-NGC CUDA base image", "The NVIDIA Container Toolkit is missing or not set up in Docker", "The GPUs are in MIG mode and require a MIG device UUID"], "correct": 2, "explanation": "Docker has no GPU-capable runtime. Installing the Container Toolkit and running nvidia-ctk runtime configure fixes it."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "A container fails with 'CUDA driver version is insufficient for CUDA runtime version'. Which TWO fixes are valid? (Choose two.)", "options": ["Install the CUDA toolkit on the host only", "Restart Fabric Manager", "Upgrade the host driver to a version that supports the container's CUDA", "Use an image built for a CUDA version the current driver supports"], "correct": [2, 3], "explanation": "The host driver defines the maximum CUDA runtime version. Installing a toolkit on the host does not change the driver, and Fabric Manager is unrelated."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "On an HGX H100 system, nvidia-fabricmanager fails to start after a driver upgrade. What is the MOST likely cause?", "options": ["The BlueField DPU is in NIC mode instead of DPU mode", "The Fabric Manager version does not match the new driver", "The Slurm controller is down and cannot register GPUs", "The NGC CLI is not configured with a valid API key"], "correct": 1, "explanation": "Fabric Manager must exactly match the driver version. Its log (for example /var/log/fabricmanager.log) shows version mismatch errors."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "When Fabric Manager is not running on an NVSwitch system, what do CUDA applications typically report?", "options": ["Error 802 'system not yet initialized'", "A segmentation fault in nvidia-smi", "Error 'invalid device ordinal' on GPU 8", "Error 'out of memory' on all GPUs"], "correct": 0, "explanation": "Without Fabric Manager, the NVLink fabric is not initialized and CUDA reports that the system is not ready. Memory errors or segfaults are not the expected symptom."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO steps help troubleshoot a BCM node that fails to provision? (Choose two.)", "options": ["Check the head node's provisioning logs and the node's MAC address registration", "Reinstall the GPU driver in the software image", "Check the node's console (through the BMC) for PXE/DHCP or installer errors", "Check the NCCL version"], "correct": [0, 2], "explanation": "Provisioning issues are visible on the console and in head node logs (DHCP, TFTP, node-installer). GPU drivers and NCCL do not affect PXE boot."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "A BCM health check reports 'gpu: FAIL' for one node. What is the BEST next step?", "options": ["Review the check, confirm with DCGM diagnostics, and drain the node", "Delete the node from BCM and add it back to reset its state", "Re-clone the software image used by the node's category", "Restart the head node so that all health checks run again"], "correct": 0, "explanation": "Investigate the failing check and confirm with GPU tools. Removing nodes or restarting the head node does not address the problem."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "NCCL multi-node performance is low and NCCL_DEBUG=INFO shows 'NET/Socket'. Which Magnum IO component is NOT being used?", "options": ["The CUDA runtime on each node", "NVLink inside each of the nodes", "The RDMA (InfiniBand/RoCE) transport", "The cuDNN library in the container"], "correct": 2, "explanation": "NET/Socket means NCCL fell back to TCP instead of RDMA. NVLink may still be used inside nodes, and CUDA and cuDNN are not network transports."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "GPUDirect RDMA is expected, but NCCL logs show GDR is disabled. Which TWO checks are MOST relevant? (Choose two.)", "options": ["Whether MIG is disabled on the NICs", "Whether the GPU and NIC share a good PCIe path (topology) and ACS is not blocking P2P", "Whether the NGC CLI is installed", "Whether the nvidia_peermem module is loaded"], "correct": [1, 3], "explanation": "GPUDirect RDMA needs the peermem module and a suitable PCIe path. NICs do not have MIG, and the NGC CLI is unrelated."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO steps help troubleshoot GPUDirect Storage performance? (Choose two.)", "options": ["Disable NVLink", "Run gdscheck to confirm the nvidia-fs driver, file system support, and configuration", "Measure with gdsio and compare GDS mode with compatibility mode", "Increase the Slurm time limit"], "correct": [1, 2], "explanation": "gdscheck validates the setup, and gdsio benchmarks I/O paths. Scheduler limits and NVLink do not affect storage paths."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "A Slurm job fails immediately on one node with 'GPU 3 is lost' in the job log, and dmesg shows Xid 79. What should the administrator do?", "options": ["Drain the node and investigate power, seating, and thermals", "Restart the Slurm controller to refresh the node state", "Increase the job's memory request and resubmit the job", "Reinstall Pyxis and Enroot on the affected compute node"], "correct": 0, "explanation": "Xid 79 means the GPU fell off the bus, which is a hardware-level event. The node must be removed from scheduling and investigated."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO signs indicate storage is the bottleneck of a training job? (Choose two.)", "options": ["High I/O wait on nodes and storage throughput at its limit", "NVLink errors on all GPUs", "Tensor Core activity at maximum throughout the job", "GPU utilization drops periodically while data loaders wait on I/O"], "correct": [0, 3], "explanation": "Periodic GPU idle time with high I/O wait points to storage. Full Tensor Core activity means compute-bound, and NVLink errors are a different issue."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO actions improve storage performance for AI training? (Choose two.)", "options": ["Lowering the GPU clock", "Using a more efficient data format and parallel data loading", "Reducing the number of data loader workers to zero", "Caching datasets on local NVMe"], "correct": [1, 3], "explanation": "Local caching and efficient data pipelines raise throughput. Lowering clocks or removing loader parallelism makes things worse."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "A NIM container fails to start and logs show it cannot download the model. Which TWO checks are MOST relevant? (Choose two.)", "options": ["The Slurm partition is up", "The pod has network access to NGC or a configured mirror", "The NGC API key secret is present and valid", "The node's MIG profile is 7g.80gb"], "correct": [1, 2], "explanation": "NIM downloads model artifacts from NGC with the API key. MIG profiles and Slurm do not affect the download."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO actions troubleshoot a pod that cannot pull 'nvcr.io/nvidia/pytorch:24.05-py3'? (Choose two.)", "options": ["Increase the pod's GPU limit", "Check the imagePullSecret configuration and credentials for nvcr.io", "Enable MIG on the node", "Check DNS and proxy access from the node to nvcr.io"], "correct": [1, 3], "explanation": "Image pull failures are authentication or connectivity issues. GPU limits and MIG do not affect pulls."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Docker containers on a GPU node lose GPU access after a host driver upgrade until the node is rebooted. What is the likely reason?", "options": ["Docker deletes the Container Toolkit configuration on every driver upgrade", "MIG is re-enabled automatically and hides the GPUs from Docker", "The NGC API key stored on the node expires when the driver changes", "The old kernel module stays loaded, so it mismatches the new user-space libraries"], "correct": 3, "explanation": "After upgrading, the running kernel module and new user-space libraries differ until the module is reloaded or the node rebooted, which leads to errors such as 'Driver/library version mismatch'."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "nvidia-smi returns 'Failed to initialize NVML: Driver/library version mismatch'. What is the fix?", "options": ["Update the BMC firmware to the latest version", "Reinstall Docker and the Container Toolkit", "Enable persistence mode with nvidia-smi -pm 1", "Reload the NVIDIA kernel modules or reboot the node"], "correct": 3, "explanation": "The loaded kernel module does not match the installed user-space library. Unloading and reloading the modules, or rebooting, resolves it."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO tools help troubleshoot NVLink issues on an NVSwitch system? (Choose two.)", "options": ["nvidia-smi nvlink -s and -e for link status and error counters", "sacct on the compute nodes", "ibstat on the GPUs", "Fabric Manager logs for NVSwitch and partition errors"], "correct": [0, 3], "explanation": "NVLink health is visible through nvidia-smi nvlink and Fabric Manager logs. ibstat shows network adapters, not NVLink."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "BCM reports that a node's software image cannot be synchronized because of disk errors. What should the administrator do?", "options": ["Copy the software image manually to the node with scp", "Check disk health (SMART), replace the disk if needed, then reprovision", "Disable image synchronization for that node permanently", "Move the node to another Slurm partition to isolate it"], "correct": 1, "explanation": "Disk errors prevent reliable provisioning. Fixing the disk restores normal management. Workarounds leave the node in an inconsistent state."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO checks help troubleshoot a Kubernetes GPU pod that starts but shows no GPU inside the container? (Choose two.)", "options": ["Verify that Slurm GRES is configured on the node", "Verify that the pod requests nvidia.com/gpu in its limits", "Verify that the image contains the GPU kernel driver", "Verify that the node's container runtime is configured with the NVIDIA runtime or CDI"], "correct": [1, 3], "explanation": "Without a GPU limit or a properly configured runtime, the container does not receive GPU devices. The kernel driver stays on the host, and Slurm GRES is unrelated."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO steps are appropriate when a multi-node training job is slower than expected? (Choose two.)", "options": ["Disable checkpointing to save time", "Check GPU-NIC affinity and NCCL logs for the selected transports and interfaces", "Increase the number of nodes immediately", "Run nccl-tests on the same nodes to compare collective bandwidth with the expected value"], "correct": [1, 3], "explanation": "Measuring with nccl-tests and checking NCCL configuration isolate fabric problems. More nodes or no checkpoints do not fix the bottleneck."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which statement BEST describes the Magnum IO components an operator may need to troubleshoot?", "options": ["DCGM, nvidia-smi, and Base View, which monitor GPUs", "CUDA, cuDNN, and TensorRT, which optimize model execution", "Slurm, Kubernetes, and Run:ai, which schedule workloads", "NCCL, GPUDirect RDMA, GPUDirect Storage, UCX/HPC-X, and SHARP"], "correct": 3, "explanation": "Magnum IO is NVIDIA's I/O stack for multi-GPU, multi-node data movement. The other groups are compute libraries, schedulers, and monitoring tools."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "Which TWO actions help when Slurm jobs fail because a node's GPUs are in a bad state (for example after an ECC event)? (Choose two.)", "options": ["Remove the node from the BCM inventory permanently", "Disable all GPU ECC reporting", "Run DCGM health checks in job prolog/epilog scripts", "Configure a Slurm health check program (HealthCheckProgram) to drain unhealthy nodes"], "correct": [2, 3], "explanation": "Automated health checks drain bad nodes before more jobs fail. Hiding ECC errors or deleting nodes does not solve the issue."}, {"section": "Domain 4 – Troubleshooting and Optimization", "question": "An NGC container fails with 'permission denied' when Enroot tries to create its sandbox. What should be checked?", "options": ["The user must have root access on the Slurm controller", "Enroot's directories must be user-writable and user namespaces enabled", "The NGC API key must have administrator rights", "MIG must be enabled on all GPUs of the allocated node"], "correct": 1, "explanation": "Enroot runs unprivileged and needs writable paths and user namespaces. Root access or admin keys are not required, and MIG is unrelated."}];
+
+const SECTION_CATEGORIES = {
+  "NCP-AIO — Exam Blueprint Domains": [],
+};
+
+ALL_QUESTIONS.forEach((q, i) => {
+  q.id = i;
+  const s = q.sectionClean || q.section;
+  SECTION_CATEGORIES["NCP-AIO — Exam Blueprint Domains"].push(s);
+});
+
+for (const k in SECTION_CATEGORIES) {
+  SECTION_CATEGORIES[k] = [...new Set(SECTION_CATEGORIES[k])];
+  if (SECTION_CATEGORIES[k].length === 0) delete SECTION_CATEGORIES[k];
+}
+
+let examQuestions = [];
+let currentIndex = 0;
+let answers = {};
+let revealed = {};
+
+function buildSetup() {
+  const container = document.getElementById('filterGroups');
+  container.innerHTML = '';
+  for (const [cat, sections] of Object.entries(SECTION_CATEGORIES)) {
+    if (!sections || sections.length === 0) continue;
+    const group = document.createElement('div');
+    group.className = 'filter-group';
+    const totalQ = sections.reduce((sum, s) => sum + ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length, 0);
+    group.innerHTML = `<h3>${cat} <span class="badge">${totalQ} questions</span></h3>`;
+    const list = document.createElement('div');
+    list.className = 'section-list';
+    sections.forEach(s => {
+      const count = ALL_QUESTIONS.filter(q => (q.sectionClean || q.section) === s).length;
+      const isPriority = !s.includes('(STRENGTH)');
+      const cleanName = s.replace(' (STRENGTH)', '');
+      const id = 'sec_' + s.replace(/[^a-zA-Z0-9]/g, '_');
+      const item = document.createElement('div');
+      item.className = 'section-item selected';
+      item.onclick = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+        const cb = item.querySelector('input');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      item.innerHTML = `
+        <input type="checkbox" id="${id}" data-section="${s}" checked>
+        <div class="priority-dot ${('blue')}"></div>
+        <label for="${id}">${cleanName}</label>
+        <span class="count">${count}q</span>
+      `;
+      const cbEl = item.querySelector('input');
+      cbEl.addEventListener('change', () => {
+        item.classList.toggle('selected', cbEl.checked);
+        updateCount();
+      });
+      list.appendChild(item);
+    });
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+  updateCount();
+}
+
+function getSelectedSections() {
+  return [...document.querySelectorAll('.section-item input:checked')].map(cb => cb.dataset.section);
+}
+
+function updateCount() {
+  const sections = getSelectedSections();
+  const count = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section)).length;
+  document.getElementById('selectedCount').textContent = count + ' questions selected';
+  document.getElementById('startBtn').disabled = count === 0;
+}
+
+function selectAll() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = true; cb.closest('.section-item').classList.add('selected'); });
+  updateCount();
+}
+function selectNone() {
+  document.querySelectorAll('.section-item input').forEach(cb => { cb.checked = false; cb.closest('.section-item').classList.remove('selected'); });
+  updateCount();
+}
+
+function selectPriority() {}
+function selectStrength() {}
+
+
+function startExam() {
+  const sections = getSelectedSections();
+  examQuestions = ALL_QUESTIONS.filter(q => sections.includes(q.sectionClean || q.section));
+  if (document.getElementById('randomizeToggle').checked) {
+    for (let i = examQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+    }
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function buildQuestionMap() {
+  const map = document.getElementById('questionMap');
+  map.innerHTML = '';
+  examQuestions.forEach((q, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'q-dot' + (i === currentIndex ? ' current' : '');
+    dot.textContent = i + 1;
+    dot.onclick = () => { currentIndex = i; renderQuestion(); };
+    dot.id = 'qdot_' + i;
+    map.appendChild(dot);
+  });
+}
+
+function updateDot(i) {
+  const dot = document.getElementById('qdot_' + i);
+  if (!dot) return;
+  dot.className = 'q-dot';
+  if (i === currentIndex) dot.classList.add('current');
+  const qid = examQuestions[i].id;
+  if (revealed[qid] !== undefined) {
+    dot.classList.add(answerIsCorrect(examQuestions[i]) ? 'correct-dot' : 'incorrect-dot');
+  } else if (answers[qid] !== undefined) {
+    dot.classList.add('answered');
+  }
+}
+
+function renderQuestion() {
+  const q = examQuestions[currentIndex];
+  const qid = q.id;
+  const isRevealed = revealed[qid] !== undefined;
+  const selectedOpt = answers[qid];
+  const isPriority = q.priority;
+  const cleanSection = q.sectionClean || q.section.replace(' (STRENGTH)', '');
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let optionsHtml = q.options.map((opt, i) => {
+    let cls = 'option' + (isMulti(q) ? ' multi' : '');
+    if (isRevealed) {
+      cls += ' disabled';
+      if (optionIsCorrect(q, i)) cls += ' correct' + (optionIsSelected(q, i) ? '' : ' was-correct');
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+    } else {
+      if (optionIsSelected(q, i)) cls += ' selected';
+    }
+    return `<div class="${cls}" onclick="selectOption(${i})">
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+    </div>`;
+  }).join('');
+  let explanationHtml = '';
+  if (isRevealed) {
+    const isCorrect = answerIsCorrect(q);
+    explanationHtml = `<div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+      <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+      ${q.explanation}
+    </div>`;
+  }
+  document.getElementById('questionContainer').innerHTML = `
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Question ${currentIndex + 1} of ${examQuestions.length}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘 EXAM TOPIC')} - ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      ${!isRevealed && hasSelection(q) ? `<div style="margin-top:14px;text-align:center;">
+        <button class="btn btn-primary btn-small" onclick="checkAnswer()">Check Answer</button>
+      </div>` : ''}
+      ${explanationHtml}
+    </div>
+  `;
+  const pct = ((currentIndex + 1) / examQuestions.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + examQuestions.length;
+  examQuestions.forEach((_, i) => updateDot(i));
+  updateRunningScore();
+}
+
+function isMulti(q) { return Array.isArray(q.correct); }
+
+function optionIsCorrect(q, i) {
+  return isMulti(q) ? q.correct.includes(i) : i === q.correct;
+}
+
+function optionIsSelected(q, i) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.includes(i) : a === i;
+}
+
+function answerIsCorrect(q) {
+  const a = answers[q.id];
+  if (isMulti(q)) {
+    if (!Array.isArray(a)) return false;
+    const sel = [...new Set(a)].sort((x, y) => x - y);
+    const cor = [...q.correct].sort((x, y) => x - y);
+    return sel.length === cor.length && sel.every((v, k) => v === cor[k]);
+  }
+  return a === q.correct;
+}
+
+function hasSelection(q) {
+  const a = answers[q.id];
+  return isMulti(q) ? Array.isArray(a) && a.length > 0 : a !== undefined;
+}
+
+function selectOption(i) {
+  const q = examQuestions[currentIndex];
+  if (revealed[q.id] !== undefined) return;
+  if (isMulti(q)) {
+    const a = Array.isArray(answers[q.id]) ? answers[q.id] : [];
+    answers[q.id] = a.includes(i) ? a.filter(x => x !== i) : [...a, i];
+  } else {
+    answers[q.id] = i;
+  }
+  renderQuestion();
+}
+
+function checkAnswer() {
+  const q = examQuestions[currentIndex];
+  if (!hasSelection(q)) return;
+  revealed[q.id] = true;
+  renderQuestion();
+  const answeredEl = document.getElementById('answeredCount');
+  if (answeredEl) answeredEl.textContent = Object.keys(revealed).length;
+}
+
+function updateRunningScore() {
+  const total = Object.keys(revealed).length;
+  if (total === 0) return;
+  const correct = examQuestions.filter(q => revealed[q.id] && answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const el = document.getElementById('liveScore');
+  if (el) {
+    el.textContent = correct + '/' + total + ' (' + pct + '%)';
+    el.style.color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  }
+}
+
+function prevQuestion() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
+function nextQuestion() { if (currentIndex < examQuestions.length - 1) { currentIndex++; renderQuestion(); } }
+
+function finishExam() {
+  examQuestions.forEach(q => {
+    if (answers[q.id] === undefined) answers[q.id] = -1;
+    revealed[q.id] = true;
+  });
+  showResults();
+}
+
+function showResults() {
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  const total = examQuestions.length;
+  const correct = examQuestions.filter(q => answerIsCorrect(q)).length;
+  const pct = Math.round(correct / total * 100);
+  const pass = pct >= 70;
+  document.getElementById('scoreBig').textContent = pct + '%';
+  document.getElementById('scoreBig').className = 'score-big ' + (pass ? 'pass' : 'fail');
+  document.getElementById('scoreDetail').textContent = correct + ' correct out of ' + total + ' questions - ' + (pass ? 'PASS (>=70%)' : 'FAIL (need >=70%)');
+  const sectionScores = {};
+  examQuestions.forEach(q => {
+    const s = q.sectionClean || q.section;
+    if (!sectionScores[s]) sectionScores[s] = { correct: 0, total: 0 };
+    sectionScores[s].total++;
+    if (answerIsCorrect(q)) sectionScores[s].correct++;
+  });
+  const breakdown = document.getElementById('scoreBreakdown');
+  breakdown.innerHTML = '';
+  for (const [s, data] of Object.entries(sectionScores)) {
+    const sPct = Math.round(data.correct / data.total * 100);
+    const cls = sPct >= 70 ? 'good' : sPct >= 50 ? 'ok' : 'bad';
+    breakdown.innerHTML += `<div class="score-section">
+      <span class="name">${s}</span>
+      <span class="result ${cls}">${data.correct}/${data.total} (${sPct}%)</span>
+    </div>`;
+  }
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.remove('hidden');
+  filterReview('all');
+}
+
+function filterReview(mode) {
+  const container = document.getElementById('reviewContainer');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  let filtered = examQuestions;
+  if (mode === 'wrong') filtered = examQuestions.filter(q => !answerIsCorrect(q));
+  if (mode === 'correct') filtered = examQuestions.filter(q => answerIsCorrect(q));
+  document.getElementById('reviewTitle').textContent = `Review Mode - ${filtered.length} questions`;
+  filtered.forEach((q, idx) => {
+    const isCorrect = answerIsCorrect(q);
+    const isPriority = q.priority;
+    const cleanSection = q.sectionClean || q.section;
+    let optionsHtml = q.options.map((opt, i) => {
+      let cls = 'option disabled' + (isMulti(q) ? ' multi' : '');
+      if (optionIsCorrect(q, i)) cls += ' correct';
+      else if (optionIsSelected(q, i)) cls += ' incorrect';
+      return `<div class="${cls}">
+        <div class="option-letter">${letters[i]}</div>
+        <div class="option-text">${opt}</div>
+      </div>`;
+    }).join('');
+    container.innerHTML += `<div class="question-card">
+      <div class="question-meta">
+        <span class="question-num">Q${idx + 1}</span>
+        <span class="question-section ${('section-default')}">
+          ${('📘')} ${cleanSection}
+        </span>
+      </div>
+      <div class="question-text">${q.question}</div>
+      ${isMulti(q) ? '<div class="multi-hint">☑ Multiple answers possible — check all that apply</div>' : ''}
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${isCorrect ? 'correct' : 'incorrect'} show">
+        <strong>${isCorrect ? '\u2714 Correct!' : '\u2718 Incorrect'}</strong><br>
+        ${q.explanation}
+      </div>
+    </div>`;
+  });
+}
+
+function backToResults() {
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.remove('hidden');
+}
+
+function retryWrong() {
+  const wrongQuestions = examQuestions.filter(q => !answerIsCorrect(q));
+  if (wrongQuestions.length === 0) { alert('No wrong answers to retry!'); return; }
+  examQuestions = wrongQuestions;
+  for (let i = examQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [examQuestions[i], examQuestions[j]] = [examQuestions[j], examQuestions[i]];
+  }
+  currentIndex = 0; answers = {}; revealed = {};
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat">Questions: <b>${examQuestions.length}</b></div>
+    <div class="stat">Answered: <b id="answeredCount">0</b></div>
+    <div class="stat">Score: <b id="liveScore">-</b></div>
+    <div class="stat" style="color:var(--orange)">Retry Mode</div>
+  `;
+  buildQuestionMap(); renderQuestion();
+}
+
+function resetExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('reviewScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').innerHTML = ``;
+  answers = {}; revealed = {}; examQuestions = []; currentIndex = 0;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('examScreen').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') prevQuestion();
+  if (e.key === 'ArrowRight') nextQuestion();
+  if (e.key === 'Enter') checkAnswer();
+  if (['a','b','c','d','e','f'].includes(e.key.toLowerCase())) {
+    const idx = e.key.toLowerCase().charCodeAt(0) - 97;
+    const q = examQuestions[currentIndex];
+    if (idx < q.options.length) selectOption(idx);
+  }
+});
+
+buildSetup();
+</script>
+
+<footer style="text-align:center;padding:30px 20px 40px;color:#535353;font-size:0.82rem;line-height:1.8;font-family:'Titillium','Calibri',sans-serif;">
+  <img src="assets/logo/itq-glasses-orange.png" alt="" style="height:22px;width:auto;opacity:.95;margin-bottom:6px;display:inline-block;"><br>
+  Made by an ITQer with <span style="color:#FF4F41;">&#9829;</span> &nbsp;&middot;&nbsp; <strong style="color:#040559;">ITQ &mdash; What's Next.</strong><br>
+  100% AI-generated content. Not official NVIDIA or ITQ material. For practice only.
+</footer>
+</body>
+</html>
