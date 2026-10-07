@@ -1,7 +1,7 @@
 // Offline support: precache the whole site so it works without network.
 // Pages are network-first (fresh when online), other assets stale-while-revalidate.
 // Bump CACHE_VERSION when PRECACHE changes so installed apps re-download everything.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE = 'practice-exams-' + CACHE_VERSION;
 const NETWORK_TIMEOUT_MS = 3000;
 
@@ -12,6 +12,10 @@ const PRECACHE = [
   'NVIDIA_NCA-AIIO_Practice_Exam.html',
   'NVIDIA_NCP-AII_Practice_Exam.html',
   'NVIDIA_NCP-AIO_Practice_Exam.html',
+  'NVIDIA_NCA-AIIO_Hard_Practice_Exam.html',
+  'NVIDIA_NCP-AII_Hard_Practice_Exam.html',
+  'NVIDIA_NCP-AIO_Hard_Practice_Exam.html',
+  'NVIDIA_NCP-AIO_Labs.html',
   'VCAP_Automation_Practice_Exam.html',
   'VCAP_Networking_Practice_Exam_Customized_for_Florian.html',
   'VCAP_Networking_Practice_Exam_Generic.html',

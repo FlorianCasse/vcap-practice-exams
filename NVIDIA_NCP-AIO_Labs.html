@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#040559">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Practice Exams">
+<title>NVIDIA-Certified Professional: AI Operations (NCP-AIO) — Hands-on Lab Simulator</title>
+<style>
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Semibold.otf') format('opentype');font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:'Titillium';src:url('assets/fonts/Titillium-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+  :root{
+    --bg:#E6EBEB; --surface:#FFFFFF; --surface2:#EEF4FB;
+    --border:#CDE3F7; --text:#040559; --text2:#535353;
+    --accent:#040559; --green:#1F8A5B; --green-bg:#E7F4EC; --green-border:#A7D7BD;
+    --red:#FF4F41; --red-bg:#FFEDEB; --red-border:#FFC7C1; --nv:#76B900;
+    --term-bg:#0b0f24; --term-text:#e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family:'Titillium','Calibri',system-ui,sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  .header { background:#040559; border-bottom:3px solid #FF4F41; padding:16px 30px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .header h1 { font-size:1.35rem; color:#fff; font-weight:700; }
+  .header h1 span { color:#FF4F41; }
+  .header .itq-logo { height:28px; width:auto; display:block; }
+  .header-stats { color:#cbd5e1; font-size:0.9rem; }
+  .container { max-width:1100px; margin:0 auto; padding:20px; }
+  .setup { background:var(--surface); border-radius:12px; padding:30px; box-shadow:0 2px 16px rgba(4,5,89,0.07); }
+  .setup h2 { font-size:1.3rem; margin-bottom:10px; }
+  .setup p { color:var(--text2); margin-bottom:12px; }
+  .btn { padding:10px 24px; border:none; border-radius:8px; font-size:0.95rem; cursor:pointer; font-weight:600; font-family:inherit; transition:all .15s; }
+  .btn-primary { background:#FF4F41; color:#fff; }
+  .btn-primary:hover { background:#e8463a; }
+  .btn-secondary { background:#fff; color:#040559; border:1px solid #CDE3F7; }
+  .btn-secondary:hover { background:#EEF4FB; }
+  .btn-small { padding:6px 14px; font-size:0.82rem; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .exam-box { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; background:#F0F8E0; border:1px solid #C9E59A; border-left:5px solid var(--nv); border-radius:10px; padding:16px 20px; margin:18px 0 24px; }
+  .exam-box b { color:#040559; }
+  .area { margin-bottom:22px; }
+  .area h3 { font-size:1rem; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .area h3 .badge { font-size:0.72rem; background:#FF4F41; color:#fff; padding:2px 8px; border-radius:10px; }
+  .lab-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:12px; }
+  .lab-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:8px; }
+  .lab-card h4 { font-size:1rem; }
+  .lab-card .meta { font-size:0.8rem; color:var(--text2); display:flex; gap:12px; flex-wrap:wrap; }
+  .lab-card .desc { font-size:0.88rem; color:var(--text2); flex:1; }
+  .lab-card .best.good { color:var(--green); font-weight:700; }
+  .lab-card .best.bad { color:#c81e10; font-weight:700; }
+  .note { font-size:0.82rem; color:var(--text2); border-top:1px solid var(--border); padding-top:12px; margin-top:8px; }
+  .lab-wrap { max-width:1480px; margin:0 auto; padding:16px; }
+  .lab-grid { display:grid; grid-template-columns:400px 1fr; gap:16px; height:calc(100vh - 150px); min-height:560px; }
+  .task-panel { background:var(--surface); border-radius:12px; padding:20px; overflow:auto; box-shadow:0 2px 16px rgba(4,5,89,0.07); display:flex; flex-direction:column; gap:12px; }
+  .task-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .area-badge { font-size:0.74rem; padding:3px 10px; border-radius:12px; background:rgba(4,5,89,0.07); border:1px solid rgba(4,5,89,0.18); font-weight:600; }
+  .timer { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-weight:700; font-size:1rem; }
+  .timer.over { color:#c81e10; }
+  .task-panel h2 { font-size:1.15rem; line-height:1.3; }
+  .task-panel h3 { font-size:0.92rem; margin-top:4px; }
+  .brief { font-size:0.9rem; color:#1f2937; }
+  .brief p { margin-bottom:8px; }
+  .brief ul { margin:0 0 8px 18px; }
+  .brief code, .hint-box code, .solution-box code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.82rem; background:#EEF4FB; padding:1px 5px; border-radius:4px; }
+  table.kv { border-collapse:collapse; margin:6px 0 10px; font-size:0.85rem; width:100%; }
+  table.kv td { border:1px solid var(--border); padding:4px 8px; }
+  table.kv td:first-child { background:#F5F8FC; font-weight:600; width:45%; }
+  .objectives { list-style:none; display:flex; flex-direction:column; gap:6px; font-size:0.88rem; }
+  .objectives li { padding:7px 10px; background:var(--surface2); border-radius:8px; border-left:4px solid var(--border); }
+  .objectives li.ok { border-left-color:var(--green); background:var(--green-bg); }
+  .objectives li.ko { border-left-color:var(--red); background:var(--red-bg); }
+  .hint-box { font-size:0.86rem; display:flex; flex-direction:column; gap:6px; }
+  .hint-box div { background:#FBF1E0; border:1px solid #E8C98A; border-radius:8px; padding:8px 10px; }
+  .solution-box { font-size:0.84rem; background:#F5F8FC; border:1px solid var(--border); border-radius:8px; padding:10px; }
+  .solution-box pre { white-space:pre-wrap; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.8rem; }
+  .task-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; padding-top:8px; }
+  .terminal { background:var(--term-bg); color:var(--term-text); border-radius:12px; padding:14px 16px; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; line-height:1.45; cursor:text; box-shadow:0 2px 16px rgba(4,5,89,0.15); }
+  .terminal #termOut div { white-space:pre-wrap; word-break:break-word; }
+  .terminal .cmdline { color:#fff; }
+  .terminal .sys { color:#94a3b8; }
+  .term-line { display:flex; align-items:baseline; }
+  .term-line .prompt { color:var(--nv); white-space:pre; }
+  #termInput { flex:1; background:transparent; border:none; outline:none; color:#fff; font:inherit; caret-color:var(--nv); padding:0; min-width:40px; }
+  .modal { position:fixed; inset:0; background:rgba(4,5,89,0.45); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .modal-box { background:#fff; border-radius:12px; padding:20px; width:min(900px,100%); max-height:92vh; display:flex; flex-direction:column; gap:12px; box-shadow:0 10px 40px rgba(4,5,89,0.3); }
+  .modal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .modal-head .muted { font-size:0.8rem; color:var(--text2); }
+  #editorArea { width:100%; min-height:420px; flex:1; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; background:var(--term-bg); color:var(--term-text); border-radius:8px; padding:12px; border:none; resize:vertical; tab-size:2; }
+  .modal-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .score-big { font-size:3rem; font-weight:800; text-align:center; }
+  .score-big.pass { color:var(--green); }
+  .score-big.fail { color:#c81e10; }
+  .result-flags { font-size:0.84rem; color:var(--text2); text-align:center; }
+  .hidden { display:none !important; }
+  @supports (height: 100dvh) { .lab-grid { height:calc(100dvh - 150px); } }
+  @media (hover: none) and (pointer: coarse) {
+    .terminal, #termInput, #editorArea { font-size:16px; }
+    .btn { padding:12px 24px; min-height:44px; }
+    .btn-small { padding:8px 16px; min-height:44px; }
+  }
+  @media (max-width: 1000px) {
+    .lab-grid { grid-template-columns:1fr; height:auto; }
+    .terminal { min-height:520px; }
+  }
+</style>
+</head>
+<body>
+
+<div style="background:#FF4F41;color:#fff;text-align:center;padding:15px 20px;font-size:1rem;font-weight:700;line-height:1.45;">
+  &#9888; Unofficial project. Not affiliated with, authorized, or endorsed by ITQ or NVIDIA. 100% AI-generated practice content.
+</div>
+<div class="header">
+  <a href="index.html" style="display:flex;align-items:center;text-decoration:none;"><img class="itq-logo" src="assets/logo/itq-logo-white.png" alt="ITQ"></a>
+  <h1>NVIDIA-Certified Professional: AI Operations <span>(NCP-AIO)</span> — Hands-on Labs</h1>
+  <div class="header-stats" id="headerStats"></div>
+</div>
+
+<div id="homeScreen" class="container">
+  <div class="setup">
+    <h2>Hands-on lab simulator</h2>
+    <p>Since May 2026 the NCP-AIO exam is <b>30 multiple-choice questions + 3 hands-on labs</b>, and each part is worth 50% of the score. The labs run in a live VM. They cover three areas: troubleshoot a cluster with <b>Slurm in BCM</b>, run a workload with <b>Kubernetes</b>, and <b>add a node</b> with BCM.</p>
+    <p>This simulator reproduces those tasks in a scripted terminal (<code>cmsh</code>, Slurm, <code>systemctl</code>, <code>kubectl</code>). Grading checks the final state of the cluster, so any valid path passes, just like the real labs.</p>
+    <div class="exam-box">
+      <div><b>Exam simulation</b><br><span style="color:#535353;font-size:0.9rem;">3 labs (one per area, picked at random), 60 minutes in total, no hints and no solutions.</span></div>
+      <button class="btn btn-primary" onclick="startExamMode()">Start exam simulation</button>
+    </div>
+    <div id="labList"></div>
+    <p class="note">The simulator implements the commands and options these tasks need, not complete tools. Type <code>help</code> in the terminal to list what each lab supports. Use the arrow keys for history and Ctrl+L to clear the screen. The editor (<code>vi</code>/<code>nano</code>) opens in a pop-up window.</p>
+  </div>
+</div>
+
+<div id="labScreen" class="lab-wrap hidden">
+  <div class="lab-grid">
+    <aside class="task-panel">
+      <div class="task-head"><span class="area-badge" id="labArea"></span><span class="timer" id="labTimer">--:--</span></div>
+      <h2 id="labTitle"></h2>
+      <div class="brief" id="labBrief"></div>
+      <h3>Objectives</h3>
+      <ul class="objectives" id="labObjectives"></ul>
+      <div class="hint-box" id="hintBox"></div>
+      <div class="solution-box hidden" id="solutionBox"></div>
+      <div class="task-actions">
+        <button class="btn btn-primary btn-small" onclick="submitLab()">Submit lab</button>
+        <button class="btn btn-secondary btn-small" id="hintBtn" onclick="nextHint()">Hint</button>
+        <button class="btn btn-secondary btn-small" id="solBtn" onclick="showSolution()">Solution</button>
+        <button class="btn btn-secondary btn-small" id="resetBtn" onclick="resetLab()">Reset</button>
+        <button class="btn btn-secondary btn-small" onclick="backHome()">Back</button>
+      </div>
+    </aside>
+    <section class="terminal" id="terminal" onclick="focusInput()">
+      <div id="termOut"></div>
+      <div class="term-line"><span id="termPrompt" class="prompt"></span><input id="termInput" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" aria-label="Terminal input"></div>
+    </section>
+  </div>
+</div>
+
+<div id="editorModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+  <div class="modal-box">
+    <div class="modal-head"><b id="editorTitle"></b><span class="muted">Simplified editor. Ctrl+S saves and quits, Esc quits without saving.</span></div>
+    <textarea id="editorArea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="File content"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-small" onclick="editorSave()">Save &amp; quit (:wq)</button>
+      <button class="btn btn-secondary btn-small" onclick="editorQuit()">Quit without saving (:q!)</button>
+    </div>
+  </div>
+</div>
+
+<div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+  <div class="modal-box" style="width:min(640px,100%);">
+    <h2 id="resultTitle" style="text-align:center;">Lab result</h2>
+    <div class="score-big" id="resultScore">0%</div>
+    <div class="result-flags" id="resultFlags"></div>
+    <ul class="objectives" id="resultList"></ul>
+    <div class="modal-actions" id="resultActions" style="justify-content:center;"></div>
+  </div>
+</div>
+
+<script>
+// LAB-ENGINE-START
+const LabEngine = (() => {
+'use strict';
+const deep = o => JSON.parse(JSON.stringify(o));
+const pad = (v, n) => String(v ?? '').padEnd(n);
+const lpad = (v, n) => String(v ?? '').padStart(n);
+const b64e = s => btoa(unescape(encodeURIComponent(s)));
+const b64d = s => decodeURIComponent(escape(atob(s)));
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const T = v => typeof v === 'number' ? v : Date.parse(v);
+const iso = t => new Date(T(t)).toISOString().slice(0, 19);
+const ctime = t => { const d = new Date(T(t)); return `${DAYS[d.getUTCDay()]} ${MONS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2)} ${d.toISOString().slice(11, 19)} ${d.getUTCFullYear()}`; };
+const jtime = t => { const d = new Date(T(t)); return `${MONS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, '0')} ${d.toISOString().slice(11, 19)}`; };
+const sdtime = t => { const d = new Date(T(t)); return `${DAYS[d.getUTCDay()]} ${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 19)} UTC`; };
+const age = (t0, t) => { let x = Math.max(0, Math.floor((t - T(t0)) / 1000)); if (x < 120) return x + 's'; x = Math.floor(x / 60); if (x < 120) return x + 'm'; x = Math.floor(x / 60); if (x < 48) return x + 'h'; return Math.floor(x / 24) + 'd'; };
+const ago = (t0, t) => { const x = Math.max(0, Math.floor((t - T(t0)) / 1000)); if (x < 60) return `${x}s ago`; if (x < 3600) return `${Math.floor(x / 60)}min ${x % 60}s ago`; return `${Math.floor(x / 3600)}h ${Math.floor((x % 3600) / 60)}min ago`; };
+const center = (v, n) => { v = String(v); if (v.length >= n) return v; const l = Math.floor((n - v.length) / 2); return ' '.repeat(l) + v + ' '.repeat(n - v.length - l); };
+const dots = (name, w = 30) => name + ' ' + '.'.repeat(Math.max(3, w - name.length)) + ' ';
+
+function table(headers, rows) {
+  const w = headers.map((h, i) => Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)));
+  const fmt = r => r.map((c, i) => pad(c, w[i])).join(' ').replace(/\s+$/, '');
+  return [fmt(headers), w.map(x => '-'.repeat(x)).join(' '), ...rows.map(fmt)].join('\n');
+}
+function ktable(headers, rows) {
+  const w = headers.map((h, i) => Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)));
+  return [headers, ...rows].map(r => r.map((c, i) => i < r.length - 1 ? pad(c, w[i] + 3) : String(c ?? '')).join('')).join('\n');
+}
+function satable(headers, rows) {
+  const w = headers.map((h, i) => Math.max(10, h.length, ...rows.map(r => String(r[i] ?? '').length)));
+  const fmt = r => r.map((c, i) => lpad(c, w[i])).join(' ') + ' ';
+  return [fmt(headers), w.map(x => '-'.repeat(x)).join(' ') + ' ', ...rows.map(fmt)].join('\n');
+}
+function hostlist(names) {
+  if (!names.length) return '';
+  const groups = {};
+  for (const n of names) { const m = n.match(/^(.*?)(\d+)$/); const p = m ? m[1] : n; (groups[p] = groups[p] || []).push(m ? m[2] : ''); }
+  return Object.entries(groups).map(([p, nums]) => {
+    if (nums.length === 1) return p + nums[0];
+    nums.sort((a, b) => +a - +b);
+    const rs = []; let st = nums[0], pv = nums[0];
+    for (let k = 1; k <= nums.length; k++) {
+      const c = nums[k];
+      if (c !== undefined && +c === +pv + 1) { pv = c; continue; }
+      rs.push(st === pv ? st : `${st}-${pv}`); st = pv = c;
+    }
+    return `${p}[${rs.join(',')}]`;
+  }).join(',');
+}
+const MAX_HOSTS = 4096;
+const tooMany = () => Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true });
+function expandHosts(spec) {
+  const out = [], parts = []; let depth = 0, cur = '';
+  const range = (a, b) => { if (b - a >= MAX_HOSTS) throw tooMany(); };
+  const push = h => { if (out.length >= MAX_HOSTS) throw tooMany(); out.push(h); };
+  for (const ch of String(spec || '')) { if (ch === '[') depth++; if (ch === ']') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
+  if (cur) parts.push(cur);
+  for (const p of parts) {
+    let m = p.match(/^([a-z-]*?)(\d+)\.\.([a-z-]*?)(\d+)$/i);
+    if (m) { range(+m[2], +m[4]); for (let n = +m[2]; n <= +m[4]; n++) push(m[1] + String(n).padStart(m[2].length, '0')); continue; }
+    m = p.match(/^(.*)\[(.*)\](.*)$/);
+    if (!m) { push(p); continue; }
+    for (const r of m[2].split(',')) {
+      const [a, b] = r.split('-');
+      if (b === undefined) { push(m[1] + a + m[3]); continue; }
+      range(+a, +b);
+      for (let n = +a; n <= +b; n++) push(m[1] + String(n).padStart(a.length, '0') + m[3]);
+    }
+  }
+  return out;
+}
+
+// ---------- mini YAML (subset used by Kubernetes manifests) ----------
+function yamlScalar(v) {
+  v = v.trim();
+  if (/^".*"$/.test(v)) { try { return JSON.parse(v); } catch (e) { return v.slice(1, -1); } }
+  if (/^'.*'$/.test(v)) return v.slice(1, -1).replace(/''/g, "'");
+  if (/^-?\d+$/.test(v)) return +v;
+  if (v === 'true') return true;
+  if (v === 'false') return false;
+  if (v === 'null' || v === '~') return null;
+  if (v === '[]') return [];
+  if (v === '{}') return {};
+  if (/^\[.*\]$/.test(v)) return v.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean).map(yamlScalar);
+  if (/^\{.*\}$/.test(v)) { const o = {}; v.slice(1, -1).split(',').map(x => x.trim()).filter(Boolean).forEach(kv => { const i = kv.indexOf(':'); o[yamlScalar(kv.slice(0, i))] = yamlScalar(kv.slice(i + 1)); }); return o; }
+  return v;
+}
+function parseYAML(text) {
+  return text.split(/^---\s*$/m).filter(d => d.trim()).map(doc => {
+    const lines = [];
+    doc.split('\n').forEach((raw, idx) => {
+      if (/^\s*#/.test(raw) || !raw.trim()) return;
+      if (/^\s*\t/.test(raw)) throw new Error(`yaml: line ${idx + 1}: found character that cannot start any token (tab indentation)`);
+      const l = raw.replace(/\s+#(?=[^"']*$).*$/, '');
+      lines.push({ ind: l.match(/^ */)[0].length, txt: l.trim(), n: idx + 1 });
+    });
+    let i = 0;
+    const isItem = l => l.txt === '-' || l.txt.startsWith('- ');
+    function block(ind) { if (i >= lines.length) return null; return isItem(lines[i]) ? list(lines[i].ind) : map(lines[i].ind); }
+    function map(ind) {
+      const o = {};
+      while (i < lines.length && lines[i].ind === ind && !isItem(lines[i])) {
+        const m = lines[i].txt.match(/^("[^"]*"|'[^']*'|[^:'"]+?):(?:\s+(.*))?$/);
+        if (!m) throw new Error(`yaml: line ${lines[i].n}: could not find expected ':'`);
+        const key = yamlScalar(m[1]); i++;
+        if (m[2] !== undefined && m[2] !== '') o[key] = yamlScalar(m[2]);
+        else if (i < lines.length && (lines[i].ind > ind || (lines[i].ind === ind && isItem(lines[i])))) o[key] = block(lines[i].ind);
+        else o[key] = null;
+      }
+      if (i < lines.length && lines[i].ind > ind) throw new Error(`yaml: line ${lines[i].n}: mapping values are not allowed in this context (check indentation)`);
+      return o;
+    }
+    function list(ind) {
+      const a = [];
+      while (i < lines.length && lines[i].ind === ind && isItem(lines[i])) {
+        const rest = lines[i].txt.slice(1).trim();
+        if (!rest) { i++; a.push(block(lines[i] ? lines[i].ind : ind + 2)); continue; }
+        if (/^("[^"]*"|'[^']*'|[^:'"\s][^:]*?):(\s|$)/.test(rest)) {
+          lines[i] = { ind: ind + (lines[i].txt.length - rest.length), txt: rest, n: lines[i].n };
+          a.push(map(lines[i].ind));
+        } else { a.push(yamlScalar(rest)); i++; }
+      }
+      return a;
+    }
+    const r = block(0);
+    if (i < lines.length) throw new Error(`yaml: line ${lines[i].n}: did not find expected key (check indentation)`);
+    return r;
+  });
+}
+function yq(v) {
+  if (typeof v !== 'string') return String(v);
+  if (v === '' || /^[\s\-?:,[\]{}#&*!|>'"%@`$]|: |\s#|^(true|false|null|~|-?\d+(\.\d+)?)$/.test(v)) return JSON.stringify(v);
+  return v;
+}
+function toYAML(o, ind = 0) {
+  const sp = ' '.repeat(ind);
+  if (Array.isArray(o)) return o.map(v => (v && typeof v === 'object' && !Array.isArray(v)) ? sp + '- ' + toYAML(v, ind + 2).trimStart() : sp + '- ' + yq(v)).join('\n');
+  return Object.entries(o).map(([k, v]) => {
+    if (v && typeof v === 'object') {
+      if (Array.isArray(v) && !v.length) return `${sp}${yq(k)}: []`;
+      if (!Array.isArray(v) && !Object.keys(v).length) return `${sp}${yq(k)}: {}`;
+      return `${sp}${yq(k)}:\n` + toYAML(v, Array.isArray(v) ? ind : ind + 2);
+    }
+    return `${sp}${yq(k)}: ${v === null ? 'null' : yq(v)}`;
+  }).join('\n');
+}
+function deepMerge(t, src) {
+  for (const [k, v] of Object.entries(src)) {
+    if (v === null) delete t[k];
+    else if (v && typeof v === 'object' && !Array.isArray(v) && t[k] && typeof t[k] === 'object' && !Array.isArray(t[k])) deepMerge(t[k], v);
+    else t[k] = deep(v);
+  }
+  return t;
+}
+
+// ---------- shell parsing ----------
+function scan(str, seps) {
+  const parts = [], ops = []; let cur = '', q = null, depth = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (q) { cur += ch; if (ch === q) q = null; else if (ch === '\\' && q === '"' && i + 1 < str.length) cur += str[++i]; continue; }
+    if (ch === "'" || ch === '"') { q = ch; cur += ch; continue; }
+    if (ch === '\\' && i + 1 < str.length) { cur += ch + str[++i]; continue; }
+    if (ch === '$' && str[i + 1] === '(') { depth++; cur += ch; continue; }
+    if (ch === ')' && depth) { depth--; cur += ch; continue; }
+    if (!depth) { const sep = seps.find(sp => str.startsWith(sp, i)); if (sep) { parts.push(cur); ops.push(sep); cur = ''; i += sep.length - 1; continue; } }
+    cur += ch;
+  }
+  parts.push(cur);
+  return { parts, ops };
+}
+function tokenize(line, s) {
+  const out = []; let cur = '', q = null, quoted = false;
+  const sub = i => {
+    if (line[i + 1] === '(') {
+      let d = 0, j = i + 1;
+      for (; j < line.length; j++) { if (line[j] === '(') d++; else if (line[j] === ')') { d--; if (!d) break; } }
+      const inner = line.slice(i + 2, j);
+      return { v: s ? (runPipeline(s, inner).out || '').replace(/\n+$/, '') : '', end: j };
+    }
+    if (line[i + 1] === '{') { const j = line.indexOf('}', i); if (j < 0) throw new Error(`${line.slice(i)}: bad substitution`); return { v: (s && s.env[line.slice(i + 2, j)]) ?? '', end: j }; }
+    const m = line.slice(i + 1).match(/^[A-Za-z_][A-Za-z0-9_]*/);
+    if (!m) return { v: '$', end: i };
+    return { v: (s && s.env[m[0]]) ?? '', end: i + m[0].length };
+  };
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q === "'") { if (ch === "'") q = null; else cur += ch; continue; }
+    if (q === '"') {
+      if (ch === '"') { q = null; continue; }
+      if (ch === '\\' && '"$\\`'.includes(line[i + 1])) { cur += line[++i]; continue; }
+      if (ch === '$') { const r = sub(i); cur += r.v; i = r.end; continue; }
+      cur += ch; continue;
+    }
+    if (ch === "'" || ch === '"') { q = ch; quoted = true; continue; }
+    if (ch === '\\' && i + 1 < line.length) { cur += line[++i]; quoted = true; continue; }
+    if (ch === '$') { const r = sub(i); cur += r.v; i = r.end; quoted = true; continue; }
+    if (ch === ' ' || ch === '\t') { if (cur || quoted) { out.push(cur); cur = ''; quoted = false; } continue; }
+    if (ch === '~' && !cur && (i + 1 === line.length || line[i + 1] === '/' || line[i + 1] === ' ')) { cur += '/root'; continue; }
+    cur += ch;
+  }
+  if (q) throw new Error(`unexpected EOF while looking for matching \`${q}'`);
+  if (cur || quoted) out.push(cur);
+  return out;
+}
+const HEAD = s => s.lab.head || 'bcm-head';
+function fpath(p) {
+  p = String(p).replace(/^~(?=\/|$)/, '/root');
+  if (!p.startsWith('/')) p = '/root/' + p.replace(/^\.\//, '');
+  return p;
+}
+function filter(out, t) {
+  const c = t[0], args = t.slice(1), lines = out.split('\n');
+  if (c === 'grep' || c === 'egrep') {
+    let inv = false, ic = false, pat = null;
+    for (const a of args) { if (/^-[a-zA-Z]+$/.test(a)) { if (a.includes('v')) inv = true; if (a.includes('i')) ic = true; } else if (pat === null) pat = a; }
+    if (pat === null) return 'Usage: grep [OPTION]... PATTERNS [FILE]...';
+    let re;
+    try { re = new RegExp(pat.replace(/\\\|/g, '|'), ic ? 'i' : ''); } catch (e) { re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), ic ? 'i' : ''); }
+    return lines.filter(l => re.test(l) !== inv).join('\n');
+  }
+  if (c === 'head' || c === 'tail') {
+    let n = 10;
+    for (let k = 0; k < args.length; k++) { if (args[k] === '-n') n = +args[++k]; else if (/^-n?\d+$/.test(args[k])) n = +args[k].replace(/^-n?/, ''); }
+    return (c === 'head' ? lines.slice(0, n) : lines.slice(-n)).join('\n');
+  }
+  if (c === 'base64') {
+    if (args.some(a => a === '-d' || a === '--decode')) { try { return b64d(out.trim()); } catch (e) { return 'base64: invalid input'; } }
+    return b64e(out);
+  }
+  if (c === 'wc') return String(lines.filter(l => l.length).length);
+  if (c === 'sort') return lines.slice().sort().join('\n');
+  if (['less', 'more', 'cat', 'column'].includes(c)) return out;
+  return `${c}: not available in this simulator`;
+}
+function runPipeline(s, part) {
+  part = part.replace(/\s2>(&1|\/dev\/null)/g, '');
+  const segs = scan(part, ['|']).parts;
+  const r = scan(segs[segs.length - 1], ['>>', '>']);
+  let redir = null, append = false;
+  if (r.parts.length > 1) {
+    segs[segs.length - 1] = r.parts[0];
+    try { redir = tokenize(r.parts[1].trim(), s)[0]; } catch (e) { return { out: 'bash: ' + e.message }; }
+    append = r.ops[0] === '>>';
+  }
+  let toks;
+  try { toks = tokenize(segs[0].trim(), s); } catch (e) { return { out: 'bash: ' + e.message, fail: true }; }
+  if (!toks.length) return { out: '' };
+  let res = dispatch(s, toks, segs[0].trim());
+  if (res.editor || res.clear) return res;
+  for (const seg of segs.slice(1)) {
+    let ft;
+    try { ft = tokenize(seg.trim(), s); } catch (e) { return { out: 'bash: ' + e.message }; }
+    res = { ...res, out: filter(res.out || '', ft) };
+  }
+  if (redir) {
+    const p = fpath(redir);
+    if (p !== '/dev/null') s.st.files[p] = (append ? (s.st.files[p] || '') : '') + (res.out || '') + '\n';
+    return { out: '' };
+  }
+  return res;
+}
+function shellLine(s, line) {
+  const seq = scan(line, ['&&', ';']);
+  const outs = []; let res = { out: '' };
+  for (let i = 0; i < seq.parts.length; i++) {
+    const part = seq.parts[i].trim();
+    if (!part) continue;
+    res = s.cmsh ? { out: BCM.exec(s, part) } : runPipeline(s, part);
+    if (res.editor || res.clear) return res;
+    if (res.out !== '' && res.out != null) outs.push(res.out);
+    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).reduce((acc, p, j) => j ? acc + seq.ops[i + j] + p : p, ''); s.pending.restOp = seq.ops[i]; break; }
+    if (res.fail && seq.ops[i] === '&&') break;
+  }
+  return { out: outs.join('\n') };
+}
+function dispatch(s, toks, raw) {
+  const cmd = toks[0];
+  if (s.chroot) return wrap(chrootCmd(s, toks));
+  for (const m of mods(s)) if (m.cmds && Object.hasOwn(m.cmds, cmd)) return wrap(m.cmds[cmd](s, toks, raw));
+  if (Object.hasOwn(COMMON, cmd)) return wrap(COMMON[cmd](s, toks, raw));
+  if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(cmd)) { const i = cmd.indexOf('='); s.env[cmd.slice(0, i)] = cmd.slice(i + 1); return { out: '' }; }
+  return { out: `${cmd}: command not found`, fail: true };
+}
+const wrap = r => typeof r === 'string' ? { out: r } : r;
+
+// ---------- services (systemd) ----------
+const SVCDESC = { munge: 'MUNGE authentication service', slurmd: 'Slurm node daemon', 'nvidia-fabricmanager': 'NVIDIA fabric manager service' };
+function svcLog(s, host, name, msg, src) {
+  const h = s.st.hosts[host]; h.logs = h.logs || {}; (h.logs[name] = h.logs[name] || []).push({ t: s.t, src, msg });
+}
+function svcStart(s, host, name) {
+  const h = s.st.hosts[host], svc = h.services[name];
+  const deps = (s.lab.svcDeps || {})[name] || [];
+  const missing = deps.filter(d => !(h.services[d] && h.services[d].active));
+  if (missing.length) {
+    // the daemon starts but cannot authenticate: it stays active and keeps retrying (slurmd behaviour)
+    svc.active = true; svc.failed = false; svc.since = s.t; svc.pid = 5000 + (s.counter % 900);
+    svcLog(s, host, name, `Started ${name}.service - ${SVCDESC[name] || name}.`, 'systemd[1]');
+    (s.lab.svcFailLogs?.[name] || []).forEach(m => svcLog(s, host, name, m, `${name}[${svc.pid}]`));
+    return '';
+  }
+  svc.active = true; svc.failed = false; svc.since = s.t; svc.pid = 6000 + (s.counter % 900);
+  svcLog(s, host, name, `Started ${name}.service - ${SVCDESC[name] || name}.`, 'systemd[1]');
+  (s.lab.svcOkLogs?.[name] || []).forEach(m => svcLog(s, host, name, m.replace('%T', ctime(s.t)), `${name}[${svc.pid}]`));
+  return '';
+}
+function svcStatus(s, host, name, svc) {
+  const st = svc.active ? `active (running) since ${sdtime(svc.since)}; ${ago(svc.since, s.t)}`
+    : svc.failed ? `failed (Result: exit-code) since ${sdtime(svc.since)}; ${ago(svc.since, s.t)}`
+    : `inactive (dead)${svc.since ? ` since ${sdtime(svc.since)}; ${ago(svc.since, s.t)}` : ''}`;
+  const logs = ((s.st.hosts[host].logs || {})[name] || []).slice(-6).map(l => `${jtime(l.t)} ${host} ${l.src}: ${l.msg}`);
+  return [`${svc.active ? '●' : (svc.failed ? '×' : '○')} ${name}.service - ${SVCDESC[name] || name}`,
+    `     Loaded: loaded (/lib/systemd/system/${name}.service; ${svc.enabled ? 'enabled' : 'disabled'}; preset: enabled)`,
+    `     Active: ${st}`,
+    ...(svc.active ? [`   Main PID: ${svc.pid || 2211} (${name === 'munge' ? 'munged' : name})`] : []),
+    '', ...logs].join('\n');
+}
+
+// ---------- GPU output ----------
+function nvsmi(s, t) {
+  const g = (s.st.gpuHosts || {})[s.host];
+  if (!g) return 'nvidia-smi: command not found';
+  const buses = ['1B', '43', '52', '61', '9D', 'C3', 'D1', 'DF'];
+  if (t.includes('-L')) return buses.map((b, i) => `GPU ${i}: NVIDIA H100 80GB HBM3 (UUID: GPU-${(0x3b1c0f00 + i * 4099 + s.host.length).toString(16)}-71d2-5e0a-9c1e-${b}a4f2c6d81)`).join('\n');
+  if (t.length > 1) return 'This simulator only supports nvidia-smi and nvidia-smi -L.';
+  const L = [ctime(s.t) + '       ',
+    '+-----------------------------------------------------------------------------------------+',
+    '| NVIDIA-SMI 570.172.08             Driver Version: 570.172.08     CUDA Version: 12.8     |',
+    '|-----------------------------------------+------------------------+----------------------+',
+    '| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |',
+    '| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |',
+    '|                                         |                        |               MIG M. |',
+    '|=========================================+========================+======================|'];
+  buses.forEach((b, i) => {
+    L.push(`|   ${i}  NVIDIA H100 80GB HBM3          On  |   00000000:${b}:00.0 Off |                    0 |`);
+    L.push(`| N/A   ${30 + (i * 3) % 7}C    P0             ${68 + i}W /  700W |       1MiB /  81559MiB |      0%      Default |`);
+    L.push('|                                         |                        |             Disabled |');
+    L.push('+-----------------------------------------+------------------------+----------------------+');
+  });
+  L.push('', '+-----------------------------------------------------------------------------------------+',
+    '| Processes:                                                                              |',
+    '|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |',
+    '|        ID   ID                                                               Usage      |',
+    '|=========================================================================================|',
+    '|  No running processes found                                                             |',
+    '+-----------------------------------------------------------------------------------------+');
+  return L.join('\n');
+}
+
+// ---------- packages ----------
+const PKGS = {
+  'datacenter-gpu-manager-4-cuda12': { v: '1:4.2.3-1', d: 'NVIDIA Data Center GPU Manager 4 (CUDA 12)' },
+  'datacenter-gpu-manager': { v: '1:3.3.9', d: 'NVIDIA Data Center GPU Manager 3 (legacy)' },
+  'nvidia-driver-570-server': { v: '570.172.08-0ubuntu1', d: 'NVIDIA Server Driver metapackage' },
+  'nvidia-fabricmanager-570': { v: '570.172.08-1', d: 'Fabric Manager for NVSwitch based systems' },
+  'nvidia-container-toolkit': { v: '1.17.8-1', d: 'NVIDIA Container Toolkit' },
+  'cuda-toolkit-12-8': { v: '12.8.1-1', d: 'CUDA Toolkit 12.8 meta-package' },
+  'nvsm': { v: '24.09.2', d: 'NVIDIA System Management' },
+  'htop': { v: '3.3.0-4build1', d: 'interactive processes viewer' }
+};
+function aptCmd(s, t, list, where) {
+  const sub = t.slice(1).find(x => !x.startsWith('-'));
+  if (sub === 'update') return 'Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease\nHit:2 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64  InRelease\nHit:3 https://repo.download.nvidia.com/baseos/ubuntu/noble/x86_64 noble InRelease\nReading package lists... Done';
+  if (sub === 'install') {
+    const pkgs = t.slice(t.indexOf('install') + 1).filter(x => !x.startsWith('-'));
+    if (!pkgs.length) return '0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.';
+    for (const p of pkgs) if (!PKGS[p]) return `Reading package lists... Done\nBuilding dependency tree... Done\nE: Unable to locate package ${p}`;
+    const todo = pkgs.filter(p => !list.includes(p));
+    if (!todo.length) return pkgs.map(p => `${p} is already the newest version (${PKGS[p].v}).`).join('\n');
+    const doIt = () => { todo.forEach(p => list.push(p)); return todo.map(p => `Unpacking ${p} (${PKGS[p].v}) ...\nSetting up ${p} (${PKGS[p].v}) ...`).join('\n') + (where ? `\n[simulator] installed on: ${where}` : ''); };
+    const head = `Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed:\n  ${todo.join(' ')}\n0 upgraded, ${todo.length} newly installed, 0 to remove and 0 not upgraded.`;
+    if (t.some(x => /^-[a-z]*y[a-z]*$/.test(x) || x === '--yes' || x === '--assume-yes')) return head + '\n' + doIt();
+    const yes = ans => /^(y|yes|)$/i.test(ans);
+    s.pending = { prompt: 'Do you want to continue? [Y/n] ', accepts: yes, handle: ans => yes(ans) ? doIt() : 'Abort.' };
+    return head + '\nAfter this operation, 1,284 MB of additional disk space will be used.';
+  }
+  if (sub === 'remove' || sub === 'purge') {
+    const pkgs = t.slice(t.indexOf(sub) + 1).filter(x => !x.startsWith('-'));
+    pkgs.forEach(p => { const i = list.indexOf(p); if (i >= 0) list.splice(i, 1); });
+    return pkgs.map(p => `Removing ${p} ...`).join('\n');
+  }
+  return `apt: '${sub || ''}' is not simulated (use apt update / apt install / apt remove)`;
+}
+function dpkgCmd(s, t, list) {
+  if (!t.includes('-l') && !t.includes('--list')) return 'This simulator supports: dpkg -l [package]';
+  const names = t.slice(1).filter(x => !x.startsWith('-'));
+  const rows = list.filter(p => !names.length || names.some(n => new RegExp('^' + n.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$').test(p)));
+  if (!rows.length) return `dpkg-query: no packages found matching ${names.join(' ')}`;
+  return ['Desired=Unknown/Install/Remove/Purge/Hold', '| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend', '|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)',
+    '||/ Name                              Version              Architecture Description', '+++-=================================-====================-============-==========================================',
+    ...rows.map(p => `ii  ${pad(p, 33)} ${pad(PKGS[p] ? PKGS[p].v : '1.0', 20)} amd64        ${PKGS[p] ? PKGS[p].d : ''}`)].join('\n');
+}
+
+// ---------- common shell commands ----------
+const COMMON = {
+  clear: () => ({ clear: true }),
+  help: s => s.lab.help,
+  pwd: () => '/root',
+  cd: () => '',
+  whoami: () => 'root',
+  hostname: s => s.host,
+  date: s => ctime(s.t).replace(/ (\d{4})$/, ' UTC $1'),
+  history: s => s.hist.map((h, i) => `${lpad(i + 1, 5)}  ${h}`).join('\n'),
+  echo: (s, t) => t.slice(1).filter(x => x !== '-n' && x !== '-e').join(' '),
+  export: (s, t) => { for (const a of t.slice(1)) { const i = a.indexOf('='); if (i > 0) s.env[a.slice(0, i)] = a.slice(i + 1); } return ''; },
+  ls: s => s.host !== HEAD(s) ? '' : Object.keys(s.st.files).filter(f => f.startsWith('/root/') && !f.slice(6).includes('/')).map(f => f.slice(6)).sort().join('  '),
+  cat: (s, t) => t.slice(1).filter(a => !a.startsWith('-')).map(a => { const c = s.host === HEAD(s) ? s.st.files[fpath(a)] : undefined; return c === undefined ? `cat: ${a}: No such file or directory` : c.replace(/\n$/, ''); }).join('\n'),
+  vi: (s, t) => edit(s, t), vim: (s, t) => edit(s, t), nano: (s, t) => edit(s, t),
+  ssh(s, t) {
+    let i = 1; const VAL = ['-o', '-i', '-p', '-l', '-J', '-F'];
+    while (i < t.length && t[i].startsWith('-')) { if (VAL.includes(t[i])) i++; i++; }
+    if (i >= t.length) return 'usage: ssh [-46AaCfGgKkMNnqsTtVvXxYy] destination [command]';
+    const host = t[i].replace(/^.*@/, ''), cmd = t.slice(i + 1);
+    const ok = sshOk(s, host);
+    if (ok !== true) return { out: ok, fail: true };
+    if (cmd.length) { const prev = s.host; s.host = host; const r = runPipeline(s, cmd.map(x => /[\s|;&$'"]/.test(x) ? `'${x.replace(/'/g, "'\\''")}'` : x).join(' ')); s.host = prev; return r; }
+    if (host === s.host) return '';
+    s.sshStack.push(s.host); s.host = host;
+    return `Welcome to DGX OS 7.1 (GNU/Linux 6.8.0-1017-nvidia x86_64)\nLast login: ${ctime(s.t - 86400e3)} from 10.141.255.254`;
+  },
+  exit(s) {
+    if (s.sshStack.length) { const prev = s.host; s.host = s.sshStack.pop(); return `logout\nConnection to ${prev} closed.`; }
+    return 'You are on the head node. Use the "Back" button to leave the lab.';
+  },
+  logout: s => COMMON.exit(s),
+  systemctl(s, t) {
+    const args = t.slice(1).filter(a => !['--no-pager', '-l', '--full', '-q'].includes(a));
+    const now = args.includes('--now'); const rest = args.filter(a => a !== '--now');
+    const verb = rest[0], units = rest.slice(1);
+    if (!verb) return 'systemctl: this simulator supports status, start, stop, restart, enable, disable, is-active, is-enabled';
+    if (!units.length) return 'Too few arguments.';
+    const outs = [];
+    for (const u of units) {
+      const name = u.replace(/\.service$/, '');
+      const svc = s.st.hosts?.[s.host]?.services?.[name];
+      if (!svc) { outs.push(verb === 'status' ? `Unit ${name}.service could not be found.` : `Failed to ${verb} ${name}.service: Unit ${name}.service not found.`); continue; }
+      if (verb === 'status') outs.push(svcStatus(s, s.host, name, svc));
+      else if (['start', 'restart', 'reload-or-restart', 'try-restart'].includes(verb)) { const r = svcStart(s, s.host, name); if (r) outs.push(r); }
+      else if (verb === 'stop') { svc.active = false; svc.failed = false; svc.since = s.t; svcLog(s, s.host, name, `Stopped ${name}.service - ${SVCDESC[name] || name}.`, 'systemd[1]'); }
+      else if (verb === 'enable') { if (!svc.enabled) outs.push(`Created symlink /etc/systemd/system/multi-user.target.wants/${name}.service → /lib/systemd/system/${name}.service.`); svc.enabled = true; if (now) { const r = svcStart(s, s.host, name); if (r) outs.push(r); } }
+      else if (verb === 'disable') { if (svc.enabled) outs.push(`Removed "/etc/systemd/system/multi-user.target.wants/${name}.service".`); svc.enabled = false; if (now) { svc.active = false; svc.since = s.t; } }
+      else if (verb === 'is-active') outs.push(svc.active ? 'active' : (svc.failed ? 'failed' : 'inactive'));
+      else if (verb === 'is-enabled') outs.push(svc.enabled ? 'enabled' : 'disabled');
+      else outs.push(`Unknown command verb '${verb}'.`);
+    }
+    return outs.join('\n');
+  },
+  journalctl(s, t) {
+    const h = s.st.hosts?.[s.host];
+    if (!h) return '-- No entries --';
+    const units = []; let n = 30;
+    for (let i = 1; i < t.length; i++) {
+      if (t[i] === '-u' || t[i] === '--unit') units.push(t[++i].replace(/\.service$/, ''));
+      else if (/^--unit=/.test(t[i])) units.push(t[i].slice(7).replace(/\.service$/, ''));
+      else if (t[i] === '-n' || t[i] === '--lines') n = +t[++i];
+      else if (/^-xeu$|^-eu$|^-u$/.test(t[i])) units.push(t[++i].replace(/\.service$/, ''));
+    }
+    let rows = [];
+    for (const [u, ls] of Object.entries(h.logs || {})) if (!units.length || units.includes(u)) rows.push(...ls);
+    if (!units.length) rows.push(...(h.syslog || []));
+    rows = rows.slice().sort((a, b) => T(a.t) - T(b.t)).slice(-n);
+    if (!rows.length) return '-- No entries --';
+    return rows.map(l => `${jtime(l.t)} ${s.host} ${l.src}: ${l.msg}`).join('\n');
+  },
+  'nvidia-smi': (s, t) => nvsmi(s, t),
+  apt: (s, t) => aptHost(s, t), 'apt-get': (s, t) => aptHost(s, t),
+  dpkg: (s, t) => dpkgCmd(s, t, hostPkgs(s))
+};
+function hostPkgs(s) {
+  if (s.host === HEAD(s)) return (s.st.headPkgs = s.st.headPkgs || ['nvidia-container-toolkit']);
+  const d = s.st.bcm && s.st.bcm.device[s.host];
+  if (d) return (d.packages = d.packages || []);
+  return ['nvidia-driver-570-server', 'nvidia-fabricmanager-570', 'nvidia-container-toolkit'];
+}
+function aptHost(s, t) {
+  const where = s.host === HEAD(s) ? 'the head node bcm-head itself (NOT a software image)' : `${s.host} only. The next image sync or reprovisioning overwrites manual changes on nodes`;
+  return aptCmd(s, t, hostPkgs(s), where);
+}
+function edit(s, t) {
+  const f = t.slice(1).find(a => !a.startsWith('-') && !a.startsWith('+'));
+  if (!f) return 'Usage: vi <file>';
+  if (s.host !== HEAD(s)) return 'Editing files on compute nodes is not part of this lab. Work from the head node.';
+  const p = fpath(f);
+  return { out: '', editor: { kind: 'file', path: p, title: p, content: s.st.files[p] || '' } };
+}
+function sshOk(s, host) {
+  if (host === s.host || host === HEAD(s) || host === 'localhost') return true;
+  for (const m of mods(s)) if (m.canSsh) { const r = m.canSsh(s, host); if (r !== null && r !== undefined) return r; }
+  return `ssh: Could not resolve hostname ${host}: Name or service not known`;
+}
+
+// ---------- BCM / cmsh ----------
+const BCM = {
+  canSsh(s, h) { const d = s.st.bcm && s.st.bcm.device[h]; if (!d) return null; return d.status === 'UP' ? true : `ssh: connect to host ${h} port 22: No route to host`; },
+  tick(s) {
+    const b = s.st.bcm; if (!b) return;
+    for (const [name, n] of Object.entries(b.device)) {
+      if (n.type !== 'PhysicalNode' || n.power !== 'on' || n.status === 'UP' || n.pxeFailed) continue;
+      n.boot = (n.boot || 0) + 1;
+      if (!n.hw && b.hardware && n.mac.toUpperCase() !== b.hardware.mac.toUpperCase()) {
+        n.pxeFailed = true; n.status = 'DOWN'; n.info = '';
+        if (!b.newnodes.length) b.newnodes.push({ mac: b.hardware.mac, t: s.t, port: 'mgmt-sw-r14:23' });
+        continue;
+      }
+      if (n.boot >= 5) { n.status = 'UP'; n.info = ''; if (!n.hw) n.hw = true; b.newnodes = b.newnodes.filter(x => x.mac.toUpperCase() !== n.mac.toUpperCase()); BCM.sync(s, name); }
+      else if (n.boot === 4) { n.status = 'INSTALLER_CALLINGINIT'; n.info = 'switching to local root'; }
+      else if (n.boot >= 2) { n.status = 'INSTALLING'; n.info = n.boot === 2 ? 'node installer started' : 'provisioning started, waiting for completion'; }
+      else { n.status = 'BOOTING'; n.info = ''; }
+    }
+  },
+  cmds: {
+    cmsh(s, t) {
+      if (s.host !== HEAD(s)) return 'cmsh: command not found';
+      s.cmsh = { mode: null, obj: null, sub: null, subobj: null };
+      const ci = t.indexOf('-c');
+      if (ci > 0) { const out = BCM.exec(s, t.slice(ci + 1).join(' ')); s.cmsh = null; s.drafts = {}; return out; }
+      return '';
+    },
+    'cm-chroot-sw-img'(s, t) {
+      if (s.host !== HEAD(s)) return 'cm-chroot-sw-img: command not found';
+      if (!t[1]) return 'Usage: cm-chroot-sw-img <software image directory>';
+      const name = BCM.imageByPath(s, t[1]);
+      if (!name) return `Error: ${t[1]} is not the directory of a committed software image`;
+      s.chroot = name;
+      return `Mounting /proc, /sys and /dev into ${s.st.bcm.softwareimage[name].path}\nEntering the chroot of software image ${name}. Type 'exit' to leave.`;
+    },
+    chroot(s, t) {
+      const name = BCM.imageByPath(s, t[1] || '');
+      if (!name) return `chroot: cannot change root directory to '${t[1] || ''}': No such file or directory`;
+      if (t.length > 2) { s.chroot = name; const r = chrootCmd(s, t.slice(2)); s.chroot = null; return r; }
+      s.chroot = name; return '';
+    }
+  },
+  imageByPath(s, p) { p = p.replace(/\/+$/, ''); return Object.keys(s.st.bcm.softwareimage).find(n => s.st.bcm.softwareimage[n].path === p) || null; },
+  imageOf(s, n) { const d = s.st.bcm.device[n]; if (d.softwareimage) return d.softwareimage; const c = s.st.bcm.category[d.category]; return c ? c.softwareimage : 'default-image'; },
+  sync(s, n) { const d = s.st.bcm.device[n], img = s.st.bcm.softwareimage[BCM.imageOf(s, n)]; d.image = BCM.imageOf(s, n); d.packages = deep(img.packages); },
+  store: (s, m) => s.st.bcm[m],
+  get(s, m, n) { const d = s.drafts[m + ':' + n]; if (d) return d.__removed ? null : d; return (BCM.store(s, m) || {})[n] || null; },
+  edit(s, m, n) { const k = m + ':' + n; if (!s.drafts[k]) s.drafts[k] = deep(BCM.store(s, m)[n]); return s.drafts[k]; },
+  names(s, m) {
+    const set = new Set(Object.keys(BCM.store(s, m) || {}));
+    for (const k of Object.keys(s.drafts)) if (k.startsWith(m + ':')) { const n = k.slice(m.length + 1); if (s.drafts[k].__removed) set.delete(n); else set.add(n); }
+    return [...set].sort();
+  },
+  dirty: (s, m, n) => !!s.drafts[m + ':' + n],
+  modeDirty: (s, m) => Object.keys(s.drafts).some(k => k.startsWith(m + ':')),
+  resolve(s, m, n) { if (!n) return null; const all = BCM.names(s, m); return all.find(x => x === n) || all.find(x => x.toLowerCase() === n.toLowerCase()) || null; },
+  prompt(s) {
+    const c = s.cmsh; let p = `[${HEAD(s)}`;
+    if (c.mode) {
+      p += `->${c.mode}${BCM.modeDirty(s, c.mode) ? '*' : ''}`;
+      if (c.obj) p += `[${c.obj}${BCM.dirty(s, c.mode, c.obj) ? '*' : ''}]`;
+      if (c.sub) { const d = c.obj && BCM.dirty(s, c.mode, c.obj) ? '*' : ''; p += `->${c.sub}${d}`; if (c.subobj) p += `[${c.subobj}${d}]`; }
+    }
+    return p + ']% ';
+  },
+  exec(s, line) {
+    const parts = scan(line, [';']).parts.map(x => x.trim()).filter(Boolean);
+    const outs = [];
+    for (const p of parts) { const o = BCM.one(s, p); if (o) outs.push(o); if (!s.cmsh) break; }
+    return outs.join('\n');
+  },
+  leave(s) {
+    const pending = Object.keys(s.drafts);
+    s.cmsh = null; s.drafts = {};
+    return pending.length ? `Warning: uncommitted changes were discarded: ${pending.map(k => k.split(':')[1]).join(', ')}` : '';
+  },
+  one(s, line) {
+    let t; try { t = tokenize(line, null); } catch (e) { return 'Error: ' + e.message; }
+    if (!t.length) return '';
+    const c = s.cmsh, w = t[0].toLowerCase();
+    const MODES = ['device', 'category', 'softwareimage'];
+    if (w === 'quit') return BCM.leave(s);
+    if (w === 'help') return BCM.help(s);
+    if (w === 'exit' || w === '..') { if (c.subobj) c.subobj = null; else if (c.sub) c.sub = null; else if (c.obj) c.obj = null; else if (c.mode) c.mode = null; else return BCM.leave(s); return ''; }
+    if (w === 'home' || w === 'top') { Object.assign(c, { mode: null, obj: null, sub: null, subobj: null }); return ''; }
+    if (MODES.includes(w)) { Object.assign(c, { mode: w, obj: null, sub: null, subobj: null }); return t.length > 1 ? BCM.one(s, line.replace(/^\s*\S+\s*/, '')) : ''; }
+    if (['network', 'partition', 'wlm', 'kubernetes', 'monitoring', 'user', 'main'].includes(w)) return `The ${w} mode is not needed for this lab (simulator).`;
+    if (!c.mode) return `Unknown command: ${t[0]}. Select a mode first (device, category, softwareimage) or type help.`;
+    if (c.sub && (['power', 'imageupdate', 'newnodes'].includes(w) || (w === 'status' && c.sub !== 'services'))) return BCM.modeCmd(s, t);
+    if (c.sub === 'interfaces') return BCM.ifCmd(s, t);
+    if (c.sub === 'services') return BCM.svcCmd(s, t);
+    return BCM.modeCmd(s, t);
+  },
+  help(s) {
+    return ['cmsh commands supported by this simulator:',
+      '  Modes      : device, category, softwareimage   (exit / .. = up one level, home = top, quit = leave cmsh)',
+      '  In a mode  : list, use <name>, show [name], get <prop>, set <prop> <value>, clone <src> <new>, commit, refresh, remove <name>',
+      '  device     : status [-n nodes], power on|off|reset|status [-n nodes | -c category], imageupdate [-n nodes | -c category] [-w],',
+      '               newnodes, interfaces (submode: list, use <if>, set ip|network <value>), services (submode: list, status, start|stop|restart <svc>)',
+      '  Properties : device: ip (BOOTIF), mac, category, rack, softwareimage | category: softwareimage | softwareimage: path',
+      '  Node ranges: -n node001..node004 or -n node00[1-4]'].join('\n');
+  },
+  modeCmd(s, t) {
+    const c = s.cmsh, mode = c.mode, w = t[0].toLowerCase(), a = t.slice(1), cur = c.obj;
+    switch (w) {
+      case 'list': return BCM.list(s, mode);
+      case 'use': { if (!a[0]) return 'Error: use requires an object name'; const n = BCM.resolve(s, mode, a[0]); if (!n) return `Error: ${mode} ${a[0]} not found`; c.obj = n; c.sub = null; c.subobj = null; return ''; }
+      case 'show': { const n = a[0] ? BCM.resolve(s, mode, a[0]) : cur; if (!n) return 'Error: no object selected, run "use <name>" first'; return BCM.show(s, mode, n); }
+      case 'get': { if (!cur) return 'Error: no object selected'; const v = BCM.prop(s, mode, cur, a[0]); return v === undefined ? `Error: unknown property '${a[0]}'` : String(v); }
+      case 'set': { if (!cur) return 'Error: no object selected, run "use <name>" first'; return BCM.set(s, mode, cur, a[0], a.slice(1).join(' ')); }
+      case 'clone': { let src, dst; if (a.length >= 2) [src, dst] = a; else if (a.length === 1 && cur) { src = cur; dst = a[0]; } else return 'Usage: clone <source> <new name>'; return BCM.clone(s, mode, src, dst); }
+      case 'commit': { const names = cur && !a.includes('-a') ? [cur] : BCM.names(s, mode).filter(n => BCM.dirty(s, mode, n)); return names.map(n => BCM.commit(s, mode, n)).filter(Boolean).join('\n'); }
+      case 'refresh': if (cur) { delete s.drafts[mode + ':' + cur]; if (!BCM.get(s, mode, cur)) c.obj = null; } return '';
+      case 'remove': { const n = BCM.resolve(s, mode, a[0] || cur); if (!n) return `Error: ${mode} ${a[0] || ''} not found`; if (mode === 'device' && BCM.get(s, mode, n).type === 'HeadNode') return 'Error: the head node cannot be removed'; if (s.drafts[mode + ':' + n] && s.drafts[mode + ':' + n].__new) delete s.drafts[mode + ':' + n]; else { BCM.edit(s, mode, n).__removed = true; } if (cur === n) c.obj = null; return `Removed ${n} (run commit to apply)`; }
+      case 'add': return 'In this simulator create objects with clone (it copies the interfaces and settings of an existing object).';
+    }
+    if (mode === 'device') {
+      switch (w) {
+        case 'status': return BCM.status(s, a, cur);
+        case 'power': return BCM.power(s, a, cur);
+        case 'imageupdate': return BCM.imageupdate(s, a, cur);
+        case 'newnodes': return BCM.newnodes(s);
+        case 'interfaces': if (!cur) return 'Error: no device selected, run "use <node>" first'; c.sub = 'interfaces'; c.subobj = null; return '';
+        case 'services': if (!cur) return 'Error: no device selected, run "use <node>" first'; if (!s.st.hosts || !s.st.hosts[cur]) return 'No services are configured on this device in this lab.'; c.sub = 'services'; return '';
+      }
+    }
+    return `Unknown command: ${t[0]}. Type help for the commands available in this mode.`;
+  },
+  list(s, mode) {
+    if (mode === 'device') return table(['Type', 'Hostname (key)', 'MAC', 'Category', 'Ip', 'Network', 'Status'], BCM.names(s, 'device').map(n => { const d = BCM.get(s, 'device', n); const bi = d.ifs.bootif || {}; return [d.type, n, d.mac, d.category || '', bi.ip || '', bi.network || '', `[${center(BCM.store(s, 'device')[n] ? d.status : 'DOWN', 8)}]`]; }));
+    if (mode === 'category') return table(['Name (key)', 'Software image', 'Nodes'], BCM.names(s, 'category').map(n => [n, BCM.get(s, 'category', n).softwareimage, Object.values(s.st.bcm.device).filter(d => d.category === n).length]));
+    if (mode === 'softwareimage') return table(['Name (key)', 'Path', 'Kernel version', 'Nodes'], BCM.names(s, 'softwareimage').map(n => { const i = BCM.get(s, 'softwareimage', n); return [n, i.path, i.kernel, Object.keys(s.st.bcm.device).filter(d => s.st.bcm.device[d].type === 'PhysicalNode' && BCM.imageOf(s, d) === n).length]; }));
+    return '';
+  },
+  show(s, mode, n) {
+    const o = BCM.get(s, mode, n);
+    if (mode === 'device') {
+      const img = o.softwareimage ? o.softwareimage : `${(s.st.bcm.category[o.category] || {}).softwareimage || ''} (from category)`;
+      return table(['Parameter', 'Value'], [['Category', o.category || ''], ['Hostname', n], ['IP', (o.ifs.bootif || {}).ip || ''], ['MAC', o.mac], ['Partition', 'base'], ['Power control', o.ifs.ipmi0 ? 'ipmi0' : 'none'], ['Provisioning interface', 'BOOTIF'], ['Rack', o.rack || ''], ['Software image', o.type === 'HeadNode' ? '' : img], ['Type', o.type], ['Interfaces', `<${Object.keys(o.ifs).length} in submode>`], ['Services', `<${Object.keys((s.st.hosts || {})[n]?.services || {}).length} in submode>`]]);
+    }
+    if (mode === 'category') return table(['Parameter', 'Value'], [['Name', n], ['Software image', o.softwareimage], ['Default gateway', '10.141.255.254'], ['Management network', 'internalnet'], ['Install mode', 'AUTO'], ['Revision', '']]);
+    if (mode === 'softwareimage') return table(['Parameter', 'Value'], [['Name', n], ['Path', o.path], ['Kernel version', o.kernel], ['Boot FSPart', '98784247810'], ['Packages (simulator)', o.packages.join(', ')]]);
+    return '';
+  },
+  prop(s, mode, n, p) {
+    const o = BCM.get(s, mode, n); const k = (p || '').toLowerCase();
+    if (mode === 'device') return { ip: (o.ifs.bootif || {}).ip, mac: o.mac, category: o.category, rack: o.rack || '', hostname: n, softwareimage: o.softwareimage || '', type: o.type }[k];
+    if (mode === 'category') return { name: n, softwareimage: o.softwareimage }[k];
+    if (mode === 'softwareimage') return { name: n, path: o.path, kernelversion: o.kernel }[k];
+  },
+  set(s, mode, n, p, v) {
+    if (!p) return 'Usage: set <property> <value>';
+    const k = p.toLowerCase();
+    if (mode === 'device') {
+      if (k === 'mac') { if (!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(v)) return `Error: invalid MAC address '${v}'`; BCM.edit(s, mode, n).mac = v.toUpperCase(); return ''; }
+      if (k === 'category') { if (!s.st.bcm.category[v]) return `Error: category '${v}' not found`; BCM.edit(s, mode, n).category = v; return ''; }
+      if (k === 'rack') { BCM.edit(s, mode, n).rack = v; return ''; }
+      if (k === 'ip') { if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(v || '')) return `Error: invalid IP address '${v || ''}'`; BCM.edit(s, mode, n).ifs.bootif.ip = v; return ''; }
+      if (k === 'softwareimage') { if (!s.st.bcm.softwareimage[v]) return `Error: software image '${v}' not found`; BCM.edit(s, mode, n).softwareimage = v; return ''; }
+      if (k === 'hostname') return 'Error: to create a node under a new name, clone an existing node';
+    }
+    if (mode === 'category' && k === 'softwareimage') { if (!s.st.bcm.softwareimage[v]) return `Error: software image '${v}' not found${BCM.get(s, 'softwareimage', v) ? ' (it exists but is not committed yet)' : ''}`; BCM.edit(s, mode, n).softwareimage = v; return ''; }
+    if (mode === 'softwareimage' && k === 'path') { BCM.edit(s, mode, n).path = v; return ''; }
+    return `Error: unknown or read-only property '${p}'`;
+  },
+  nextIp(s, net) {
+    const base = net === 'ipminet' ? '10.148.0.' : '10.141.0.';
+    const used = new Set();
+    BCM.names(s, 'device').forEach(n => Object.values(BCM.get(s, 'device', n).ifs).forEach(i => used.add(i.ip)));
+    for (let x = 1; x < 255; x++) if (!used.has(base + x)) return base + x;
+    return '0.0.0.0';
+  },
+  clone(s, mode, src, dst) {
+    const sn = BCM.resolve(s, mode, src), so = sn && BCM.get(s, mode, sn);
+    if (!so) return `Error: ${mode} '${src}' not found`;
+    if (BCM.get(s, mode, dst)) return `Error: ${mode} '${dst}' already exists`;
+    const o = deep(so); o.__new = true;
+    if (mode === 'device') {
+      if (so.type === 'HeadNode') return 'Error: the head node cannot be cloned';
+      Object.assign(o, { mac: '00:00:00:00:00:00', status: 'DOWN', power: 'off', info: '', hw: false, boot: 0, packages: [], pxeFailed: false, rebooted: false });
+      delete o.image;
+      s.drafts[mode + ':' + dst] = o;
+      for (const itf of Object.values(o.ifs)) itf.ip = BCM.nextIp(s, itf.network);
+      s.cmsh.obj = dst; s.cmsh.sub = null; s.cmsh.subobj = null;
+      return 'Warning: The Ethernet switch settings were not cloned, and have to be set manually';
+    } else {
+      if (mode === 'softwareimage') { o.path = '/cm/images/' + dst; o.clonedFrom = sn; }
+      s.drafts[mode + ':' + dst] = o;
+    }
+    s.cmsh.obj = dst; s.cmsh.sub = null; s.cmsh.subobj = null;
+    return '';
+  },
+  commit(s, mode, n) {
+    const k = mode + ':' + n, d = s.drafts[k];
+    if (!d) return '';
+    const st = BCM.store(s, mode);
+    if (d.__removed) { delete st[n]; delete s.drafts[k]; return ''; }
+    if (mode === 'device') {
+      const errs = [];
+      for (const [on, o] of Object.entries(st)) {
+        if (on === n) continue;
+        for (const itf of Object.values(d.ifs)) for (const [jn, j] of Object.entries(o.ifs)) if (itf.ip && itf.ip === j.ip) errs.push(`ip: ${itf.ip} is already assigned to ${on}:${jn === 'bootif' ? 'BOOTIF' : jn}`);
+        if (d.mac !== '00:00:00:00:00:00' && o.mac && o.mac.toUpperCase() === d.mac.toUpperCase()) errs.push(`mac: ${d.mac} is already assigned to ${on}`);
+      }
+      if (errs.length) return `Commit of ${n} failed:\n` + errs.map(e => '  ' + e).join('\n');
+    }
+    let notes = '';
+    if (mode === 'softwareimage' && d.__new) {
+      const src = st[d.clonedFrom];
+      notes = [`${ctime(s.t)} [notice] ${HEAD(s)}: Started to copy: ${src.path} -> ${d.path}`, `${ctime(s.t + 47000)} [notice] ${HEAD(s)}: Copied: ${src.path} -> ${d.path}`, `${ctime(s.t + 71000)} [notice] ${HEAD(s)}: Initial ramdisk for image ${n} was generated successfully`].join('\n');
+      s.t += 71000;
+    }
+    const o = deep(d); delete o.__new; st[n] = o; delete s.drafts[k];
+    return notes;
+  },
+  targets(s, a, cur) {
+    const out = []; let explicit = false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] === '-n' || a[i] === '--nodes') { explicit = true; out.push(...expandHosts(a[++i] || '')); }
+      else if (a[i] === '-c' || a[i] === '--category') { explicit = true; const cat = a[++i]; out.push(...Object.keys(s.st.bcm.device).filter(n => s.st.bcm.device[n].category === cat)); }
+      else if (!a[i].startsWith('-')) { explicit = true; out.push(...expandHosts(a[i])); }
+    }
+    if (out.length > MAX_HOSTS) throw tooMany();
+    if (explicit) return out;
+    return cur ? [cur] : null;
+  },
+  status(s, a, cur) {
+    const tg = BCM.targets(s, a, cur) || Object.keys(s.st.bcm.device).sort();
+    return tg.map(n => { const d = s.st.bcm.device[n]; if (!d) return `${n}: not found${BCM.get(s, 'device', n) ? ' (not committed yet)' : ''}`; return `${dots(n)}[${center(d.status, 8)}]${d.info ? ` (${d.info})` : ''}`; }).join('\n');
+  },
+  power(s, a, cur) {
+    const act = (a.find(x => ['on', 'off', 'reset', 'status', 'cycle'].includes(x.toLowerCase())) || '').toLowerCase();
+    if (!act) return 'Usage: power on|off|reset|status [-n nodes | -c category]';
+    const tg = BCM.targets(s, a.filter(x => x.toLowerCase() !== act), cur);
+    if (!tg || !tg.length) return 'Error: no devices specified (use -n <nodes>, -c <category> or select a node with use)';
+    const hw = s.st.bcm.hardware;
+    return tg.map(n => {
+      const d = s.st.bcm.device[n];
+      if (!d) return `Error: device ${n} not found${BCM.get(s, 'device', n) ? ' (it has uncommitted changes, commit first)' : ''}`;
+      if (d.type === 'HeadNode') return `${n}: power control of the head node is not allowed from cmsh in this lab`;
+      const bmc = d.ifs.ipmi0 ? d.ifs.ipmi0.ip : '';
+      const line = st => `${dots('ipmi0', 24)}[${center(st, 9)}] ${n}`;
+      if (act === 'status') return line(d.power === 'on' ? 'ON' : 'OFF');
+      if (!d.hw && hw && bmc !== hw.bmcIp) return `${line('FAILED')} (timeout: no BMC answering on ${bmc})`;
+      if (act === 'off') { d.power = 'off'; d.status = 'DOWN'; d.info = ''; return line('OFF'); }
+      if (act === 'on' && d.power === 'on') return line('ON');
+      if (d.status === 'UP') d.rebooted = true;
+      d.power = 'on'; d.status = 'BOOTING'; d.info = ''; d.boot = 0; d.pxeFailed = false;
+      return line(act === 'on' ? 'ON' : 'RESET');
+    }).join('\n');
+  },
+  imageupdate(s, a, cur) {
+    const wait = a.includes('-w') || a.includes('--wait');
+    const tg = BCM.targets(s, a.filter(x => x !== '-w' && x !== '--wait'), cur);
+    if (!tg || !tg.length) return 'Error: no nodes specified (use -n <nodes>, -c <category> or select a node with use)';
+    const L = [];
+    if (!wait) L.push('Performing dry run (use synclog command to review result, then pass -w to perform real update)...');
+    for (const n of tg) {
+      const d = s.st.bcm.device[n];
+      if (!d) { L.push(`Error: device ${n} not found`); continue; }
+      if (d.status !== 'UP') { L.push(`${n}: node is not UP, skipped`); continue; }
+      const img = s.st.bcm.softwareimage[BCM.imageOf(s, n)];
+      L.push(`${ctime(s.t)} [notice] ${HEAD(s)}: Provisioning started: sending ${HEAD(s)}:${img.path} to ${n}:/, mode UPDATE, dry run = ${wait ? 'no' : 'yes'}${wait ? '' : ', no data changes!'}`);
+      L.push(`${ctime(s.t + 38000)} [notice] ${HEAD(s)}: Provisioning completed: sent ${HEAD(s)}:${img.path} to ${n}:/, mode UPDATE, dry run = ${wait ? 'no' : 'yes'}${wait ? '' : ', no data changes!'}`);
+      if (wait) BCM.sync(s, n);
+    }
+    return L.join('\n');
+  },
+  newnodes(s) {
+    const nn = s.st.bcm.newnodes || [];
+    if (!nn.length) return 'No new nodes detected.';
+    return table(['MAC', 'First appeared', 'Detected on switch port'], nn.map(x => [x.mac, ctime(x.t), x.port]));
+  },
+  ifCmd(s, t) {
+    const c = s.cmsh, w = t[0].toLowerCase(), a = t.slice(1);
+    const node = BCM.get(s, 'device', c.obj);
+    const rif = nm => Object.keys(node.ifs).find(k => k.toLowerCase() === String(nm || '').toLowerCase());
+    switch (w) {
+      case 'list': return table(['Type', 'Network device name', 'IP', 'Network'], Object.entries(node.ifs).map(([k, v]) => [v.type, k === 'bootif' ? 'BOOTIF [prov]' : k, v.ip, v.network]));
+      case 'use': { const k = rif(a[0]); if (!k) return `Error: interface '${a[0] || ''}' not found`; c.subobj = k; return ''; }
+      case 'show': { const k = a[0] ? rif(a[0]) : c.subobj; if (!k) return 'Error: no interface selected'; const v = node.ifs[k]; return table(['Parameter', 'Value'], [['Network device name', k === 'bootif' ? 'BOOTIF' : k], ['Type', v.type], ['IP', v.ip], ['Network', v.network]]); }
+      case 'get': { if (!c.subobj) return 'Error: no interface selected'; return String(node.ifs[c.subobj][(a[0] || '').toLowerCase()] ?? `Error: unknown property '${a[0]}'`); }
+      case 'set': {
+        if (!c.subobj) return 'Error: no interface selected, run "use <interface>" first';
+        const p = (a[0] || '').toLowerCase(), v = a[1];
+        if (p === 'ip') { if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(v || '')) return `Error: invalid IP address '${v || ''}'`; BCM.edit(s, 'device', c.obj).ifs[c.subobj].ip = v; return ''; }
+        if (p === 'network') { if (!s.st.bcm.networks[v]) return `Error: network '${v}' not found`; BCM.edit(s, 'device', c.obj).ifs[c.subobj].network = v; return ''; }
+        return `Error: unknown property '${a[0] || ''}' for an interface`;
+      }
+      case 'commit': return BCM.commit(s, 'device', c.obj);
+      case 'add': case 'remove': return 'Adding or removing interfaces is not needed in this lab.';
+    }
+    return `Unknown command: ${t[0]}. Interfaces submode: list, use, show, get, set ip|network, commit, exit`;
+  },
+  svcCmd(s, t) {
+    const c = s.cmsh, w = t[0].toLowerCase(), a = t.slice(1), h = s.st.hosts[c.obj];
+    const label = v => v.active ? 'UP' : (v.failed ? 'FAILED' : 'STOPPED');
+    switch (w) {
+      case 'list': return table(['Service (key)', 'Monitored', 'Autostart'], Object.entries(h.services).map(([k, v]) => [k, 'yes', v.enabled ? 'yes' : 'no']));
+      case 'status': return Object.entries(h.services).filter(([k]) => !a[0] || k === a[0]).map(([k, v]) => `${dots(k, 22)}[${center(label(v), 8)}]`).join('\n');
+      case 'start': case 'restart': { const k = a[0]; if (!h.services[k]) return `Error: service '${k || ''}' not found`; const r = svcStart(s, c.obj, k); return r ? `Failed to ${w} ${k} on ${c.obj}: see journalctl -u ${k} on the node` : ''; }
+      case 'stop': { const k = a[0]; if (!h.services[k]) return `Error: service '${k || ''}' not found`; h.services[k].active = false; h.services[k].since = s.t; return ''; }
+    }
+    return `Unknown command: ${t[0]}. Services submode: list, status, start|stop|restart <service>, exit`;
+  }
+};
+function chrootCmd(s, t) {
+  const img = s.st.bcm.softwareimage[s.chroot], cmd = t[0];
+  if (cmd === 'exit' || cmd === 'logout') { s.chroot = null; return `Unmounting /proc, /sys and /dev from ${img.path}`; }
+  if (cmd === 'apt' || cmd === 'apt-get') return aptCmd(s, t, img.packages, `software image ${Object.keys(s.st.bcm.softwareimage).find(k => s.st.bcm.softwareimage[k] === img)}`);
+  if (cmd === 'dpkg') return dpkgCmd(s, t, img.packages);
+  if (cmd === 'clear') return { clear: true };
+  if (['ls', 'echo', 'pwd', 'help', 'history', 'date', 'export'].includes(cmd)) return COMMON[cmd](s, t);
+  return `${cmd}: not available inside the image chroot in this simulator (use apt / dpkg, then exit)`;
+}
+
+// ---------- Slurm ----------
+const SLURM = {
+  canSsh(s, h) { return s.st.hosts && s.st.hosts[h] ? true : null; },
+  up: (h, n) => !h.services[n] || h.services[n].active,
+  avail: nd => nd.state === 'idle' && !nd.drain && !nd.nores && !nd.job,
+  tick(s) {
+    const sl = s.st.slurm; if (!sl) return;
+    for (const [n, nd] of Object.entries(sl.nodes)) {
+      const h = s.st.hosts && s.st.hosts[n]; if (!h) continue;
+      if (SLURM.up(h, 'slurmd') && SLURM.up(h, 'munge')) { nd.nores = false; nd.pendingDown = false; }
+      else {
+        nd.nores = true;
+        if (nd.state !== 'down') { if (nd.pendingDown) { nd.state = 'down'; nd.reason = 'Not responding'; nd.ruser = 'slurm'; nd.rtime = iso(s.t); nd.pendingDown = false; } else nd.pendingDown = true; }
+      }
+    }
+    for (const j of sl.jobs.filter(x => x.st === 'PD').sort((a, b) => b.prio - a.prio)) {
+      const r = SLURM.evalJob(s, j);
+      if (r.nodes) { j.st = 'R'; j.reason = 'None'; j.alloc = r.nodes; j.start = s.t; r.nodes.forEach(n => { sl.nodes[n].job = j.id; }); }
+      else j.reason = r.reason;
+    }
+  },
+  evalJob(s, j) {
+    const sl = s.st.slurm, p = sl.partitions.find(x => x.name === j.part);
+    if (!p) return { reason: 'BadConstraints' };
+    if (p.state !== 'UP') return { reason: 'PartitionDown' };
+    const q = sl.qos[j.qos];
+    if (q && q.maxGpuPU != null) {
+      const used = sl.jobs.filter(x => x.st === 'R' && x.user === j.user && x.qos === j.qos).reduce((acc, x) => acc + x.N * x.gpus, 0);
+      if (used + j.N * j.gpus > q.maxGpuPU) return { reason: 'QOSMaxGRESPerUser' };
+    }
+    if (j.req) {
+      const bad = j.req.filter(n => { const nd = sl.nodes[n]; return nd.drain || nd.state === 'down' || nd.nores; });
+      if (bad.length) return { reason: `ReqNodeNotAvail, UnavailableNodes:${hostlist(bad)}` };
+    }
+    const free = (j.req || p.nodes).filter(n => SLURM.avail(sl.nodes[n]));
+    if (free.length >= j.N) return { nodes: free.slice(0, j.N) };
+    return { reason: 'Resources' };
+  },
+  dstate(nd) { let b; if (nd.state === 'down') b = 'down'; else if (nd.drain) b = nd.job ? 'drng' : 'drain'; else b = nd.job ? 'alloc' : 'idle'; return b + (nd.nores ? '*' : ''); },
+  lstate(nd) { let b = nd.state === 'down' ? 'DOWN' : (nd.job ? 'ALLOCATED' : 'IDLE'); if (nd.drain) b += '+DRAIN'; if (nd.nores) b += '+NOT_RESPONDING'; return b; },
+  etime(s, j) { if (j.st !== 'R') return '0:00'; const x = Math.floor((s.t - T(j.start)) / 1000), h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), sec = String(x % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`; },
+  cmds: {
+    sinfo(s, t) {
+      const sl = s.st.slurm, a = t.slice(1);
+      let parts = sl.partitions;
+      const pi = a.findIndex(x => x === '-p' || x === '--partition'); if (pi >= 0) parts = parts.filter(p => p.name === a[pi + 1]);
+      if (a.includes('-R') || a.includes('--list-reasons')) {
+        const g = {};
+        Object.entries(sl.nodes).filter(([, nd]) => nd.reason && (nd.drain || nd.state === 'down')).forEach(([n, nd]) => { const k = [nd.reason, nd.ruser, nd.rtime].join('|'); (g[k] = g[k] || []).push(n); });
+        return [`${pad('REASON', 20)} ${pad('USER', 9)} ${pad('TIMESTAMP', 19)} NODELIST`, ...Object.entries(g).map(([k, ns]) => { const [r, u, tm] = k.split('|'); return `${pad(r.slice(0, 20), 20)} ${pad(u, 9)} ${pad(tm, 19)} ${hostlist(ns)}`; })].join('\n');
+      }
+      if (a.includes('-N') || a.includes('--Node')) {
+        const rows = []; parts.forEach(p => p.nodes.forEach(n => rows.push(`${pad(n, 10)} ${lpad(1, 5)} ${pad(p.name + (p.def ? '*' : ''), 9)} ${SLURM.dstate(sl.nodes[n])}`)));
+        return ['NODELIST   NODES PARTITION STATE', ...rows].join('\n');
+      }
+      const L = ['PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST'];
+      for (const p of parts) {
+        const g = {}; p.nodes.forEach(n => { const st = SLURM.dstate(sl.nodes[n]); (g[st] = g[st] || []).push(n); });
+        for (const [st, ns] of Object.entries(g)) L.push(`${pad(p.name + (p.def ? '*' : ''), 9)} ${lpad(p.state.toLowerCase(), 5)} ${lpad('infinite', 10)} ${lpad(ns.length, 6)} ${lpad(st, 6)} ${hostlist(ns)}`);
+      }
+      return L.join('\n');
+    },
+    squeue(s, t) {
+      const sl = s.st.slurm, a = t.slice(1), f = {};
+      for (let i = 0; i < a.length; i++) { if (['-u', '--user', '-j', '--jobs', '-p', '--partition'].includes(a[i])) f[a[i].replace(/^-+/, '')[0]] = a[++i]; else if (/^--(user|jobs|partition)=/.test(a[i])) { const [k, v] = a[i].slice(2).split('='); f[k[0]] = v; } }
+      const jobs = sl.jobs.filter(j => (j.st === 'PD' || j.st === 'R') && (!f.u || j.user === f.u) && (!f.j || String(j.id) === f.j) && (!f.p || j.part === f.p));
+      const L = [`${lpad('JOBID', 18)} ${lpad('PARTITION', 9)} ${lpad('NAME', 8)} ${lpad('USER', 8)} ${lpad('ST', 2)} ${lpad('TIME', 10)} ${lpad('NODES', 6)} NODELIST(REASON)`];
+      jobs.forEach(j => L.push(`${lpad(j.id, 18)} ${lpad(j.part, 9)} ${lpad(j.name.slice(0, 8), 8)} ${lpad(j.user, 8)} ${lpad(j.st, 2)} ${lpad(SLURM.etime(s, j), 10)} ${lpad(j.N, 6)} ${j.st === 'R' ? hostlist(j.alloc) : '(' + j.reason + ')'}`));
+      return L.join('\n');
+    },
+    scontrol(s, t) {
+      const sl = s.st.slurm, a = t.slice(1), verb = (a[0] || '').toLowerCase();
+      if (verb === 'show') {
+        const what = (a[1] || '').toLowerCase(), id = a[2];
+        if (what.startsWith('node')) return (id ? expandHosts(id) : Object.keys(sl.nodes)).map(n => sl.nodes[n] ? SLURM.showNode(s, n) : `Node ${n} not found`).join('\n\n');
+        if (what.startsWith('partition')) return sl.partitions.filter(p => !id || p.name === id).map(p => SLURM.showPart(s, p)).join('\n\n') || `Partition ${id} not found`;
+        if (what.startsWith('job')) { const js = sl.jobs.filter(j => !id || String(j.id) === id); return js.length ? js.map(j => SLURM.showJob(s, j)).join('\n\n') : `slurm_load_jobs error: Invalid job id specified`; }
+        if (what === 'config') return SLURM.config(s);
+        return `invalid entity: ${a[1] || ''} for keyword: show`;
+      }
+      if (verb === 'update') {
+        const kv = {};
+        a.slice(1).forEach(x => { const i = x.indexOf('='); if (i > 0) kv[x.slice(0, i).toLowerCase()] = x.slice(i + 1); });
+        if (kv.nodename) return SLURM.updNode(s, kv);
+        if (kv.partitionname) return SLURM.updPart(s, kv);
+        if (kv.jobid) return SLURM.updJob(s, kv);
+        return 'scontrol: error: update requires NodeName=, PartitionName= or JobId=';
+      }
+      if (verb === 'ping') return `Slurmctld(primary) at ${HEAD(s)} is UP`;
+      if (verb === 'reconfigure' || verb === 'reconfig') return '';
+      return `invalid keyword: ${a[0] || ''} (this simulator supports: show node|partition|job|config, update, ping)`;
+    },
+    sacctmgr(s, t) {
+      const sl = s.st.slurm;
+      const imm = t.some(x => x === '-i' || x === '--immediate');
+      const a = t.slice(1).filter(x => !/^-/.test(x));
+      const verb = (a[0] || '').toLowerCase(), ent = (a[1] || '').toLowerCase();
+      if (verb === 'show' || verb === 'list') {
+        let fmt = null; const filt = {};
+        a.slice(2).forEach(x => { const i = x.indexOf('='); if (i < 0) return; const k = x.slice(0, i).toLowerCase(), v = x.slice(i + 1); if (k === 'format') fmt = v.split(',').map(f => f.toLowerCase().replace(/%-?\d+$/, '')); else filt[k] = v; });
+        if (ent === 'qos') {
+          const COLS = { name: ['Name', (n) => n], priority: ['Priority', (n, q) => q.prio], maxtrespu: ['MaxTRESPU', (n, q) => q.maxGpuPU != null ? `gres/gpu=${q.maxGpuPU}` : ''], maxtresperuser: ['MaxTRESPU', (n, q) => q.maxGpuPU != null ? `gres/gpu=${q.maxGpuPU}` : ''], maxwall: ['MaxWall', (n, q) => q.maxwall || ''], maxtres: ['MaxTRES', () => ''], grptres: ['GrpTRES', () => ''], preempt: ['Preempt', () => ''] };
+          const f = (fmt || ['name', 'priority', 'maxtrespu', 'maxwall']).filter(x => COLS[x]);
+          const names = Object.keys(sl.qos).filter(n => !filt.name || n === filt.name);
+          return satable(f.map(x => COLS[x][0]), names.map(n => f.map(x => COLS[x][1](n, sl.qos[n]))));
+        }
+        if (ent.startsWith('assoc') || ent === 'user' || ent === 'users') {
+          const COLS = { cluster: ['Cluster', () => 'slurm'], account: ['Account', x => x.account], user: ['User', x => x.user], partition: ['Partition', () => ''], share: ['Share', () => '1'], qos: ['QOS', x => x.qos.join(',')], defaultqos: ['Def QOS', x => x.def], maxjobs: ['MaxJobs', () => ''] };
+          const f = (fmt || ['cluster', 'account', 'user', 'partition', 'share', 'qos', 'defaultqos']).filter(x => COLS[x]);
+          const rows = sl.assoc.filter(x => (!filt.user && !filt.users) || x.user === (filt.user || filt.users)).filter(x => !filt.account || x.account === filt.account);
+          return satable(f.map(x => COLS[x][0]), rows.map(r => f.map(x => COLS[x][1](r))));
+        }
+        return `sacctmgr: error: this simulator supports: show qos, show assoc`;
+      }
+      if (verb === 'modify' || verb === 'update') {
+        if (ent !== 'qos') return 'sacctmgr: error: this simulator only supports modify qos';
+        const si = a.findIndex(x => x.toLowerCase() === 'set');
+        if (si < 0) return " Nothing to modify (use: sacctmgr modify qos <name> set MaxTRESPerUser=gres/gpu=N)";
+        let name = null;
+        a.slice(2, si).forEach(x => { if (x.toLowerCase() === 'where') return; const i = x.indexOf('='); if (i > 0 && x.slice(0, i).toLowerCase() === 'name') name = x.slice(i + 1); else if (i < 0) name = x; });
+        const q = sl.qos[name];
+        if (!q) return ' Nothing modified';
+        const ch = {};
+        a.slice(si + 1).forEach(x => { const i = x.indexOf('='); if (i < 0) return; const k = x.slice(0, i).toLowerCase(), v = x.slice(i + 1); if (k === 'maxtresperuser' || k === 'maxtrespu') { const m = v.match(/gres\/gpu=(-?\d+)/); if (m) ch.maxGpuPU = +m[1] < 0 ? null : +m[1]; } if (k === 'priority') ch.prio = +v; });
+        if (!Object.keys(ch).length) return ' Nothing modified';
+        const apply = () => { Object.assign(q, ch); return ''; };
+        const msg = ` Modified qos...\n  ${name}`;
+        if (imm) { apply(); return msg; }
+        const yes = ans => /^y(es)?$/i.test(ans);
+        s.pending = { prompt: '(N/y): ', accepts: yes, handle: ans => yes(ans) ? apply() : ' Changes Discarded' };
+        return msg + '\nWould you like to commit changes? (You have 30 seconds to decide)';
+      }
+      return 'sacctmgr: error: this simulator supports: show|list qos|assoc, modify qos';
+    },
+    scancel(s, t) {
+      const sl = s.st.slurm; const out = [];
+      t.slice(1).filter(x => !x.startsWith('-')).forEach(id => {
+        const j = sl.jobs.find(x => String(x.id) === id && (x.st === 'PD' || x.st === 'R'));
+        if (!j) { out.push(`scancel: error: Kill job error on job id ${id}: Invalid job id specified`); return; }
+        if (j.st === 'R') j.alloc.forEach(n => { sl.nodes[n].job = null; });
+        j.st = 'CA';
+      });
+      return out.join('\n');
+    },
+    sbatch: () => 'sbatch: job submission is disabled in this lab. Fix the jobs already in the queue.',
+    srun: () => 'srun: job submission is disabled in this lab. Fix the jobs already in the queue.'
+  },
+  showNode(s, n) {
+    const nd = s.st.slurm.nodes[n], p = s.st.slurm.partitions.filter(x => x.nodes.includes(n)).map(x => x.name).join(',');
+    return [`NodeName=${n} Arch=x86_64 CoresPerSocket=56`, `   CPUAlloc=${nd.job ? 224 : 0} CPUEfctv=224 CPUTot=224 CPULoad=${nd.job ? '187.40' : '0.03'}`, '   AvailableFeatures=(null)', '   ActiveFeatures=(null)', '   Gres=gpu:h100:8(S:0-1)',
+      `   NodeAddr=${n} NodeHostName=${n} Version=24.05.4`, '   OS=Linux 6.8.0-1017-nvidia #19-Ubuntu SMP', `   RealMemory=2063000 AllocMem=0 FreeMem=2011234 Sockets=2 Boards=1`,
+      `   State=${SLURM.lstate(nd)} ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A`, `   Partitions=${p}`, `   BootTime=${nd.boot || '2026-10-01T06:12:40'} SlurmdStartTime=${nd.nores ? 'None' : (nd.boot || '2026-10-01T06:13:31')}`,
+      `   CfgTRES=cpu=224,mem=2063000M,billing=224,gres/gpu=8`, `   AllocTRES=${nd.job ? 'cpu=224,gres/gpu=8' : ''}`, ...(nd.reason ? [`   Reason=${nd.reason} [${nd.ruser}@${nd.rtime}]`] : [])].join('\n');
+  },
+  showPart(s, p) {
+    return [`PartitionName=${p.name}`, '   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL', `   AllocNodes=ALL Default=${p.def ? 'YES' : 'NO'} QoS=N/A`, '   DefaultTime=NONE DisableRootJobs=NO ExclusiveUser=NO GraceTime=0 Hidden=NO',
+      '   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED', `   Nodes=${hostlist(p.nodes)}`, '   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE',
+      '   OverTimeLimit=NONE PreemptMode=OFF', `   State=${p.state} TotalCPUs=${224 * p.nodes.length} TotalNodes=${p.nodes.length} SelectTypeParameters=NONE`, '   JobDefaults=(null)', '   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED'].join('\n');
+  },
+  showJob(s, j) {
+    const st = { PD: 'PENDING', R: 'RUNNING', CA: 'CANCELLED' }[j.st];
+    return [`JobId=${j.id} JobName=${j.name}`, `   UserId=${j.user}(${j.uid}) GroupId=${j.account}(2001) MCS_label=N/A`, `   Priority=${j.prio} Nice=0 Account=${j.account} QOS=${j.qos}`,
+      `   JobState=${st} Reason=${j.st === 'PD' ? j.reason : 'None'} Dependency=(null)`, '   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0',
+      `   RunTime=${j.st === 'R' ? SLURM.etime(s, j) : '00:00:00'} TimeLimit=UNLIMITED TimeMin=N/A`, `   SubmitTime=${j.submit} EligibleTime=${j.submit}`,
+      ...(j.st === 'R' ? [`   StartTime=${iso(j.start)} EndTime=Unknown Deadline=N/A`] : []),
+      `   Partition=${j.part} AllocNode:Sid=${HEAD(s)}:21877`, `   ReqNodeList=${j.req ? hostlist(j.req) : '(null)'} ExcNodeList=(null)`, `   NodeList=${j.st === 'R' ? hostlist(j.alloc) : ''}`,
+      `   NumNodes=${j.N} NumCPUs=${j.N} NumTasks=${j.N} CPUs/Task=1 ReqB:S:C:T=0:0:*:*`, `   ReqTRES=cpu=${j.N},mem=0,node=${j.N},billing=${j.N},gres/gpu=${j.N * j.gpus}`,
+      `   Command=/home/${j.user}/jobs/${j.name}.sbatch`, `   WorkDir=/home/${j.user}/jobs`, `   TresPerNode=gres/gpu:${j.gpus}`].join('\n');
+  },
+  config(s) {
+    return [`Configuration data as of ${iso(s.t)}`, 'ClusterName             = slurm', `SlurmctldHost[0]        = ${HEAD(s)}`, 'AuthType                = auth/munge', 'GresTypes               = gpu', 'ReturnToService         = 0',
+      'SelectType              = select/cons_tres', 'SlurmdTimeout           = 300 sec', 'SLURM_VERSION           = 24.05.4', 'AccountingStorageEnforce = associations,limits,qos', 'PriorityType            = priority/multifactor'].join('\n');
+  },
+  updNode(s, kv) {
+    const st = (kv.state || '').toLowerCase(), out = [];
+    for (const n of expandHosts(kv.nodename)) {
+      const nd = s.st.slurm.nodes[n];
+      if (!nd) { out.push('slurm_update error: Invalid node name specified'); continue; }
+      if (st === 'resume' || st === 'idle') {
+        if (!nd.drain && nd.state !== 'down') { if (st === 'resume') out.push('slurm_update error: Invalid node state specified'); continue; }
+        nd.drain = false; if (nd.state === 'down') nd.state = 'idle'; nd.reason = ''; nd.pendingDown = false;
+      } else if (st === 'undrain') { nd.drain = false; if (nd.state !== 'down') nd.reason = ''; }
+      else if (st === 'drain' || st === 'down') {
+        if (!kv.reason) { out.push('You must specify a reason when DOWNING or DRAINING a node. Request denied'); continue; }
+        if (st === 'drain') nd.drain = true; else { nd.state = 'down'; if (nd.job) { const j = s.st.slurm.jobs.find(x => x.id === nd.job); if (j) { j.st = 'PD'; j.alloc.forEach(x => { s.st.slurm.nodes[x].job = null; }); } } }
+        nd.reason = kv.reason; nd.ruser = 'root'; nd.rtime = iso(s.t);
+      } else if (!st) out.push('scontrol: error: no State= specified');
+      else out.push('slurm_update error: Invalid node state specified');
+    }
+    return out.join('\n');
+  },
+  updPart(s, kv) {
+    const p = s.st.slurm.partitions.find(x => x.name === kv.partitionname);
+    if (!p) return 'slurm_update error: Invalid partition name specified';
+    if (!kv.state) return 'scontrol: error: no State= specified';
+    const v = kv.state.toUpperCase();
+    if (!['UP', 'DOWN', 'DRAIN', 'INACTIVE'].includes(v)) return 'scontrol: error: Invalid input: State=' + kv.state;
+    p.state = v; return '';
+  },
+  updJob(s, kv) {
+    const sl = s.st.slurm, j = sl.jobs.find(x => String(x.id) === kv.jobid);
+    if (!j || j.st === 'CA') return 'slurm_update error: Invalid job id specified';
+    if (j.st !== 'PD') return 'slurm_update error: Job is no longer pending execution';
+    if (kv.qos) {
+      const as = sl.assoc.find(x => x.user === j.user);
+      if (!sl.qos[kv.qos] || !as || !as.qos.includes(kv.qos)) return 'slurm_update error: Invalid qos specification';
+      j.qos = kv.qos;
+    }
+    if (kv.partition) { if (!sl.partitions.find(x => x.name === kv.partition)) return 'slurm_update error: Invalid partition name specified'; j.part = kv.partition; }
+    return '';
+  }
+};
+
+// ---------- Kubernetes ----------
+const VECTOR_OK = '[Vector addition of 50000 elements]\nCopy input data from the host memory to the CUDA device\nCUDA kernel launch with 196 blocks of 256 threads\nCopy output data from the CUDA device to the host memory\nTest PASSED\nDone';
+const VECTOR_FAIL = '[Vector addition of 50000 elements]\nFailed to allocate device vector A (error code CUDA driver version is insufficient for CUDA runtime version)!';
+const TRITON_LOG = 'I1007 10:31:02.412021 1 server.cc:674]\n+---------+---------+--------+\n| Model   | Version | Status |\n+---------+---------+--------+\n| llm-ens | 1       | READY  |\n+---------+---------+--------+\nI1007 10:31:02.519873 1 grpc_server.cc:2463] "Started GRPCInferenceService at 0.0.0.0:8001"\nI1007 10:31:02.520114 1 http_server.cc:4692] "Started HTTPService at 0.0.0.0:8000"\nI1007 10:31:02.563440 1 http_server.cc:362] "Started Metrics Service at 0.0.0.0:8002"';
+const RES = { po: 'pods', pod: 'pods', pods: 'pods', no: 'nodes', node: 'nodes', nodes: 'nodes', deploy: 'deployments', deployment: 'deployments', deployments: 'deployments', 'deployment.apps': 'deployments', secret: 'secrets', secrets: 'secrets', ns: 'namespaces', namespace: 'namespaces', namespaces: 'namespaces', ev: 'events', event: 'events', events: 'events', sa: 'serviceaccounts', serviceaccount: 'serviceaccounts', serviceaccounts: 'serviceaccounts', ds: 'daemonsets', daemonset: 'daemonsets', daemonsets: 'daemonsets', all: 'all' };
+function kparse(a) {
+  const VAL = new Set(['n', 'namespace', 'o', 'output', 'f', 'filename', 'p', 'patch', 'type', 'image', 'restart', 'overrides', 'docker-server', 'docker-username', 'docker-password', 'docker-email', 'l', 'selector', 'c', 'container', 'tail', 'replicas', 'timeout', 'from-literal']);
+  const pos = [], f = {};
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    if (x.startsWith('--')) { const eq = x.indexOf('='); if (eq > 0) { f[x.slice(2, eq)] = x.slice(eq + 1); continue; } const k = x.slice(2); if (VAL.has(k) && i + 1 < a.length) f[k] = a[++i]; else f[k] = true; continue; }
+    if (x.startsWith('-') && x.length > 1) {
+      let k = x.slice(1);
+      if (k.includes('=')) { const [kk, ...vv] = k.split('='); f[kk] = vv.join('='); continue; }
+      if (VAL.has(k[0]) && k.length > 1 && !VAL.has(k)) { f[k[0]] = k.slice(1); continue; }
+      if (VAL.has(k) && i + 1 < a.length) f[k] = a[++i]; else for (const ch of k) f[ch] = true;
+      continue;
+    }
+    pos.push(x);
+  }
+  return { pos, f, ns: f.n || f.namespace, all: !!(f.A || f['all-namespaces']), out: f.o || f.output };
+}
+const K8S = {
+  canSsh(s, h) { return s.st.k8s && s.st.k8s.nodes.some(n => n.name === h) ? true : null; },
+  hash(str) { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } const al = 'bcdfghjklmnpqrstvwxz2456789'; let o = ''; for (let i = 0; i < 9; i++) { o += al[h % al.length]; h = Math.floor(h / al.length) || (h ^ 0x9e3779b9) >>> 0; } return o; },
+  suffix(s) { const al = 'bcdfghjklmnpqrstvwxz2456789'; let x = (s.counter * 7919 + 104729) >>> 0, o = ''; for (let i = 0; i < 5; i++) { o += al[x % al.length]; x = Math.floor(x / al.length) + 31 * (i + 1); } return o; },
+  init(s) {
+    const k = s.st.k8s; if (!k) return;
+    for (const d of k.deployments) {
+      const h = K8S.hash(JSON.stringify(d.manifest.spec.template));
+      k.pods.filter(p => p.owner === d.name && p.ns === d.ns && p.hash === '@').forEach(p => { p.hash = h; p.name = `${d.name}-${h}-${p.name}`; p.manifest.metadata.name = p.name; });
+    }
+  },
+  ns(s, P) { return P.ns || s.st.k8s.ctxNs || 'default'; },
+  nsExists: (s, n) => s.st.k8s.namespaces.some(x => x.name === n),
+  gpuOf(m) { return ((m.spec && m.spec.containers) || []).reduce((acc, c) => acc + (+(((c.resources || {}).limits || {})['nvidia.com/gpu']) || 0), 0); },
+  gpuFree(s, n) { return (n.gpu || 0) - s.st.k8s.pods.filter(p => p.node === n.name && !['Completed', 'Error'].includes(p.phase)).reduce((acc, p) => acc + (p.gpu || 0), 0); },
+  ev(s, p, type, reason, msg, from, dedupe) {
+    const e = dedupe && p.events.find(x => x.reason === reason && x.msg === msg);
+    if (e) { e.count++; e.t = s.t; return; }
+    p.events.push({ type, reason, msg, from, t: s.t, first: s.t, count: 1 });
+  },
+  newPod(s, ns, m, owner) {
+    const sa = (s.st.k8s.sa[ns] || []);
+    m = deep(m); m.metadata = m.metadata || {}; m.metadata.namespace = ns; m.spec = m.spec || {};
+    const ps = (m.spec.imagePullSecrets || []).map(x => x.name);
+    sa.forEach(n => { if (!ps.includes(n)) { ps.push(n); m.spec.imagePullSecrets = (m.spec.imagePullSecrets || []).concat([{ name: n }]); } });
+    return { name: m.metadata.name, ns, manifest: m, node: null, phase: 'Pending', t0: s.t, restarts: 0, events: [], owner: owner || null, pullSecrets: ps, gpu: K8S.gpuOf(m) };
+  },
+  tick(s) {
+    const k = s.st.k8s; if (!k) return;
+    for (const d of k.deployments) K8S.reconcile(s, d);
+    for (const p of k.pods) K8S.step(s, p);
+  },
+  reconcile(s, d) {
+    const k = s.st.k8s, tpl = d.manifest.spec.template, h = K8S.hash(JSON.stringify(tpl));
+    k.pods.forEach(p => { if (p.owner === d.name && p.ns === d.ns && p.hash !== h) p.deleted = true; });
+    k.pods = k.pods.filter(p => !p.deleted);
+    const live = k.pods.filter(p => p.owner === d.name && p.ns === d.ns);
+    for (let i = live.length; i < (d.manifest.spec.replicas ?? 1); i++) {
+      const name = `${d.name}-${h}-${K8S.suffix(s)}`; s.counter++;
+      const p = K8S.newPod(s, d.ns, { apiVersion: 'v1', kind: 'Pod', metadata: { name, labels: deep((tpl.metadata || {}).labels || {}) }, spec: deep(tpl.spec) }, d.name);
+      p.hash = h; k.pods.push(p);
+    }
+  },
+  imgInfo: (s, img) => (s.lab.images || {})[img],
+  schedule(s, p) {
+    const k = s.st.k8s, tol = p.manifest.spec.tolerations || [], reasons = {}; let cand = null;
+    const order = p.gpu > 0 ? k.nodes : k.nodes.slice().sort((a, b) => (a.gpu || 0) - (b.gpu || 0));
+    for (const n of order) {
+      let why = null;
+      if (n.unsched) why = 'node(s) were unschedulable';
+      else {
+        const bad = (n.taints || []).find(tt => !tol.some(o => o.operator === 'Exists' ? (!o.key || o.key === tt.key) : (o.key === tt.key && String(o.value ?? '') === String(tt.value ?? ''))));
+        if (bad) why = `node(s) had untolerated taint {${bad.key}: ${bad.value || ''}}`;
+      }
+      if (!why && p.gpu > K8S.gpuFree(s, n)) why = 'Insufficient nvidia.com/gpu';
+      if (!why) { if (!cand) cand = n; } else reasons[why] = (reasons[why] || 0) + 1;
+    }
+    if (cand) return { node: cand.name };
+    const N = k.nodes.length, ins = reasons['Insufficient nvidia.com/gpu'] || 0;
+    const pre = [ins ? `${ins} No preemption victims found for incoming pod` : '', N - ins ? `${N - ins} Preemption is not helpful for scheduling` : ''].filter(Boolean).join(', ');
+    return { msg: `0/${N} nodes are available: ${Object.entries(reasons).map(([r, c]) => `${c} ${r}`).sort().join(', ')}. preemption: 0/${N} nodes are available: ${pre}.` };
+  },
+  validCred(s, sec) { const srv = String(sec.server || '').replace(/^https?:\/\//, '').replace(/\/.*$/, ''); return srv === 'nvcr.io' && sec.user === '$oauthtoken' && sec.pass === s.lab.ngcKey; },
+  pull(s, p, img) {
+    const info = K8S.imgInfo(s, img), k = s.st.k8s;
+    if (!info) return { ok: false, err: `rpc error: code = NotFound desc = failed to pull and unpack image "${img}": failed to resolve reference "${img}": ${img}: not found` };
+    if (!info.private) return { ok: true, size: info.size };
+    const found = p.pullSecrets.map(n => k.secrets.find(x => x.ns === p.ns && x.name === n)).filter(Boolean);
+    const missing = p.pullSecrets.filter(n => !k.secrets.some(x => x.ns === p.ns && x.name === n));
+    if (found.some(sec => K8S.validCred(s, sec))) return { ok: true, size: info.size };
+    const repo = img.replace(/^nvcr\.io\//, '').replace(/:[^/]*$/, '');
+    return { ok: false, secretWarn: missing.length ? `Unable to retrieve some image pull secrets (${missing.join(', ')}); attempting to pull the image may not succeed.` : null,
+      err: found.length ? `failed to pull and unpack image "${img}": failed to resolve reference "${img}": failed to authorize: failed to fetch oauth token: unexpected status from GET request to https://nvcr.io/proxy_auth?scope=repository%3A${encodeURIComponent(repo)}%3Apull&service=registry: 401 Unauthorized`
+        : `failed to pull and unpack image "${img}": failed to resolve reference "${img}": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed` };
+  },
+  step(s, p) {
+    const k = s.st.k8s, c0 = (p.manifest.spec.containers || [])[0];
+    if (!c0) return;
+    const img = c0.image;
+    if (p.phase === 'Pending' && !p.node) {
+      const r = K8S.schedule(s, p);
+      if (r.node) { p.node = r.node; p.phase = 'ContainerCreating'; K8S.ev(s, p, 'Normal', 'Scheduled', `Successfully assigned ${p.ns}/${p.name} to ${r.node}`, 'default-scheduler'); }
+      else K8S.ev(s, p, 'Warning', 'FailedScheduling', r.msg, 'default-scheduler', true);
+      return;
+    }
+    if (['ContainerCreating', 'ErrImagePull', 'ImagePullBackOff'].includes(p.phase)) {
+      const r = K8S.pull(s, p, img);
+      if (r.ok) {
+        K8S.ev(s, p, 'Normal', 'Pulling', `Pulling image "${img}"`, 'kubelet', true);
+        K8S.ev(s, p, 'Normal', 'Pulled', `Successfully pulled image "${img}" in 38.214s (38.214s including waiting). Image size: ${r.size} bytes.`, 'kubelet');
+        K8S.ev(s, p, 'Normal', 'Created', `Created container ${c0.name}`, 'kubelet');
+        K8S.ev(s, p, 'Normal', 'Started', `Started container ${c0.name}`, 'kubelet');
+        p.phase = 'Running'; p.started = s.t;
+      } else {
+        if (r.secretWarn) K8S.ev(s, p, 'Warning', 'FailedToRetrieveImagePullSecret', r.secretWarn, 'kubelet', true);
+        K8S.ev(s, p, 'Normal', 'Pulling', `Pulling image "${img}"`, 'kubelet', true);
+        K8S.ev(s, p, 'Warning', 'Failed', `Failed to pull image "${img}": ${r.err}`, 'kubelet', true);
+        K8S.ev(s, p, 'Warning', 'Failed', 'Error: ErrImagePull', 'kubelet', true);
+        if (p.phase !== 'ContainerCreating') { K8S.ev(s, p, 'Normal', 'BackOff', `Back-off pulling image "${img}"`, 'kubelet', true); K8S.ev(s, p, 'Warning', 'Failed', 'Error: ImagePullBackOff', 'kubelet', true); }
+        p.phase = p.phase === 'ErrImagePull' ? 'ImagePullBackOff' : 'ErrImagePull';
+      }
+      return;
+    }
+    if (p.phase === 'Running') {
+      const info = K8S.imgInfo(s, img) || {};
+      if (info.oneshot) {
+        const node = k.nodes.find(n => n.name === p.node);
+        const ok = p.gpu > 0 && node && node.gpu > 0;
+        p.ranOk = ok; p.logs = ok ? VECTOR_OK : VECTOR_FAIL;
+        const rp = p.manifest.spec.restartPolicy || 'Always';
+        if (ok) p.phase = 'Completed';
+        else { p.phase = rp === 'Never' ? 'Error' : 'CrashLoopBackOff'; if (rp !== 'Never') { p.restarts++; K8S.ev(s, p, 'Warning', 'BackOff', `Back-off restarting failed container ${c0.name} in pod ${p.name}_${p.ns}`, 'kubelet', true); } }
+      } else if (!p.logs) p.logs = info.logs || '';
+    }
+  },
+  cmds: { kubectl(s, t) { if (s.host !== HEAD(s)) return 'kubectl: command not found (run it from the head node)'; return K8S.kubectl(s, t.slice(1)); } },
+  kubectl(s, a) {
+    const P = kparse(a), ns = K8S.ns(s, P), [verb, ...rest] = P.pos;
+    switch (verb) {
+      case 'get': return K8S.get(s, P, rest, ns);
+      case 'describe': return K8S.describe(s, P, rest, ns);
+      case 'create': return K8S.create(s, P, rest, ns);
+      case 'apply': return K8S.applyFile(s, P, ns, 'apply');
+      case 'delete': return K8S.del(s, P, rest, ns);
+      case 'logs': return K8S.logs(s, P, rest, ns);
+      case 'cordon': case 'uncordon': return K8S.cordon(s, verb, rest[0]);
+      case 'patch': return K8S.patch(s, P, rest, ns);
+      case 'edit': return K8S.edit(s, P, rest, ns);
+      case 'rollout': return K8S.rollout(s, P, rest, ns);
+      case 'run': return K8S.run(s, P, rest, ns);
+      case 'config':
+        if (rest[0] === 'set-context' && P.f.namespace) { if (!K8S.nsExists(s, P.f.namespace)) { /* kubectl does not validate */ } s.st.k8s.ctxNs = P.f.namespace; return 'Context "kubernetes-admin@kubernetes" modified.'; }
+        if (rest[0] === 'current-context') return 'kubernetes-admin@kubernetes';
+        return 'This simulator supports: kubectl config set-context --current --namespace=<ns>, kubectl config current-context';
+      case 'version': return 'Client Version: v1.31.4\nKustomize Version: v5.4.2\nServer Version: v1.31.4';
+      case 'drain': case 'taint': case 'exec': case 'scale': case 'label': case 'annotate': case 'top':
+        return `kubectl ${verb} is not simulated in this lab. It is not needed to solve it.`;
+      case undefined: return 'kubectl controls the Kubernetes cluster manager.\nSupported here: get, describe, create, apply, delete, logs, cordon, uncordon, patch, edit, rollout, run, config';
+    }
+    return `error: unknown command "${verb}" for "kubectl"`;
+  },
+  res(rest) { if (!rest.length) return {}; let [r, name] = rest; if (r.includes('/')) [r, name] = r.split('/'); return { res: RES[r.toLowerCase()], raw: r, name }; },
+  podStatus(p) { return { Pending: 'Pending', ContainerCreating: 'ContainerCreating', Running: 'Running', Completed: 'Completed', Error: 'Error', CrashLoopBackOff: 'CrashLoopBackOff', ErrImagePull: 'ErrImagePull', ImagePullBackOff: 'ImagePullBackOff' }[p.phase]; },
+  podReady: p => p.phase === 'Running' ? '1/1' : '0/1',
+  podYaml(s, p) { return toYAML({ apiVersion: 'v1', kind: 'Pod', metadata: { name: p.name, namespace: p.ns }, spec: { ...p.manifest.spec, ...(p.node ? { nodeName: p.node } : {}) }, status: { phase: ['Completed'].includes(p.phase) ? 'Succeeded' : (['Running'].includes(p.phase) ? 'Running' : (p.phase === 'Error' ? 'Failed' : 'Pending')) } }); },
+  secretB64(sec) { const auth = b64e(`${sec.user}:${sec.pass}`); return b64e(JSON.stringify({ auths: { [sec.server]: { username: sec.user, password: sec.pass, auth } } })); },
+  get(s, P, rest, ns) {
+    const k = s.st.k8s, { res, raw, name } = K8S.res(rest);
+    if (!res) return raw ? `error: the server doesn't have a resource type "${raw}"` : 'You must specify the type of resource to get.';
+    const inNs = x => P.all || x.ns === ns;
+    const nsCol = P.all;
+    if (res === 'nodes') {
+      const ns2 = k.nodes.filter(n => !name || n.name === name);
+      if (name && !ns2.length) return `Error from server (NotFound): nodes "${name}" not found`;
+      if (P.out === 'wide') return ktable(['NAME', 'STATUS', 'ROLES', 'AGE', 'VERSION', 'INTERNAL-IP', 'OS-IMAGE'], ns2.map(n => [n.name, 'Ready' + (n.unsched ? ',SchedulingDisabled' : ''), n.roles || '<none>', '41d', 'v1.31.4', n.ip, 'Ubuntu 24.04.2 LTS']));
+      return ktable(['NAME', 'STATUS', 'ROLES', 'AGE', 'VERSION'], ns2.map(n => [n.name, 'Ready' + (n.unsched ? ',SchedulingDisabled' : ''), n.roles || '<none>', '41d', 'v1.31.4']));
+    }
+    if (res === 'namespaces') return ktable(['NAME', 'STATUS', 'AGE'], k.namespaces.filter(n => !name || n.name === name).map(n => [n.name, 'Active', age(n.t0, s.t)])) ;
+    if (res === 'pods' || res === 'all') {
+      const ps = k.pods.filter(p => inNs(p) && (!name || p.name === name));
+      if (name && !ps.length) return `Error from server (NotFound): pods "${name}" not found`;
+      if (name && P.out === 'yaml') return K8S.podYaml(s, ps[0]);
+      let out = '';
+      if (!ps.length && res === 'pods') return `No resources found in ${ns} namespace.`;
+      if (ps.length) {
+        const h = ['NAME', 'READY', 'STATUS', 'RESTARTS', 'AGE'].concat(P.out === 'wide' ? ['IP', 'NODE'] : []);
+        out = ktable(nsCol ? ['NAMESPACE', ...h] : h, ps.map(p => { const r = [(res === 'all' ? 'pod/' : '') + p.name, K8S.podReady(p), K8S.podStatus(p), String(p.restarts), age(p.t0, s.t)].concat(P.out === 'wide' ? [p.node ? '10.244.' + (p.node.length % 7) + '.' + (11 + p.name.length) : '<none>', p.node || '<none>'] : []); return nsCol ? [p.ns, ...r] : r; }));
+      }
+      if (res === 'all') { const ds = k.deployments.filter(inNs); if (ds.length) out += (out ? '\n\n' : '') + ktable(['NAME', 'READY', 'UP-TO-DATE', 'AVAILABLE', 'AGE'], ds.map(d => { const r = K8S.depReady(s, d); return ['deployment.apps/' + d.name, `${r}/${d.manifest.spec.replicas ?? 1}`, String(d.manifest.spec.replicas ?? 1), String(r), age(d.t0, s.t)]; })); if (!out) return `No resources found in ${ns} namespace.`; }
+      return out;
+    }
+    if (res === 'deployments') {
+      const ds = k.deployments.filter(d => inNs(d) && (!name || d.name === name));
+      if (name && !ds.length) return `Error from server (NotFound): deployments.apps "${name}" not found`;
+      if (name && P.out === 'yaml') return toYAML(K8S.depFull(ds[0]));
+      if (!ds.length) return `No resources found in ${ns} namespace.`;
+      return ktable((nsCol ? ['NAMESPACE'] : []).concat(['NAME', 'READY', 'UP-TO-DATE', 'AVAILABLE', 'AGE']), ds.map(d => { const r = K8S.depReady(s, d); return (nsCol ? [d.ns] : []).concat([d.name, `${r}/${d.manifest.spec.replicas ?? 1}`, String(d.manifest.spec.replicas ?? 1), String(r), age(d.t0, s.t)]); }));
+    }
+    if (res === 'secrets') {
+      const ss = k.secrets.filter(x => inNs(x) && (!name || x.name === name));
+      if (name && !ss.length) return `Error from server (NotFound): secrets "${name}" not found`;
+      if (name && P.out && /^jsonpath/.test(P.out)) return /dockerconfigjson/.test(P.out) ? K8S.secretB64(ss[0]) : '';
+      if (name && P.out === 'yaml') return toYAML({ apiVersion: 'v1', data: { '.dockerconfigjson': K8S.secretB64(ss[0]) }, kind: 'Secret', metadata: { name: ss[0].name, namespace: ss[0].ns }, type: 'kubernetes.io/dockerconfigjson' });
+      if (!ss.length) return `No resources found in ${ns} namespace.`;
+      return ktable((nsCol ? ['NAMESPACE'] : []).concat(['NAME', 'TYPE', 'DATA', 'AGE']), ss.map(x => (nsCol ? [x.ns] : []).concat([x.name, 'kubernetes.io/dockerconfigjson', '1', age(x.t0, s.t)])));
+    }
+    if (res === 'serviceaccounts') {
+      const list = k.namespaces.filter(n => P.all || n.name === ns).map(n => ({ ns: n.name, name: 'default', secrets: k.sa[n.name] || [] }));
+      if (name && P.out === 'yaml') { const sa = list.find(x => x.name === name); return sa ? toYAML(K8S.saObj(sa.ns, sa.secrets)) : `Error from server (NotFound): serviceaccounts "${name}" not found`; }
+      return ktable((nsCol ? ['NAMESPACE'] : []).concat(['NAME', 'SECRETS', 'AGE']), list.map(x => (nsCol ? [x.ns] : []).concat([x.name, '0', '41d'])));
+    }
+    if (res === 'events') {
+      const rows = [];
+      k.pods.filter(inNs).forEach(p => p.events.forEach(e => rows.push({ e, p })));
+      rows.sort((a, b) => a.e.t - b.e.t);
+      if (!rows.length) return `No resources found in ${ns} namespace.`;
+      return ktable((nsCol ? ['NAMESPACE'] : []).concat(['LAST SEEN', 'TYPE', 'REASON', 'OBJECT', 'MESSAGE']), rows.map(({ e, p }) => (nsCol ? [p.ns] : []).concat([age(e.t, s.t), e.type, e.reason, 'pod/' + p.name, e.msg])));
+    }
+    if (res === 'daemonsets') {
+      const ds = (k.daemonsets || []).filter(inNs);
+      if (!ds.length) return `No resources found in ${ns} namespace.`;
+      return ktable((nsCol ? ['NAMESPACE'] : []).concat(['NAME', 'DESIRED', 'CURRENT', 'READY', 'UP-TO-DATE', 'AVAILABLE', 'NODE SELECTOR', 'AGE']), ds.map(d => (nsCol ? [d.ns] : []).concat([d.name, '2', '2', '2', '2', '2', d.sel, '41d'])));
+    }
+    return `error: the server doesn't have a resource type "${raw}"`;
+  },
+  saObj: (ns, secrets) => Object.assign({ apiVersion: 'v1', kind: 'ServiceAccount', metadata: { name: 'default', namespace: ns } }, secrets.length ? { imagePullSecrets: secrets.map(n => ({ name: n })) } : {}),
+  depReady(s, d) { return s.st.k8s.pods.filter(p => p.owner === d.name && p.ns === d.ns && p.phase === 'Running').length; },
+  depFull(d) { const m = deep(d.manifest); m.metadata = Object.assign({ name: d.name, namespace: d.ns }, m.metadata || {}); return m; },
+  describe(s, P, rest, ns) {
+    const k = s.st.k8s, { res, raw, name } = K8S.res(rest);
+    if (!res) return raw ? `error: the server doesn't have a resource type "${raw}"` : 'You must specify the type of resource to describe.';
+    if (res === 'nodes') {
+      const list = k.nodes.filter(n => !name || n.name === name);
+      if (!list.length) return `Error from server (NotFound): nodes "${name}" not found`;
+      return list.map(n => K8S.descNode(s, n)).join('\n\n');
+    }
+    if (res === 'pods') {
+      const exact = k.pods.filter(p => p.ns === ns && p.name === name);
+      const list = exact.length ? exact : k.pods.filter(p => p.ns === ns && (!name || p.name.startsWith(name)));
+      if (!list.length) return name ? `Error from server (NotFound): pods "${name}" not found` : `No resources found in ${ns} namespace.`;
+      return list.map(p => K8S.descPod(s, p)).join('\n\n\n');
+    }
+    if (res === 'deployments') {
+      const d = k.deployments.find(x => x.ns === ns && (!name || x.name === name));
+      if (!d) return `Error from server (NotFound): deployments.apps "${name}" not found`;
+      const c = d.manifest.spec.template.spec.containers[0], r = K8S.depReady(s, d), rep = d.manifest.spec.replicas ?? 1;
+      return [`Name:                   ${d.name}`, `Namespace:              ${d.ns}`, `Replicas:               ${rep} desired | ${rep} updated | ${rep} total | ${r} available | ${rep - r} unavailable`, 'StrategyType:           RollingUpdate',
+        'Pod Template:', `  Labels:  app=${d.name}`, '  Containers:', `   ${c.name}:`, `    Image:      ${c.image}`, `    Limits:`, `      nvidia.com/gpu:  ${((c.resources || {}).limits || {})['nvidia.com/gpu'] || 0}`,
+        `  Image Pull Secrets:  ${(d.manifest.spec.template.spec.imagePullSecrets || []).map(x => x.name).join(', ') || '<none>'}`, 'Conditions:', '  Type           Status  Reason', '  ----           ------  ------', `  Available      ${r >= rep ? 'True ' : 'False'}   ${r >= rep ? 'MinimumReplicasAvailable' : 'MinimumReplicasUnavailable'}`].join('\n');
+    }
+    if (res === 'secrets') { const x = k.secrets.find(y => y.ns === ns && y.name === name); if (!x) return `Error from server (NotFound): secrets "${name}" not found`; return [`Name:         ${x.name}`, `Namespace:    ${x.ns}`, 'Type:  kubernetes.io/dockerconfigjson', '', 'Data', '====', `.dockerconfigjson:  ${JSON.stringify({ auths: { [x.server]: {} } }).length + x.user.length + x.pass.length + 40} bytes`].join('\n'); }
+    return `describe ${raw} is not simulated in this lab.`;
+  },
+  descNode(s, n) {
+    const k = s.st.k8s, pods = k.pods.filter(p => p.node === n.name && !['Completed', 'Error'].includes(p.phase));
+    const used = pods.reduce((acc, p) => acc + (p.gpu || 0), 0);
+    return [`Name:               ${n.name}`, `Roles:              ${n.roles || '<none>'}`, 'Labels:             kubernetes.io/os=linux', `                    kubernetes.io/hostname=${n.name}`,
+      ...(n.gpu ? ['                    nvidia.com/gpu.present=true', '                    nvidia.com/gpu.product=NVIDIA-H100-80GB-HBM3', `                    nvidia.com/gpu.count=${n.gpu}`, '                    nvidia.com/mig.config=all-disabled'] : []),
+      `Taints:             ${(n.taints || []).map(tt => `${tt.key}${tt.value ? '=' + tt.value : ''}:${tt.effect}`).concat(n.unsched ? ['node.kubernetes.io/unschedulable:NoSchedule'] : []).join('\n                    ') || '<none>'}`,
+      `Unschedulable:      ${n.unsched ? 'true' : 'false'}`, 'Conditions:', '  Type             Status  Reason                       Message', '  ----             ------  ------                       -------', '  Ready            True    KubeletReady                 kubelet is posting ready status',
+      'Capacity:', '  cpu:                224', '  memory:             2112512000Ki', `  nvidia.com/gpu:     ${n.gpu || 0}`, 'Allocatable:', '  cpu:                224', '  memory:             2112409600Ki', `  nvidia.com/gpu:     ${n.gpu || 0}`,
+      'Non-terminated Pods:          (' + pods.length + ' in total)', '  Namespace                   Name                                   GPU Limits', '  ---------                   ----                                   ----------',
+      ...pods.map(p => `  ${pad(p.ns, 27)} ${pad(p.name, 38)} ${p.gpu || 0}`),
+      'Allocated resources:', '  Resource           Requests    Limits', '  --------           --------    ------', `  nvidia.com/gpu     ${pad(used, 11)} ${used}`,
+      'Events:', ...(n.events && n.events.length ? ['  Type    Reason              Age   From     Message', '  ----    ------              ----  ----     -------', ...n.events.map(e => `  Normal  ${pad(e.reason, 19)} ${pad(age(e.t, s.t), 5)} kubelet  ${e.msg}`)] : ['  <none>'])].join('\n');
+  },
+  descPod(s, p) {
+    const c = p.manifest.spec.containers[0], lim = (c.resources || {}).limits || {}, req = (c.resources || {}).requests || lim;
+    const state = { Running: '      State:          Running', Completed: '      State:          Terminated\n        Reason:       Completed\n        Exit Code:    0', Error: '      State:          Terminated\n        Reason:       Error\n        Exit Code:    1', CrashLoopBackOff: '      State:          Waiting\n        Reason:       CrashLoopBackOff\n      Last State:     Terminated\n        Reason:       Error\n        Exit Code:    1' }[p.phase] || `      State:          Waiting\n        Reason:       ${p.phase === 'Pending' ? 'ContainerCreating' : p.phase}`;
+    const evs = p.events.slice(-8);
+    const qos = (p.manifest.spec.containers || []).some(cc => ['cpu', 'memory'].some(r => ((cc.resources || {}).limits || {})[r] || ((cc.resources || {}).requests || {})[r])) ? 'Burstable' : 'BestEffort';
+    return [`Name:             ${p.name}`, `Namespace:        ${p.ns}`, 'Priority:         0', 'Service Account:  default', `Node:             ${p.node ? p.node + '/' + (s.st.k8s.nodes.find(n => n.name === p.node) || {}).ip : '<none>'}`,
+      `Status:           ${p.phase === 'Completed' ? 'Succeeded' : p.phase === 'Running' ? 'Running' : p.phase === 'Error' ? 'Failed' : 'Pending'}`, ...(p.owner ? [`Controlled By:    ReplicaSet/${p.owner}-${p.hash}`] : []), 'Containers:', `  ${c.name}:`, `    Image:          ${c.image}`, ...(p.node ? [state, `    Ready:          ${p.phase === 'Running' ? 'True' : 'False'}`, `    Restart Count:  ${p.restarts}`] : []), ...(Object.keys(lim).length ? ['    Limits:', ...Object.entries(lim).map(([kk, v]) => `      ${kk}:  ${v}`)] : []), ...(Object.keys(req).length ? ['    Requests:', ...Object.entries(req).map(([kk, v]) => `      ${kk}:  ${v}`)] : []),
+      'Conditions:', '  Type              Status', `  PodScheduled      ${p.node ? 'True' : 'False'}`, `  Ready             ${p.phase === 'Running' ? 'True' : 'False'}`,
+      `QoS Class:                   ${qos}`, `Node-Selectors:              ${Object.entries(p.manifest.spec.nodeSelector || {}).map(([kk, v]) => kk + '=' + v).join(',') || '<none>'}`,
+      `Tolerations:                 ${(p.manifest.spec.tolerations || []).map(o => `${o.key || ''}${o.operator === 'Exists' ? ' op=Exists' : '=' + (o.value || '')}:${o.effect || ''}`).concat(['node.kubernetes.io/not-ready:NoExecute op=Exists for 300s', 'node.kubernetes.io/unreachable:NoExecute op=Exists for 300s']).join('\n                             ')}`,
+      'Events:', ...(evs.length ? ['  Type     Reason            Age                From               Message', '  ----     ------            ----               ----               -------', ...evs.map(e => `  ${pad(e.type, 8)} ${pad(e.reason, 17)} ${pad(e.count > 1 ? `${age(e.t, s.t)} (x${e.count} over ${age(e.first, s.t)})` : age(e.t, s.t), 18)} ${pad(e.from, 18)} ${e.msg}`)] : ['  <none>'])].join('\n');
+  },
+  create(s, P, rest, ns) {
+    const k = s.st.k8s, kind = (rest[0] || '').toLowerCase();
+    if (P.f.f || P.f.filename) return K8S.applyFile(s, P, ns, 'create');
+    if (kind === 'namespace' || kind === 'ns') {
+      const n = rest[1]; if (!n) return 'error: exactly one NAME is required, got 0';
+      if (K8S.nsExists(s, n)) return `Error from server (AlreadyExists): namespaces "${n}" already exists`;
+      k.namespaces.push({ name: n, t0: s.t }); return `namespace/${n} created`;
+    }
+    if (kind === 'secret') {
+      const type = (rest[1] || '').toLowerCase(), n = rest[2];
+      if (type !== 'docker-registry') return type === 'generic' ? 'A generic secret cannot be used to pull images. Use: kubectl create secret docker-registry <name> --docker-server=... --docker-username=... --docker-password=...' : 'error: Unknown secret type. Use docker-registry for registry credentials.';
+      if (!n) return 'error: NAME is required';
+      if (!P.f['docker-username'] || !P.f['docker-password']) return 'error: either --from-file or the combination of --docker-username, --docker-password and --docker-server is required';
+      if (!K8S.nsExists(s, ns)) return `error: failed to create secret namespaces "${ns}" not found`;
+      if (k.secrets.some(x => x.ns === ns && x.name === n)) return `error: failed to create secret secrets "${n}" already exists`;
+      k.secrets.push({ ns, name: n, server: P.f['docker-server'] || 'https://index.docker.io/v1/', user: String(P.f['docker-username']), pass: String(P.f['docker-password']), t0: s.t });
+      return `secret/${n} created`;
+    }
+    if (kind === 'deployment' || kind === 'deploy') return 'Creating deployments imperatively is not needed in this lab.';
+    return `error: create ${rest[0] || ''} is not simulated. Supported: create namespace, create secret docker-registry, create -f`;
+  },
+  applyFile(s, P, ns, mode) {
+    const f = P.f.f || P.f.filename;
+    if (!f || f === true) return 'error: must specify one of -f and -k';
+    const p = fpath(f), txt = s.st.files[p];
+    if (txt === undefined) return `error: the path "${f}" does not exist`;
+    let docs; try { docs = parseYAML(txt); } catch (e) { return `error: error parsing ${f}: error converting YAML to JSON: ${e.message}`; }
+    return docs.filter(Boolean).map(o => K8S.applyObj(s, o, ns, f, mode)).join('\n');
+  },
+  applyObj(s, o, ns, file, mode) {
+    const k = s.st.k8s;
+    if (typeof o !== 'object' || Array.isArray(o)) return `error: error validating "${file}": invalid object`;
+    const kind = o.kind, name = o.metadata && o.metadata.name;
+    if (!kind) return `error: error validating "${file}": error validating data: kind not set`;
+    if (!name) return `error: error when retrieving current configuration: resource name may not be empty`;
+    const ons = (o.metadata && o.metadata.namespace) || ns;
+    if (kind === 'Namespace') { if (K8S.nsExists(s, name)) return `namespace/${name} unchanged`; k.namespaces.push({ name, t0: s.t }); return `namespace/${name} created`; }
+    if (kind === 'Pod') {
+      if (o.apiVersion !== 'v1') return `error: resource mapping not found for name: "${name}" namespace: "${ons}" from "${file}": no matches for kind "Pod" in version "${o.apiVersion}"\nensure CRDs are installed first`;
+      if (!K8S.nsExists(s, ons)) return `Error from server (NotFound): error when creating "${file}": namespaces "${ons}" not found`;
+      const v = K8S.validatePod(o); if (v) return `The Pod "${name}" is invalid: ${v}`;
+      const ex = k.pods.find(p => p.ns === ons && p.name === name);
+      if (ex) {
+        if (mode === 'create') return `Error from server (AlreadyExists): error when creating "${file}": pods "${name}" already exists`;
+        const a = JSON.stringify(Object.assign({}, ex.manifest.spec, { imagePullSecrets: undefined })), b = JSON.stringify(Object.assign({}, o.spec, { imagePullSecrets: undefined }));
+        if (a === b) return `pod/${name} unchanged`;
+        return `The Pod "${name}" is invalid: spec: Forbidden: pod updates may not change fields other than \`spec.containers[*].image\`, \`spec.initContainers[*].image\`, \`spec.activeDeadlineSeconds\`, \`spec.tolerations\` (only additions to existing tolerations), \`spec.terminationGracePeriodSeconds\` (allow it to be set to 1 if it was previously negative)`;
+      }
+      k.pods.push(K8S.newPod(s, ons, o, null)); return `pod/${name} created`;
+    }
+    if (kind === 'Deployment') {
+      if (o.apiVersion !== 'apps/v1') return `error: resource mapping not found for name: "${name}" namespace: "${ons}" from "${file}": no matches for kind "Deployment" in version "${o.apiVersion}"`;
+      const ex = k.deployments.find(d => d.ns === ons && d.name === name);
+      const bad = K8S.validateDeployment(name, o); if (bad) return bad;
+      if (ex) { const before = JSON.stringify(ex.manifest.spec); ex.manifest = deep(o); return JSON.stringify(ex.manifest.spec) === before ? `deployment.apps/${name} unchanged` : `deployment.apps/${name} configured`; }
+      if (mode === 'apply' || mode === 'create') { if (!K8S.nsExists(s, ons)) return `Error from server (NotFound): error when creating "${file}": namespaces "${ons}" not found`; k.deployments.push({ name, ns: ons, manifest: deep(o), t0: s.t }); return `deployment.apps/${name} created`; }
+    }
+    if (kind === 'ServiceAccount') { if (name !== 'default') return 'Only the default ServiceAccount is simulated.'; k.sa[ons] = (o.imagePullSecrets || []).map(x => x.name); return `serviceaccount/default configured`; }
+    return `error: kind ${kind} is not simulated in this lab`;
+  },
+  validateDeployment(name, o) {
+    const tpl = o && o.spec && o.spec.template, cs = tpl && tpl.spec && tpl.spec.containers;
+    if (!Array.isArray(cs) || !cs.length) return `The Deployment "${name}" is invalid: spec.template.spec.containers: Required value`;
+    for (let i = 0; i < cs.length; i++) { if (!cs[i] || typeof cs[i] !== 'object' || !cs[i].name) return `The Deployment "${name}" is invalid: spec.template.spec.containers[${i}].name: Required value`; if (!cs[i].image) return `The Deployment "${name}" is invalid: spec.template.spec.containers[${i}].image: Required value`; }
+    const r = o.spec.replicas;
+    if (r !== undefined && (!Number.isInteger(r) || r < 0 || r > K8S.MAX_REPLICAS)) return `The Deployment "${name}" is invalid: spec.replicas: Invalid value: ${JSON.stringify(r)}: must be between 0 and ${K8S.MAX_REPLICAS} in this lab`;
+    return null;
+  },
+  MAX_REPLICAS: 20,
+  validatePod(o) {
+    const cs = o.spec && o.spec.containers;
+    if (!Array.isArray(cs) || !cs.length) return 'spec.containers: Required value';
+    for (let i = 0; i < cs.length; i++) {
+      const c = cs[i];
+      if (!c.name) return `spec.containers[${i}].name: Required value`;
+      if (!c.image) return `spec.containers[${i}].image: Required value`;
+      const r = c.resources || {}, req = (r.requests || {})['nvidia.com/gpu'], lim = (r.limits || {})['nvidia.com/gpu'];
+      if (req != null && lim == null) return `spec.containers[${i}].resources.limits: Required value: Limit must be set for non overcommitable resources`;
+      if (req != null && lim != null && +req !== +lim) return `spec.containers[${i}].resources.requests: Invalid value: "${req}": must be equal to nvidia.com/gpu limit of ${lim}`;
+    }
+    const rp = o.spec.restartPolicy;
+    if (rp && !['Always', 'OnFailure', 'Never'].includes(rp)) return `spec.restartPolicy: Unsupported value: "${rp}": supported values: "Always", "OnFailure", "Never"`;
+    return null;
+  },
+  del(s, P, rest, ns) {
+    const k = s.st.k8s;
+    if (P.f.f || P.f.filename) {
+      const p = fpath(P.f.f || P.f.filename), txt = s.st.files[p];
+      if (txt === undefined) return `error: the path "${P.f.f || P.f.filename}" does not exist`;
+      let docs; try { docs = parseYAML(txt); } catch (e) { return 'error: ' + e.message; }
+      return docs.filter(Boolean).map(o => K8S.del(s, { f: {} }, [String(o.kind || '').toLowerCase(), o.metadata && o.metadata.name], (o.metadata && o.metadata.namespace) || ns)).join('\n');
+    }
+    const { res, raw, name } = K8S.res(rest);
+    if (!res) return raw ? `error: the server doesn't have a resource type "${raw}"` : 'error: You must provide one or more resources';
+    if (!name) return 'error: resource(s) were provided, but no name was specified';
+    if (res === 'pods') { const i = k.pods.findIndex(p => p.ns === ns && p.name === name); if (i < 0) return `Error from server (NotFound): pods "${name}" not found`; k.pods.splice(i, 1); return `pod "${name}" deleted`; }
+    if (res === 'secrets') { const i = k.secrets.findIndex(x => x.ns === ns && x.name === name); if (i < 0) return `Error from server (NotFound): secrets "${name}" not found`; k.secrets.splice(i, 1); return `secret "${name}" deleted`; }
+    if (res === 'deployments') { const i = k.deployments.findIndex(x => x.ns === ns && x.name === name); if (i < 0) return `Error from server (NotFound): deployments.apps "${name}" not found`; k.deployments.splice(i, 1); k.pods = k.pods.filter(p => !(p.owner === name && p.ns === ns)); return `deployment.apps "${name}" deleted`; }
+    if (res === 'namespaces') { if (['default', 'kube-system', 'gpu-operator'].includes(name)) return `Error from server (Forbidden): namespaces "${name}" is forbidden in this lab`; k.namespaces = k.namespaces.filter(x => x.name !== name); k.pods = k.pods.filter(p => p.ns !== name); k.deployments = k.deployments.filter(d => d.ns !== name); return `namespace "${name}" deleted`; }
+    return `delete ${raw} is not simulated in this lab`;
+  },
+  logs(s, P, rest, ns) {
+    const k = s.st.k8s; let name = rest[0];
+    if (!name) return 'error: expected POD_NAME';
+    let p;
+    if (name.includes('/')) { const [r, n] = name.split('/'); if (RES[r] === 'deployments') p = k.pods.find(x => x.owner === n && x.ns === ns); else p = k.pods.find(x => x.name === n && x.ns === ns); name = name.split('/')[1]; }
+    else p = k.pods.find(x => x.name === name && x.ns === ns);
+    if (!p) return `Error from server (NotFound): pods "${name}" not found`;
+    const c = p.manifest.spec.containers[0].name;
+    if (['Running', 'Completed', 'Error', 'CrashLoopBackOff'].includes(p.phase)) return p.logs || '';
+    const why = p.phase === 'ImagePullBackOff' || p.phase === 'ErrImagePull' ? 'trying and failing to pull image' : 'ContainerCreating';
+    return `Error from server (BadRequest): container "${c}" in pod "${p.name}" is waiting to start: ${why}`;
+  },
+  cordon(s, verb, name) {
+    const n = s.st.k8s.nodes.find(x => x.name === name);
+    if (!name) return 'error: USAGE: ' + verb + ' NODE';
+    if (!n) return `Error from server (NotFound): nodes "${name}" not found`;
+    const want = verb === 'cordon';
+    if (n.unsched === want) return `node/${name} already ${verb}ed`;
+    n.unsched = want; n.events = n.events || []; n.events.push({ reason: want ? 'NodeNotSchedulable' : 'NodeSchedulable', msg: `Node ${name} status is now: ${want ? 'NodeNotSchedulable' : 'NodeSchedulable'}`, t: s.t });
+    return `node/${name} ${verb}ed`;
+  },
+  patch(s, P, rest, ns) {
+    const k = s.st.k8s, { res, raw, name } = K8S.res(rest), body = P.f.p || P.f.patch;
+    if (!res || !name) return 'error: resource and name are required, e.g. kubectl patch deployment <name> -p \'{...}\'';
+    if (!body || body === true) return 'error: must specify -p to patch';
+    let j; try { j = JSON.parse(body); } catch (e) { return `error: unable to parse "${body}": yaml: did not find expected node content`; }
+    if (P.f.type === 'json') return 'JSON patches (--type=json) are not simulated. Use a strategic merge patch: -p \'{"spec":...}\'';
+    if (res === 'deployments') {
+      const d = k.deployments.find(x => x.ns === ns && x.name === name);
+      if (!d) return `Error from server (NotFound): deployments.apps "${name}" not found`;
+      const before = JSON.stringify(d.manifest), next = deepMerge(deep(d.manifest), j);
+      const bad = K8S.validateDeployment(name, next); if (bad) return bad;
+      d.manifest = next;
+      return JSON.stringify(d.manifest) === before ? `deployment.apps/${name} patched (no change)` : `deployment.apps/${name} patched`;
+    }
+    if (res === 'serviceaccounts') {
+      if (name !== 'default') return `Error from server (NotFound): serviceaccounts "${name}" not found`;
+      if (j.imagePullSecrets) k.sa[ns] = j.imagePullSecrets.map(x => x.name);
+      return `serviceaccount/default patched`;
+    }
+    if (res === 'nodes') { const n = k.nodes.find(x => x.name === name); if (!n) return `Error from server (NotFound): nodes "${name}" not found`; if (j.spec && 'unschedulable' in j.spec) n.unsched = !!j.spec.unschedulable; return `node/${name} patched`; }
+    if (res === 'pods') return `The Pod "${name}" is invalid: spec: Forbidden: pod updates may not change fields other than \`spec.containers[*].image\`, \`spec.initContainers[*].image\`, \`spec.activeDeadlineSeconds\`, \`spec.tolerations\` (only additions to existing tolerations)`;
+    return `patch ${raw} is not simulated in this lab`;
+  },
+  edit(s, P, rest, ns) {
+    const k = s.st.k8s, { res, raw, name } = K8S.res(rest);
+    if (res === 'deployments') { const d = k.deployments.find(x => x.ns === ns && x.name === name); if (!d) return `Error from server (NotFound): deployments.apps "${name}" not found`; return { out: '', editor: { kind: 'k8s', res, name, ns, title: `deployment/${name} (namespace ${ns})`, content: toYAML(K8S.depFull(d)) + '\n' } }; }
+    if (res === 'serviceaccounts') { if (name !== 'default') return `Error from server (NotFound): serviceaccounts "${name}" not found`; return { out: '', editor: { kind: 'k8s', res, name, ns, title: `serviceaccount/default (namespace ${ns})`, content: toYAML(K8S.saObj(ns, k.sa[ns] || [])) + '\n' } }; }
+    if (res === 'pods') return 'Editing a running pod spec is not allowed (pods are immutable). Edit the controller (deployment) or delete and recreate the pod.';
+    return `edit ${raw || ''} is not simulated in this lab`;
+  },
+  saveEdit(s, ed, content) {
+    let docs; try { docs = parseYAML(content); } catch (e) { return `error: ${e.message}\nA copy of your changes was not applied.`; }
+    const o = docs[0] || {};
+    if (ed.res === 'deployments') {
+      const d = s.st.k8s.deployments.find(x => x.ns === ed.ns && x.name === ed.name);
+      const bad = K8S.validateDeployment(ed.name, o); if (bad) return 'error: ' + bad + '\nYour edit was not applied.';
+      const before = JSON.stringify(d.manifest.spec); d.manifest = deep(o);
+      return JSON.stringify(d.manifest.spec) === before ? 'Edit cancelled, no changes made.' : `deployment.apps/${ed.name} edited`;
+    }
+    if (ed.res === 'serviceaccounts') { s.st.k8s.sa[ed.ns] = (o.imagePullSecrets || []).map(x => x.name); return 'serviceaccount/default edited'; }
+    return '';
+  },
+  rollout(s, P, rest, ns) {
+    const k = s.st.k8s, sub = rest[0], { res, name } = K8S.res(rest.slice(1));
+    const d = res === 'deployments' && k.deployments.find(x => x.ns === ns && x.name === name);
+    if (!d) return `Error from server (NotFound): deployments.apps "${name || ''}" not found`;
+    if (sub === 'restart') { const tpl = d.manifest.spec.template; tpl.metadata = tpl.metadata || {}; tpl.metadata.annotations = Object.assign({}, tpl.metadata.annotations, { 'kubectl.kubernetes.io/restartedAt': new Date(s.t).toISOString() }); return `deployment.apps/${name} restarted`; }
+    if (sub === 'status') { const r = K8S.depReady(s, d), rep = d.manifest.spec.replicas ?? 1; return r >= rep ? `deployment "${name}" successfully rolled out` : `Waiting for deployment "${name}" rollout to finish: ${r} of ${rep} updated replicas are available...\nerror: timed out waiting for the condition`; }
+    if (sub === 'history') return `deployment.apps/${name}\nREVISION  CHANGE-CAUSE\n1         <none>`;
+    return 'This simulator supports: rollout status|restart|history deployment/<name>';
+  },
+  run(s, P, rest, ns) {
+    const name = rest[0];
+    if (!name) return 'error: NAME is required for run';
+    if (P.f.limits || P.f.requests) return `error: unknown flag: --${P.f.limits ? 'limits' : 'requests'}\nSee 'kubectl run --help' for usage.`;
+    if (!P.f.image || P.f.image === true) return 'error: --image is required';
+    const rp = { Never: 'Never', OnFailure: 'OnFailure', Always: 'Always' }[P.f.restart] || 'Always';
+    const m = { apiVersion: 'v1', kind: 'Pod', metadata: { name, namespace: ns, labels: { run: name } }, spec: { containers: [{ name, image: P.f.image }], restartPolicy: rp } };
+    if (P.f.overrides) { try { deepMerge(m, JSON.parse(P.f.overrides)); } catch (e) { return 'error: --overrides is not valid JSON: ' + e.message; } }
+    return K8S.applyObj(s, m, ns, 'STDIN', 'create');
+  }
+};
+
+const MODULES = { bcm: BCM, slurm: SLURM, k8s: K8S };
+const mods = s => s.lab.modules.map(n => MODULES[n]);
+
+// ---------- session API ----------
+function create(lab) {
+  const s = { lab, st: deep(lab.init), env: { HOME: '/root', USER: 'root', PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/cm/local/apps/cmd/bin' }, host: HEAD({ lab }), t: Date.parse(lab.start || '2026-10-07T10:00:00Z'), hist: [], cmsh: null, chroot: null, pending: null, sshStack: [], counter: 0, drafts: {} };
+  s.st.files = s.st.files || {};
+  mods(s).forEach(m => m.init && m.init(s));
+  return s;
+}
+function tick(s) { mods(s).forEach(m => m.tick && m.tick(s)); }
+function exec(s, raw) {
+  s.t += 5000 + (s.counter % 5) * 1500; s.counter++;
+  const line = String(raw).replace(/\s+$/, '');
+  try {
+    if (s.pending) {
+      const p = s.pending; s.pending = null; s.hist.push(line);
+      const out = p.handle(line.trim()) || '';
+      const accepted = p.accepts ? p.accepts(line.trim()) : true;
+      if (!p.rest || !p.rest.trim() || (!accepted && p.restOp === '&&')) return { out };
+      const more = shellLine(s, p.rest);
+      return { ...more, out: [out, more.out].filter(Boolean).join('\n') };
+    }
+    if (line.trim()) s.hist.push(line);
+    tick(s);
+    if (!line.trim()) return { out: '' };
+    return shellLine(s, line);
+  } catch (e) { return { out: e.user ? e.message : 'simulator error: ' + e.message, fail: true }; }
+}
+function prompt(s) {
+  if (s.pending) return s.pending.prompt || '';
+  if (s.cmsh) return BCM.prompt(s);
+  if (s.chroot) return `(chroot:${s.chroot}) root@${s.host}:/# `;
+  return `root@${s.host}:~# `;
+}
+function save(s, ed, content) {
+  if (ed.kind === 'file') { s.st.files[ed.path] = content.endsWith('\n') ? content : content + '\n'; const lines = content.split('\n').length; return `"${ed.path.replace('/root/', '')}" ${lines}L, ${content.length}B written`; }
+  if (ed.kind === 'k8s') return K8S.saveEdit(s, ed, content);
+  return '';
+}
+function cancelEdit(ed) { return ed.kind === 'k8s' ? 'Edit cancelled, no changes made.' : ''; }
+function evaluate(s) {
+  for (let i = 0; i < 6; i++) { try { tick(s); } catch (e) { break; } }
+  return s.lab.objectives.map(o => { let ok = false; try { ok = !!o.check(s.st, s); } catch (e) { ok = false; } return { text: o.text, ok }; });
+}
+
+// ---------- lab definitions ----------
+const dgxIf = i => ({ ipmi0: { type: 'bmc', ip: `10.148.0.${i}`, network: 'ipminet' }, bootif: { type: 'physical', ip: `10.141.0.${i}`, network: 'internalnet' } });
+const H100_PKGS = ['nvidia-driver-570-server', 'nvidia-fabricmanager-570', 'nvidia-container-toolkit', 'nvsm'];
+function bcmBase(extra) {
+  const device = { 'bcm-head': { type: 'HeadNode', mac: 'FA:16:3E:4C:21:01', category: '', status: 'UP', power: 'on', hw: true, ifs: { bootif: { type: 'physical', ip: '10.141.255.254', network: 'internalnet' } } } };
+  for (let i = 1; i <= 8; i++) device[`node00${i}`] = { type: 'PhysicalNode', mac: `5C:25:73:AA:10:0${i}`, category: 'dgx-h100', rack: 'R12', status: 'UP', power: 'on', hw: true, ifs: dgxIf(i), image: 'dgx-h100-image', packages: H100_PKGS.slice() };
+  return Object.assign({
+    head: 'bcm-head', networks: { internalnet: '10.141.0.0/16', ipminet: '10.148.0.0/16' }, device,
+    category: { default: { softwareimage: 'default-image' }, 'dgx-h100': { softwareimage: 'dgx-h100-image' }, 'dgx-b200': { softwareimage: 'dgx-b200-image' } },
+    softwareimage: {
+      'default-image': { path: '/cm/images/default-image', kernel: '6.8.0-1017-nvidia', packages: ['nvidia-container-toolkit'] },
+      'dgx-h100-image': { path: '/cm/images/dgx-h100-image', kernel: '6.8.0-1017-nvidia', packages: H100_PKGS.slice() },
+      'dgx-b200-image': { path: '/cm/images/dgx-b200-image', kernel: '6.8.0-1017-nvidia', packages: H100_PKGS.slice() }
+    },
+    newnodes: []
+  }, extra || {});
+}
+const svcOk = () => ({ munge: { active: true, enabled: true, since: '2026-10-01T06:13:02Z', pid: 1873 }, slurmd: { active: true, enabled: true, since: '2026-10-01T06:13:31Z', pid: 2211 } });
+const GPU_NODES = n => Object.fromEntries(n.map(x => [x, 'H100']));
+const k8sNode = (name, gpu, ip, extra) => Object.assign({ name, gpu, ip, roles: '<none>', unsched: false, taints: [], events: [] }, extra || {});
+const mkPod = (ns, name, image, node, phase, gpu, created, extra) => Object.assign({ name, ns, node, phase, t0: Date.parse(created), restarts: 0, events: [], owner: null, pullSecrets: [], gpu,
+  manifest: { apiVersion: 'v1', kind: 'Pod', metadata: { name, namespace: ns }, spec: { containers: [{ name: name.replace(/-[a-z0-9]{5}$/, '').replace(/-\d+$/, ''), image, resources: gpu ? { limits: { 'nvidia.com/gpu': gpu } } : {} }] } } }, extra || {});
+const OPERATOR_PODS = () => [
+  mkPod('gpu-operator', 'gpu-operator-7d6c8b9f5d-q8r2m', 'nvcr.io/nvidia/gpu-operator:v25.3.2', 'k8s-master01', 'Running', 0, '2026-08-27T09:00:00Z'),
+  mkPod('gpu-operator', 'gpu-operator-node-feature-discovery-gc-6d8f9-xkq2p', 'registry.k8s.io/nfd/node-feature-discovery:v0.17.2', 'cpu-worker01', 'Running', 0, '2026-08-27T09:00:00Z'),
+  ...['dgx-01', 'dgx-02'].flatMap((n, i) => [
+    mkPod('gpu-operator', `gpu-feature-discovery-${['h7x2k', 'p4v9c'][i]}`, 'nvcr.io/nvidia/k8s-device-plugin:v0.17.2', n, 'Running', 0, '2026-08-27T09:02:00Z'),
+    mkPod('gpu-operator', `nvidia-container-toolkit-daemonset-${['m2c8d', 'r6t4z'][i]}`, 'nvcr.io/nvidia/k8s/container-toolkit:v1.17.8', n, 'Running', 0, '2026-08-27T09:02:00Z'),
+    mkPod('gpu-operator', `nvidia-dcgm-exporter-${['b5n7q', 'w3j8f'][i]}`, 'nvcr.io/nvidia/k8s/dcgm-exporter:4.2.3-4.1.3-ubuntu22.04', n, 'Running', 0, '2026-08-27T09:03:00Z'),
+    mkPod('gpu-operator', `nvidia-device-plugin-daemonset-${['k9d2s', 'z7g5h'][i]}`, 'nvcr.io/nvidia/k8s-device-plugin:v0.17.2', n, 'Running', 0, '2026-08-27T09:03:00Z'),
+    mkPod('gpu-operator', `nvidia-operator-validator-${['t8w4x', 'c2q6n'][i]}`, 'nvcr.io/nvidia/cloud-native/gpu-operator-validator:v25.3.2', n, 'Running', 0, '2026-08-27T09:04:00Z')
+  ])
+];
+const OPERATOR_DS = () => [{ ns: 'gpu-operator', name: 'gpu-feature-discovery', sel: 'nvidia.com/gpu.deploy.gpu-feature-discovery=true' }, { ns: 'gpu-operator', name: 'nvidia-container-toolkit-daemonset', sel: 'nvidia.com/gpu.deploy.container-toolkit=true' }, { ns: 'gpu-operator', name: 'nvidia-dcgm-exporter', sel: 'nvidia.com/gpu.deploy.dcgm-exporter=true' }, { ns: 'gpu-operator', name: 'nvidia-device-plugin-daemonset', sel: 'nvidia.com/gpu.deploy.device-plugin=true' }, { ns: 'gpu-operator', name: 'nvidia-operator-validator', sel: 'nvidia.com/gpu.deploy.operator-validator=true' }];
+const NS = names => names.map(n => ({ name: n, t0: Date.parse('2026-08-27T08:00:00Z') }));
+// Fake key used as lab data only (not a real NVIDIA credential).
+const NGC_KEY = 'nvapi-LAB-EXAMPLE-KEY-not-a-real-credential-0000';
+
+const LABS = [
+  {
+    id: 'bcm-add-node', area: 'Add a node with BCM', title: 'Add a new DGX B200 node to the cluster', minutes: 20, modules: ['bcm'],
+    desc: 'Clone an existing node in cmsh, set MAC, interfaces and category, commit, power on and watch it provision.',
+    brief: '<p>A new <b>DGX B200</b> was racked in R14 and cabled to the management and provisioning networks. Facilities have already configured its BMC.</p><table class="kv"><tr><td>Hostname</td><td><code>node009</code></td></tr><tr><td>BOOTIF MAC</td><td><code>5C:25:73:BB:20:09</code></td></tr><tr><td>BOOTIF IP (internalnet)</td><td><code>10.141.0.20</code></td></tr><tr><td>BMC ipmi0 IP (ipminet)</td><td><code>10.148.0.20</code></td></tr><tr><td>Category</td><td><code>dgx-b200</code></td></tr></table><p>Add the node to the cluster with BCM. Then power it on <b>from BCM</b> and make sure it provisions and comes <b>UP</b>.</p>',
+    init: { bcm: bcmBase({ hardware: { mac: '5C:25:73:BB:20:09', bmcIp: '10.148.0.20' } }), files: {} },
+    objectives: [
+      { text: 'node009 exists in BCM (committed) with BOOTIF MAC 5C:25:73:BB:20:09', check: st => !!st.bcm.device.node009 && st.bcm.device.node009.mac === '5C:25:73:BB:20:09' },
+      { text: 'node009 uses BOOTIF 10.141.0.20 (internalnet) and ipmi0 10.148.0.20 (ipminet)', check: st => { const d = st.bcm.device.node009; return d && d.ifs.bootif.ip === '10.141.0.20' && d.ifs.bootif.network === 'internalnet' && d.ifs.ipmi0.ip === '10.148.0.20' && d.ifs.ipmi0.network === 'ipminet'; } },
+      { text: 'node009 is in category dgx-b200 (software image dgx-b200-image)', check: st => st.bcm.device.node009 && st.bcm.device.node009.category === 'dgx-b200' },
+      { text: 'node009 was powered on by BCM, provisioned and is UP', check: st => st.bcm.device.node009 && st.bcm.device.node009.status === 'UP' && st.bcm.device.node009.image === 'dgx-b200-image' }
+    ],
+    hints: ['In cmsh, go to <code>device</code> mode and <code>clone</code> an existing DGX node. The clone copies the interfaces and settings, and BCM clears the MAC address.', 'Edit the interfaces in the node\'s <code>interfaces</code> submode: <code>use bootif</code> / <code>use ipmi0</code>, then <code>set ip ...</code>. Go back up with <code>exit</code>.', 'Nothing is applied until you <code>commit</code>, and the prompt shows <code>*</code> while changes are pending. Then run <code>power on -n node009</code> and watch <code>status</code>.', 'If the node stays DOWN, run <code>newnodes</code> in device mode: BCM saw a MAC it does not know. Fix the MAC, commit, then <code>power reset -n node009</code>. If the power command times out, check the ipmi0 IP.'],
+    solution: ['cmsh', 'device', 'clone node008 node009', 'set mac 5C:25:73:BB:20:09', 'set category dgx-b200', 'interfaces', 'use bootif', 'set ip 10.141.0.20', 'use ipmi0', 'set ip 10.148.0.20', 'exit', 'exit', 'commit', 'power on -n node009', 'status -n node009', 'status -n node009', 'status -n node009', 'status -n node009', 'status -n node009'],
+    help: 'Commands: cmsh (device / category / softwareimage modes, type help inside cmsh), ssh <node>, ls, cat, clear, history.\nTip: cmsh -c "device; status" runs a one-shot cmsh command.'
+  },
+  {
+    id: 'bcm-image', area: 'Add a node with BCM', title: 'Roll out a software image change without rebooting', minutes: 20, modules: ['bcm'],
+    desc: 'Clone a software image, install a package inside it, assign it to a category and push it live with imageupdate.',
+    brief: '<p>The <code>dgx-h100</code> nodes (node001–node008) must get <b>DCGM 4</b>, package <code>datacenter-gpu-manager-4-cuda12</code>.</p><p>Change control requires all of the following:</p><ul><li>Keep the current image <code>dgx-h100-image</code> <b>unchanged</b> so you can roll back.</li><li>Build the change in a new image named <code>dgx-h100-image-2026q4</code>.</li><li>Make the <code>dgx-h100</code> category use the new image.</li><li>Push it to the 8 running nodes <b>without rebooting them</b> (jobs are running).</li></ul>',
+    init: { bcm: bcmBase(), files: {} },
+    objectives: [
+      { text: 'Image dgx-h100-image-2026q4 exists (cloned from dgx-h100-image) and contains datacenter-gpu-manager-4-cuda12', check: st => { const i = st.bcm.softwareimage['dgx-h100-image-2026q4']; return !!i && i.packages.includes('datacenter-gpu-manager-4-cuda12') && i.packages.includes('nvidia-driver-570-server'); } },
+      { text: 'The new image was built as a copy: rollback image dgx-h100-image is unchanged', check: st => !!st.bcm.softwareimage['dgx-h100-image-2026q4'] && JSON.stringify(st.bcm.softwareimage['dgx-h100-image'].packages) === JSON.stringify(H100_PKGS) && st.bcm.softwareimage['dgx-h100-image'].path === '/cm/images/dgx-h100-image' },
+      { text: 'Category dgx-h100 uses dgx-h100-image-2026q4', check: st => st.bcm.category['dgx-h100'].softwareimage === 'dgx-h100-image-2026q4' },
+      { text: 'node001–node008 run the new image with DCGM 4 and were not rebooted', check: st => [1, 2, 3, 4, 5, 6, 7, 8].every(i => { const d = st.bcm.device['node00' + i]; return d.status === 'UP' && !d.rebooted && d.image === 'dgx-h100-image-2026q4' && d.packages.includes('datacenter-gpu-manager-4-cuda12'); }) }
+    ],
+    hints: ['In cmsh <code>softwareimage</code> mode, <code>clone</code> the image and then <code>commit</code>. BCM only copies the files when you commit.', 'Install packages inside the image with <code>cm-chroot-sw-img /cm/images/&lt;image&gt;</code> (then <code>apt install</code>, then <code>exit</code>), not on the head node or the nodes themselves.', 'Point the category at the new image: <code>category</code> → <code>use dgx-h100</code> → <code>set softwareimage ...</code> → <code>commit</code>.', '<code>imageupdate</code> without <code>-w</code> is only a dry run. Use <code>imageupdate -c dgx-h100 -w</code> in device mode.'],
+    solution: ['cmsh', 'softwareimage', 'clone dgx-h100-image dgx-h100-image-2026q4', 'commit', 'quit', 'cm-chroot-sw-img /cm/images/dgx-h100-image-2026q4', 'apt install -y datacenter-gpu-manager-4-cuda12', 'exit', 'cmsh', 'category', 'use dgx-h100', 'set softwareimage dgx-h100-image-2026q4', 'commit', 'device', 'imageupdate -c dgx-h100 -w', 'quit', 'ssh node001 dpkg -l datacenter-gpu-manager-4-cuda12'],
+    help: 'Commands: cmsh (type help inside), cm-chroot-sw-img <image dir>, chroot <dir> <cmd>, apt / apt-get (inside the chroot), dpkg -l, ssh <node>, clear, history.'
+  },
+  {
+    id: 'slurm-drain', area: 'Troubleshoot Slurm in BCM', title: 'A 4-node job stuck on drained and non-responding nodes', minutes: 15, modules: ['bcm', 'slurm'],
+    desc: 'Use sinfo/scontrol, log into the nodes, fix the root causes with systemctl and resume the nodes.',
+    brief: '<p>Users report that job <b>1042</b> (alice, a 4-node NCCL test pinned to <code>node[001-004]</code>) has been pending since last night. BCM manages the cluster, and slurmctld runs on the head node <code>bcm-head</code>.</p><p>Find out why, fix every root cause on the nodes, and get the job running. Do <b>not</b> cancel or modify the job. Make sure your fix survives a reboot.</p>',
+    init: {
+      bcm: (() => { const b = bcmBase(); ['node005', 'node006', 'node007', 'node008'].forEach(n => delete b.device[n]); return b; })(),
+      slurm: {
+        nodes: {
+          node001: { state: 'idle', drain: false, nores: false, reason: '', job: null },
+          node002: { state: 'idle', drain: false, nores: false, reason: '', job: null },
+          node003: { state: 'idle', drain: true, nores: false, reason: 'fw update - jdoe', ruser: 'root', rtime: '2026-10-05T09:12:44', job: null, boot: '2026-10-05T09:40:12' },
+          node004: { state: 'down', drain: false, nores: true, reason: 'Not responding', ruser: 'slurm', rtime: '2026-10-06T22:41:03', job: null }
+        },
+        partitions: [{ name: 'defq', def: true, state: 'UP', nodes: ['node001', 'node002', 'node003', 'node004'] }],
+        jobs: [{ id: 1042, name: 'nccl-allreduce', user: 'alice', uid: 1001, account: 'research', part: 'defq', N: 4, gpus: 8, qos: 'normal', st: 'PD', reason: 'ReqNodeNotAvail, UnavailableNodes:node[003-004]', prio: 4294901, req: ['node001', 'node002', 'node003', 'node004'], submit: '2026-10-06T23:05:17', alloc: [] }],
+        qos: { normal: { prio: 0, maxGpuPU: null } },
+        assoc: [{ account: 'research', user: 'alice', qos: ['normal'], def: 'normal' }]
+      },
+      hosts: {
+        node001: { services: svcOk() }, node002: { services: svcOk() }, node003: { services: svcOk() },
+        node004: {
+          services: { munge: { active: false, enabled: false, since: '2026-10-06T22:38:12Z' }, slurmd: { active: true, enabled: true, since: '2026-10-01T06:13:31Z', pid: 2211 } },
+          logs: {
+            munge: [{ t: '2026-10-06T22:38:12Z', src: 'systemd[1]', msg: 'Stopping munge.service - MUNGE authentication service...' }, { t: '2026-10-06T22:38:12Z', src: 'systemd[1]', msg: 'munge.service: Deactivated successfully.' }, { t: '2026-10-06T22:38:12Z', src: 'systemd[1]', msg: 'Stopped munge.service - MUNGE authentication service.' }],
+            slurmd: ['22:38:40', '22:40:58', '22:45:06', '22:53:14', '23:09:22', '23:41:30'].flatMap(h => [{ t: `2026-10-06T${h}Z`, src: 'slurmd[2211]', msg: 'slurmd: error: If munged is up, restart with --num-threads=10' }, { t: `2026-10-06T${h}Z`, src: 'slurmd[2211]', msg: 'slurmd: error: Munge encode failed: Failed to access "/run/munge/munge.socket.2": No such file or directory' }])
+          },
+          syslog: [{ t: '2026-10-06T22:37:55Z', src: 'sudo[3990]', msg: 'jdoe : TTY=pts/0 ; PWD=/root ; USER=root ; COMMAND=/usr/bin/systemctl disable --now munge' }]
+        }
+      },
+      gpuHosts: GPU_NODES(['node001', 'node002', 'node003', 'node004']),
+      files: {}
+    },
+    svcDeps: { slurmd: ['munge'] },
+    svcFailLogs: { slurmd: ['slurmd: slurmd version 24.05.4 started', 'slurmd: error: If munged is up, restart with --num-threads=10', 'slurmd: error: Munge encode failed: Failed to access "/run/munge/munge.socket.2": No such file or directory'] },
+    svcOkLogs: { slurmd: ['slurmd: slurmd version 24.05.4 started', 'slurmd: slurmd started on %T', 'slurmd: CPUs=224 Boards=1 Sockets=2 Cores=56 Threads=2 Memory=2063000 TmpDisk=0 Uptime=1987 CPUSpecList=(null) FeaturesAvail=(null) FeaturesActive=(null)'], munge: ['munged: Munge daemon 0.5.15 started'] },
+    objectives: [
+      { text: 'node003 is back in service (no longer drained)', check: st => !st.slurm.nodes.node003.drain && st.slurm.nodes.node003.state !== 'down' },
+      { text: 'node004 is responding again (munge and slurmd running) and back in service', check: st => { const n = st.slurm.nodes.node004, h = st.hosts.node004.services; return !n.nores && n.state !== 'down' && !n.drain && h.munge.active && h.slurmd.active; } },
+      { text: 'munge is enabled at boot on node004 (the fix survives a reboot)', check: st => st.hosts.node004.services.munge.enabled },
+      { text: 'Job 1042 is running and was not cancelled', check: st => st.slurm.jobs.find(j => j.id === 1042).st === 'R' }
+    ],
+    hints: ['<code>sinfo -R</code> lists why each node is unavailable, and <code>squeue</code> shows the job\'s pending reason.', 'A node that an admin drained stays drained until someone resumes it. Check that it is healthy first (for example <code>ssh node003 nvidia-smi</code>).', '"Not responding" means slurmctld cannot talk to slurmd. Log into the node: slurmd may look active, but check <code>journalctl -u slurmd</code>. All Slurm traffic is authenticated through munge.', 'ReturnToService=0 (see <code>scontrol show config</code>): a node that went DOWN stays down after the fix until you run <code>scontrol update nodename=... state=resume</code>.'],
+    solution: ['sinfo -R', 'squeue', 'scontrol show node node003', 'ssh node003 nvidia-smi -L', 'scontrol update nodename=node003 state=resume', 'ssh node004', 'systemctl status slurmd', 'journalctl -u slurmd -n 5', 'systemctl status munge', 'systemctl enable --now munge', 'systemctl restart slurmd', 'exit', 'sinfo', 'scontrol update nodename=node004 state=resume', 'squeue'],
+    help: 'Commands: sinfo [-R|-N], squeue [-u|-j], scontrol show node|partition|job|config, scontrol update ..., sacctmgr show qos|assoc, scancel,\nssh <node> [cmd], systemctl status|start|stop|restart|enable|disable [--now] <unit>, journalctl -u <unit> [-n N], nvidia-smi [-L],\ncmsh (device → use <node> → services), clear, history.'
+  },
+  {
+    id: 'slurm-pending', area: 'Troubleshoot Slurm in BCM', title: 'Jobs stuck in PENDING: partition and QOS limits', minutes: 15, modules: ['slurm'],
+    desc: 'Read pending reasons, bring a partition back up and move a job to the right QOS without touching limits.',
+    brief: '<p>Several users complain that their jobs do not start:</p><ul><li><b>2210</b> (bob): the maintenance on the <code>gpu</code> partition finished this morning.</li><li><b>2211</b> (carol): her manager approved a 16-GPU run. Carol is entitled to the existing <code>large</code> QOS.</li></ul><p>Get both jobs running. Do <b>not</b> change any QOS limits, and do not cancel or requeue other users\' jobs.</p>',
+    init: {
+      slurm: {
+        nodes: Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map(i => [`node00${i}`, { state: 'idle', drain: false, nores: false, reason: '', job: i <= 2 ? 2201 : null }])),
+        partitions: [{ name: 'defq', def: true, state: 'UP', nodes: ['node001', 'node002', 'node003', 'node004'] }, { name: 'gpu', def: false, state: 'DOWN', nodes: ['node005', 'node006', 'node007', 'node008'] }],
+        jobs: [
+          { id: 2201, name: 'pretrain-7b', user: 'dave', uid: 1004, account: 'llm', part: 'defq', N: 2, gpus: 8, qos: 'large', st: 'R', reason: 'None', prio: 4294890, submit: '2026-10-07T06:01:44', start: '2026-10-07T06:02:10Z', alloc: ['node001', 'node002'] },
+          { id: 2210, name: 'nemo-sft', user: 'bob', uid: 1002, account: 'llm', part: 'gpu', N: 2, gpus: 8, qos: 'large', st: 'PD', reason: 'PartitionDown', prio: 4294880, submit: '2026-10-07T07:48:09', alloc: [] },
+          { id: 2211, name: 'finetune-llm', user: 'carol', uid: 1003, account: 'research', part: 'defq', N: 2, gpus: 8, qos: 'normal', st: 'PD', reason: 'QOSMaxGRESPerUser', prio: 4294870, submit: '2026-10-07T08:12:03', alloc: [] }
+        ],
+        qos: { normal: { prio: 0, maxGpuPU: 8 }, large: { prio: 10, maxGpuPU: 32 } },
+        assoc: [{ account: 'llm', user: 'bob', qos: ['large', 'normal'], def: 'normal' }, { account: 'research', user: 'carol', qos: ['large', 'normal'], def: 'normal' }, { account: 'llm', user: 'dave', qos: ['large', 'normal'], def: 'normal' }]
+      },
+      files: {}
+    },
+    objectives: [
+      { text: 'Partition gpu is UP', check: st => st.slurm.partitions.find(p => p.name === 'gpu').state === 'UP' },
+      { text: 'Job 2210 (bob) is running', check: st => st.slurm.jobs.find(j => j.id === 2210).st === 'R' },
+      { text: 'Job 2211 (carol) is running under QOS large', check: st => { const j = st.slurm.jobs.find(x => x.id === 2211); return j.st === 'R' && j.qos === 'large'; } },
+      { text: 'Done without changing QOS limits, and dave\'s job 2201 is still running', check: st => st.slurm.jobs.find(j => j.id === 2211).st === 'R' && st.slurm.qos.normal.maxGpuPU === 8 && st.slurm.qos.large.maxGpuPU === 32 && st.slurm.jobs.find(j => j.id === 2201).st === 'R' }
+    ],
+    hints: ['<code>squeue</code> shows each job\'s pending reason in parentheses.', 'PartitionDown: check with <code>scontrol show partition gpu</code>, then run <code>scontrol update partitionname=gpu state=up</code>. In a BCM-managed cluster, also make the change persistent in the BCM WLM configuration.', 'QOSMaxGRESPerUser: compare the job\'s ReqTRES (<code>scontrol show job 2211</code>) with <code>sacctmgr show qos format=name,maxtrespu</code>.', 'List carol\'s allowed QOS with <code>sacctmgr show assoc user=carol format=user,qos</code>, then run <code>scontrol update jobid=2211 qos=large</code>.'],
+    solution: ['squeue', 'scontrol show partition gpu', 'scontrol update partitionname=gpu state=up', 'scontrol show job 2211', 'sacctmgr show qos format=name,maxtrespu', 'sacctmgr show assoc user=carol format=user,account,qos,defaultqos', 'scontrol update jobid=2211 qos=large', 'squeue'],
+    help: 'Commands: sinfo [-R|-N|-p], squeue [-u|-j|-p], scontrol show node|partition|job|config, scontrol update NodeName=|PartitionName=|JobId= ...,\nsacctmgr [-i] show qos|assoc [format=...] [user=...], sacctmgr modify qos <name> set ..., scancel, clear, history.'
+  },
+  {
+    id: 'k8s-gpu-pod', area: 'Run a workload with Kubernetes', title: 'Run a GPU validation pod', minutes: 15, modules: ['k8s'],
+    desc: 'Fix a broken GPU pod manifest, create the namespace, find out why the pod is Pending and get Test PASSED.',
+    brief: '<p>The ML team needs to validate GPU access on the Kubernetes cluster (deployed by BCM, with the NVIDIA GPU Operator installed).</p><p>Run the CUDA vectoradd sample as a pod named <code>gpu-test</code> in namespace <code>ml-team</code>. It must request <b>1 GPU</b> and use image <code>nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0</code>. A draft manifest is in <code>~/gpu-test.yaml</code>.</p><p>The pod must complete with <code>Test PASSED</code>. <b>dgx-02</b> came back from hardware maintenance yesterday and its ticket is closed. Do not disrupt the research team\'s training job.</p>',
+    images: { 'nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0': { oneshot: true, size: '120356412' }, 'nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.4.1': { oneshot: true, size: '119874310' } },
+    init: {
+      k8s: {
+        nodes: [k8sNode('cpu-worker01', 0, '10.141.0.31'), k8sNode('dgx-01', 8, '10.141.0.11'), k8sNode('dgx-02', 8, '10.141.0.12', { unsched: true, events: [{ reason: 'NodeNotSchedulable', msg: 'Node dgx-02 status is now: NodeNotSchedulable', t: Date.parse('2026-10-05T14:02:00Z') }] }), k8sNode('k8s-master01', 0, '10.141.0.30', { roles: 'control-plane', taints: [{ key: 'node-role.kubernetes.io/control-plane', value: '', effect: 'NoSchedule' }] })],
+        namespaces: NS(['default', 'kube-system', 'gpu-operator', 'research']),
+        pods: [...OPERATOR_PODS(), mkPod('research', 'llm-train-0', 'nvcr.io/nvidia/nemo:25.04', 'dgx-01', 'Running', 8, '2026-10-06T19:20:00Z', { logs: '[NeMo I 2026-10-07 09:58:12 nemo_logging:381] global_step=41200 reduced_train_loss=1.874 lr=1.2e-4' })],
+        deployments: [], secrets: [], sa: {}, daemonsets: OPERATOR_DS()
+      },
+      files: { '/root/gpu-test.yaml': 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: gpu-test\n  namespace: ml-team\nspec:\n  restartPolicy: OnFailure\n  containers:\n  - name: cuda-vectoradd\n    image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0\n    resources:\n      requests:\n        nvidia.com/gpu: 1\n' }
+    },
+    objectives: [
+      { text: 'Namespace ml-team exists', check: st => st.k8s.namespaces.some(n => n.name === 'ml-team') },
+      { text: 'Pod gpu-test in ml-team requests exactly 1 GPU (resources.limits nvidia.com/gpu: 1)', check: st => { const p = st.k8s.pods.find(x => x.ns === 'ml-team' && x.name === 'gpu-test'); return !!p && p.gpu === 1; } },
+      { text: 'gpu-test ran on a GPU node and completed with Test PASSED', check: st => { const p = st.k8s.pods.find(x => x.ns === 'ml-team' && x.name === 'gpu-test'); return !!p && p.ranOk === true; } },
+      { text: 'dgx-02 is back in service and research/llm-train-0 is still running', check: st => !st.k8s.nodes.find(n => n.name === 'dgx-02').unsched && (st.k8s.pods.find(p => p.ns === 'research' && p.name === 'llm-train-0') || {}).phase === 'Running' }
+    ],
+    hints: ['Read each API error carefully: the API server rejects an invalid manifest before any pod exists. Once the pod exists, the Events section of <code>kubectl describe pod gpu-test -n ml-team</code> says why the scheduler cannot place it.', 'Extended resources such as <code>nvidia.com/gpu</code> must be set under <code>resources.limits</code>. A request alone is rejected.', 'Check <code>kubectl get nodes</code>: a node in <code>SchedulingDisabled</code> state is cordoned, and <code>kubectl uncordon</code> brings it back.', 'Pods are immutable. To change their resources, delete the pod and apply the manifest again.'],
+    solution: ['kubectl get nodes', 'cat gpu-test.yaml', 'kubectl create namespace ml-team', { cmd: 'vi gpu-test.yaml', save: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: gpu-test\n  namespace: ml-team\nspec:\n  restartPolicy: OnFailure\n  containers:\n  - name: cuda-vectoradd\n    image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0\n    resources:\n      limits:\n        nvidia.com/gpu: 1\n' }, 'kubectl apply -f gpu-test.yaml', 'kubectl describe pod gpu-test -n ml-team', 'kubectl describe node dgx-02', 'kubectl uncordon dgx-02', 'kubectl get pods -n ml-team', 'kubectl get pods -n ml-team', 'kubectl logs gpu-test -n ml-team'],
+    help: 'Commands: kubectl get|describe|create|apply|delete|logs|cordon|uncordon|patch|edit|rollout|run|config, vi|nano <file>, cat, ls, clear, history.\nResources: pods, nodes, deployments, secrets, namespaces, events, serviceaccounts, daemonsets.'
+  },
+  {
+    id: 'k8s-ngc-pull', area: 'Run a workload with Kubernetes', title: 'Triton from a private NGC registry: ImagePullBackOff', minutes: 15, modules: ['k8s'],
+    desc: 'Diagnose a 401 from nvcr.io, create a correct docker-registry secret in the right namespace and wire it into the deployment.',
+    brief: '<p>The inference team deployed Triton (<code>deployment/triton</code>, namespace <code>inference</code>) from the company\'s <b>private NGC registry</b>, but the pod never starts.</p><p>The NGC API key of the team\'s service account is in <code>~/ngc-api-key.txt</code>.</p><p>Fix it so that Triton runs. Keep the image as it is.</p>',
+    ngcKey: NGC_KEY,
+    images: { 'nvcr.io/itqai/inference/triton-llm:24.08': { private: true, size: '9876543210', logs: TRITON_LOG } },
+    init: {
+      k8s: {
+        nodes: [k8sNode('cpu-worker01', 0, '10.141.0.31'), k8sNode('dgx-01', 8, '10.141.0.11'), k8sNode('dgx-02', 8, '10.141.0.12'), k8sNode('k8s-master01', 0, '10.141.0.30', { roles: 'control-plane', taints: [{ key: 'node-role.kubernetes.io/control-plane', value: '', effect: 'NoSchedule' }] })],
+        namespaces: NS(['default', 'kube-system', 'gpu-operator', 'inference']),
+        pods: [...OPERATOR_PODS(), Object.assign(mkPod('inference', 'x2k4p', 'nvcr.io/itqai/inference/triton-llm:24.08', 'dgx-01', 'ImagePullBackOff', 1, '2026-10-07T09:46:00Z'), { owner: 'triton', hash: '@', restarts: 0,
+          manifest: { apiVersion: 'v1', kind: 'Pod', metadata: { name: 'x2k4p', namespace: 'inference', labels: { app: 'triton' } }, spec: { containers: [{ name: 'triton', image: 'nvcr.io/itqai/inference/triton-llm:24.08', args: ['tritonserver', '--model-repository=/models'], resources: { limits: { 'nvidia.com/gpu': 1 } } }] } },
+          events: [{ type: 'Normal', reason: 'Scheduled', msg: 'Successfully assigned inference/triton to dgx-01', from: 'default-scheduler', t: Date.parse('2026-10-07T09:46:00Z'), first: Date.parse('2026-10-07T09:46:00Z'), count: 1 }, { type: 'Warning', reason: 'Failed', msg: 'Failed to pull image "nvcr.io/itqai/inference/triton-llm:24.08": failed to pull and unpack image "nvcr.io/itqai/inference/triton-llm:24.08": failed to resolve reference "nvcr.io/itqai/inference/triton-llm:24.08": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed', from: 'kubelet', t: Date.parse('2026-10-07T09:58:40Z'), first: Date.parse('2026-10-07T09:46:05Z'), count: 7 }, { type: 'Normal', reason: 'BackOff', msg: 'Back-off pulling image "nvcr.io/itqai/inference/triton-llm:24.08"', from: 'kubelet', t: Date.parse('2026-10-07T09:59:30Z'), first: Date.parse('2026-10-07T09:46:20Z'), count: 52 }] })],
+        deployments: [{ name: 'triton', ns: 'inference', t0: Date.parse('2026-10-07T09:46:00Z'), manifest: { apiVersion: 'apps/v1', kind: 'Deployment', metadata: { name: 'triton', namespace: 'inference', labels: { app: 'triton' } }, spec: { replicas: 1, selector: { matchLabels: { app: 'triton' } }, template: { metadata: { labels: { app: 'triton' } }, spec: { containers: [{ name: 'triton', image: 'nvcr.io/itqai/inference/triton-llm:24.08', args: ['tritonserver', '--model-repository=/models'], ports: [{ containerPort: 8000 }, { containerPort: 8001 }, { containerPort: 8002 }], resources: { limits: { 'nvidia.com/gpu': 1 } } }] } } } } }],
+        secrets: [{ ns: 'default', name: 'ngc-secret', server: 'nvcr.io', user: '$oauthtoken', pass: NGC_KEY, t0: Date.parse('2026-09-12T08:00:00Z') }],
+        sa: {}, daemonsets: OPERATOR_DS()
+      },
+      files: { '/root/ngc-api-key.txt': NGC_KEY + '\n' }
+    },
+    objectives: [
+      { text: 'Namespace inference has a docker-registry secret for nvcr.io with valid NGC credentials (username $oauthtoken)', check: (st, s) => st.k8s.secrets.some(x => x.ns === 'inference' && K8S.validCred(s, x)) },
+      { text: 'The triton pod pulls with that secret (deployment imagePullSecrets or the default ServiceAccount)', check: (st, s) => st.k8s.pods.some(p => p.owner === 'triton' && p.ns === 'inference' && p.pullSecrets.some(n => { const x = st.k8s.secrets.find(y => y.ns === 'inference' && y.name === n); return x && K8S.validCred(s, x); })) },
+      { text: 'deployment/triton is 1/1 available (pod Running)', check: st => st.k8s.pods.some(p => p.owner === 'triton' && p.ns === 'inference' && p.phase === 'Running') },
+      { text: 'Triton runs with the original image (nvcr.io/itqai/inference/triton-llm:24.08), no image swap', check: st => { const d = st.k8s.deployments.find(x => x.name === 'triton' && x.ns === 'inference'); return !!d && d.manifest.spec.template.spec.containers[0].image === 'nvcr.io/itqai/inference/triton-llm:24.08' && st.k8s.pods.some(p => p.owner === 'triton' && p.ns === 'inference' && p.phase === 'Running'); } }
+    ],
+    hints: ['<code>kubectl describe pod -n inference</code>: "pull access denied ... insufficient_scope" from nvcr.io means the pull had no valid credentials (with wrong credentials you get a 401 from nvcr.io/proxy_auth instead).', 'Secrets are namespaced: <code>kubectl get secrets -A</code>. A pod can only use pull secrets from its own namespace.', 'The NGC username is literally <code>$oauthtoken</code>. Wrap it in single quotes, otherwise the shell expands it to an empty string. Check it with <code>kubectl get secret &lt;name&gt; -n inference -o yaml</code> and <code>base64 -d</code>.', 'Reference the secret in <code>spec.template.spec.imagePullSecrets</code> with <code>kubectl patch</code> or <code>kubectl edit</code> (that change creates a new pod), or add it to the namespace\'s default ServiceAccount and restart the rollout.'],
+    solution: ['kubectl get pods -n inference', 'kubectl describe pod -n inference', 'kubectl get secrets -A', "kubectl create secret docker-registry ngc-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=\"$(cat ~/ngc-api-key.txt)\" -n inference", 'kubectl patch deployment triton -n inference -p \'{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ngc-secret"}]}}}}\'', 'kubectl get pods -n inference', 'kubectl get pods -n inference', 'kubectl rollout status deployment/triton -n inference'],
+    help: 'Commands: kubectl get|describe|create|apply|delete|logs|patch|edit|rollout|run|config, cat, ls, echo, export, base64 -d (in a pipe), vi|nano <file>, clear, history.\nResources: pods, deployments, secrets, namespaces, events, serviceaccounts, nodes.'
+  }
+];
+
+return { LABS, create, exec, prompt, save, cancelEdit, evaluate, _internal: { parseYAML, toYAML, tokenize, hostlist, expandHosts } };
+})();
+// LAB-ENGINE-END
+
+// ===================== UI =====================
+const STORE_KEY = 'nvidia-ncp-aio-labs-v1';
+const SESSION_KEY = 'nvidia-ncp-aio-labs-session-v1';
+const EXAM_MINUTES = 60, WARN_SECS = 300, EXAM_PASS_PCT = 75;
+const $ = id => document.getElementById(id);
+let session = null, lab = null, exam = null, timerInt = null, labStart = 0, hintIdx = 0, solutionViewed = false, histPos = -1, editorState = null, submitted = false, actions = [], replaying = false;
+
+function loadBest() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
+function saveBest(id, pct) { const b = loadBest(); if (!(id in b) || pct > b[id]) b[id] = pct; try { localStorage.setItem(STORE_KEY, JSON.stringify(b)); } catch (e) {} }
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const areasOf = () => [...new Set(LabEngine.LABS.map(l => l.area))];
+const objectiveItems = res => res.map(r => `<li class="${r.ok ? 'ok' : 'ko'}">${r.ok ? '&#10004;' : '&#10008;'} ${escapeHtml(r.text)}</li>`).join('');
+
+// In-progress lab saved after every command so a reload (or iPad tab discard) can resume it.
+function saveSession() {
+  if (!session || replaying) return;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ labId: lab.id, actions, hintIdx, solutionViewed, labStart, exam })); } catch (e) {}
+}
+function loadSession() { try { const v = JSON.parse(localStorage.getItem(SESSION_KEY)); return v && LabEngine.LABS.some(l => l.id === v.labId) ? v : null; } catch (e) { return null; } }
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+
+function renderHome() {
+  const best = loadBest(), saved = loadSession();
+  const resume = saved ? `<div class="exam-box" id="resumeBox"><div><b>Resume your ${saved.exam ? 'exam simulation' : 'lab'}?</b><br><span style="color:#535353;font-size:0.9rem;">${escapeHtml(LabEngine.LABS.find(l => l.id === saved.labId).title)} · ${saved.actions.length} commands</span></div><div style="display:flex;gap:8px;"><button class="btn btn-primary" onclick="resumeSession()">Resume</button><button class="btn btn-secondary" onclick="discardSession()">Discard</button></div></div>` : '';
+  $('labList').innerHTML = resume + areasOf().map(a => `<div class="area"><h3>${escapeHtml(a)} <span class="badge">${LabEngine.LABS.filter(l => l.area === a).length} labs</span></h3><div class="lab-cards">${LabEngine.LABS.filter(l => l.area === a).map(l => `
+    <div class="lab-card"><h4>${escapeHtml(l.title)}</h4><div class="meta"><span>&#9201; ~${l.minutes} min</span><span>${l.objectives.length} objectives</span>${l.id in best ? `<span class="best ${best[l.id] === 100 ? 'good' : 'bad'}">Best: ${best[l.id]}%</span>` : ''}</div>
+    <div class="desc">${escapeHtml(l.desc)}</div><div><button class="btn btn-primary btn-small" onclick="startLab('${l.id}')">Start lab</button></div></div>`).join('')}</div></div>`).join('');
+  $('headerStats').textContent = `${LabEngine.LABS.length} labs · ${Object.keys(best).length} attempted`;
+}
+function show(screen) { $('homeScreen').classList.toggle('hidden', screen !== 'home'); $('labScreen').classList.toggle('hidden', screen !== 'lab'); }
+
+function startLab(id, restore) {
+  closeEditor();
+  lab = LabEngine.LABS.find(l => l.id === id);
+  session = LabEngine.create(lab);
+  hintIdx = 0; solutionViewed = false; histPos = -1; submitted = false; actions = [];
+  $('labArea').textContent = lab.area; $('labTitle').textContent = lab.title; $('labBrief').innerHTML = lab.brief;
+  $('labObjectives').innerHTML = lab.objectives.map(o => `<li>${escapeHtml(o.text)}</li>`).join('');
+  $('hintBox').innerHTML = ''; $('solutionBox').classList.add('hidden'); $('solutionBox').innerHTML = '';
+  ['hintBtn', 'solBtn', 'resetBtn'].forEach(b => { $(b).disabled = !!exam; });
+  $('hintBtn').textContent = `Hint (${lab.hints.length})`;
+  $('termOut').innerHTML = '';
+  termPrint(`NVIDIA NCP-AIO lab simulator · ${lab.title}\nYou are root on the BCM head node. Type "help" to list the commands supported in this lab.\n`, 'sys');
+  labStart = Date.now();
+  if (restore) replay(restore);
+  updatePrompt();
+  if (!exam) startTimer();
+  show('lab'); focusInput();
+  saveSession();
+}
+function replay(saved) {
+  replaying = true;
+  labStart = saved.labStart || labStart;
+  let ed = null;
+  for (const a of saved.actions) {
+    if ('cmd' in a) { ed = runCommand(a.cmd).editor || null; }
+    else if ('save' in a && ed) { const msg = LabEngine.save(session, ed, a.save); if (msg) termPrint(msg); actions.push(a); ed = null; }
+    else if ('cancel' in a) { session.pending = null; actions.push(a); }
+  }
+  for (let i = 0; i < (saved.hintIdx || 0); i++) nextHint();
+  if (saved.solutionViewed) { solutionViewed = true; showSolution(); }
+  termPrint(`[session restored: ${saved.actions.length} actions replayed]`, 'sys');
+  replaying = false;
+}
+function resumeSession() {
+  const saved = loadSession(); if (!saved) return renderHome();
+  exam = saved.exam || null;
+  if (exam && exam.results.some(r => r.id === saved.labId)) {
+    // The lab was already submitted: continue with the next one instead of reopening it.
+    if (exam.idx >= exam.queue.length - 1) { show('lab'); return finishExam(); }
+    exam.idx++; startTimer(); return startLab(exam.queue[exam.idx]);
+  }
+  if (exam) startTimer();
+  startLab(saved.labId, saved);
+}
+function discardSession() { clearSession(); renderHome(); }
+function startExamMode() {
+  const picks = areasOf().map(a => { const ls = LabEngine.LABS.filter(l => l.area === a); return ls[Math.floor(Math.random() * ls.length)].id; });
+  exam = { queue: picks, idx: 0, results: [], deadline: Date.now() + EXAM_MINUTES * 60 * 1000 };
+  startTimer(); startLab(picks[0]);
+}
+function startTimer() {
+  clearInterval(timerInt);
+  const tickT = () => {
+    let rem, over = false;
+    if (exam) {
+      rem = Math.round((exam.deadline - Date.now()) / 1000);
+      if (rem <= 0) {
+        rem = 0; clearInterval(timerInt);
+        if (!submitted) submitLab(true);
+        else { exam.idx = exam.queue.length; saveSession(); $('resultTitle').textContent = 'Time is up'; $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>'; }
+      }
+    } else { rem = lab.minutes * 60 - Math.round((Date.now() - labStart) / 1000); if (rem < 0) { over = true; rem = -rem; } }
+    const m = Math.floor(rem / 60), s = rem % 60;
+    $('labTimer').textContent = `${over ? '+' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}${exam ? ` · lab ${Math.min(exam.idx + 1, exam.queue.length)}/${exam.queue.length}` : ''}`;
+    $('labTimer').classList.toggle('over', over || (!!exam && rem < WARN_SECS));
+  };
+  tickT(); timerInt = setInterval(tickT, 1000);
+}
+function termPrint(text, cls) { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = text; $('termOut').appendChild(d); $('terminal').scrollTop = $('terminal').scrollHeight; }
+function updatePrompt() { $('termPrompt').textContent = LabEngine.prompt(session); }
+function focusInput() { if (window.getSelection && String(window.getSelection())) return; $('termInput').focus(); }
+function runCommand(v) {
+  termPrint(LabEngine.prompt(session) + v, 'cmdline');
+  actions.push({ cmd: v });
+  const r = LabEngine.exec(session, v);
+  if (r.clear) $('termOut').innerHTML = '';
+  else if (r.out) termPrint(r.out);
+  return r;
+}
+
+$('termInput').addEventListener('keydown', e => {
+  if (!session) return;
+  const inp = $('termInput');
+  if (e.key === 'Enter') {
+    const v = inp.value; inp.value = ''; histPos = -1;
+    const r = runCommand(v);
+    if (r.editor) openEditor(r.editor);
+    updatePrompt();
+    saveSession();
+    $('terminal').scrollTop = $('terminal').scrollHeight;
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    const h = session.hist; if (!h.length) return;
+    e.preventDefault();
+    if (e.key === 'ArrowUp') histPos = histPos < 0 ? h.length - 1 : Math.max(0, histPos - 1);
+    else histPos = histPos < 0 ? -1 : histPos + 1;
+    if (histPos >= h.length) histPos = -1;
+    inp.value = histPos < 0 ? '' : h[histPos];
+  } else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); $('termOut').innerHTML = ''; }
+  else if (e.key === 'c' && e.ctrlKey && !String(window.getSelection())) { e.preventDefault(); termPrint(LabEngine.prompt(session) + inp.value + '^C', 'cmdline'); inp.value = ''; if (session.pending) { session.pending = null; actions.push({ cancel: true }); saveSession(); } updatePrompt(); }
+});
+
+function openEditor(ed) { editorState = ed; $('editorTitle').textContent = ed.title; $('editorArea').value = ed.content; $('editorModal').classList.remove('hidden'); $('editorArea').focus(); }
+function closeEditor() { $('editorModal').classList.add('hidden'); editorState = null; if (session) focusInput(); }
+function editorSave() {
+  if (!editorState || !session) return closeEditor();
+  const content = $('editorArea').value, msg = LabEngine.save(session, editorState, content);
+  actions.push({ save: content });
+  if (msg) termPrint(msg);
+  closeEditor(); updatePrompt(); saveSession();
+}
+function editorQuit() { if (!editorState) return; const msg = LabEngine.cancelEdit(editorState); if (msg && session) termPrint(msg); closeEditor(); }
+$('editorArea').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); editorSave(); }
+  else if (e.key === 'Escape') { e.preventDefault(); editorQuit(); }
+  else if (e.key === 'Tab') { e.preventDefault(); const t = e.target, p = t.selectionStart; t.value = t.value.slice(0, p) + '  ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = p + 2; }
+});
+window.addEventListener('beforeunload', e => { if (exam) { e.preventDefault(); e.returnValue = ''; } });
+
+function nextHint() { if (exam || hintIdx >= lab.hints.length) return; const d = document.createElement('div'); d.innerHTML = `<b>Hint ${hintIdx + 1}:</b> ${lab.hints[hintIdx]}`; $('hintBox').appendChild(d); hintIdx++; $('hintBtn').textContent = `Hint (${lab.hints.length - hintIdx})`; if (hintIdx >= lab.hints.length) $('hintBtn').disabled = true; saveSession(); }
+function showSolution() {
+  if (exam) return;
+  if (!solutionViewed && !confirm('Show the reference solution? Try the lab first, then compare.')) return;
+  solutionViewed = true;
+  const steps = lab.solution.map(x => typeof x === 'string' ? x : `${x.cmd}\n    # in the editor, make the file:\n${x.save.replace(/^/gm, '    ')}`).join('\n');
+  $('solutionBox').innerHTML = `<b>Reference solution</b> (other valid paths also pass):<pre>${escapeHtml(steps)}</pre>`;
+  $('solutionBox').classList.remove('hidden');
+  saveSession();
+}
+function resetLab() { if (exam) return; if (confirm('Reset this lab to its initial state?')) startLab(lab.id); }
+function backHome() {
+  if (exam && !confirm('Leave the exam simulation? Your progress will be lost.')) return;
+  closeEditor();
+  clearInterval(timerInt); exam = null; session = null; clearSession(); $('resultModal').classList.add('hidden'); renderHome(); show('home');
+}
+function showResult() { $('resultModal').classList.remove('hidden'); const b = document.querySelector && document.querySelector('#resultActions button'); if (b) b.focus(); }
+function submitLab(timeUp) {
+  if (!session) return;
+  if (timeUp) closeEditor();
+  let res;
+  try { res = LabEngine.evaluate(session); } catch (e) { res = lab.objectives.map(o => ({ text: o.text, ok: false })); }
+  submitted = true;
+  const ok = res.filter(r => r.ok).length, pct = Math.round(100 * ok / res.length);
+  $('labObjectives').innerHTML = $('resultList').innerHTML = objectiveItems(res);
+  if (!solutionViewed) saveBest(lab.id, pct);
+  const mins = Math.round((Date.now() - labStart) / 60000);
+  $('resultTitle').textContent = timeUp ? 'Time is up' : lab.title;
+  $('resultScore').textContent = `${pct}%`; $('resultScore').className = 'score-big ' + (pct === 100 ? 'pass' : 'fail');
+  $('resultFlags').textContent = exam ? `Exam lab ${exam.idx + 1} of ${exam.queue.length}` : `${ok}/${res.length} objectives · ${mins} min · hints used: ${hintIdx}${solutionViewed ? ' · solution viewed (score not saved)' : ''}`;
+  let html = '';
+  if (exam) {
+    exam.results.push({ id: lab.id, title: lab.title, pct });
+    const last = timeUp || exam.idx >= exam.queue.length - 1;
+    html = last ? '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>' : '<button class="btn btn-primary" onclick="nextExamLab()">Next lab</button>';
+    if (timeUp) exam.idx = exam.queue.length;
+    saveSession();
+  } else html = '<button class="btn btn-secondary" onclick="closeResult()">Keep working</button><button class="btn btn-primary" onclick="backHome()">Back to labs</button>';
+  $('resultActions').innerHTML = html;
+  showResult();
+}
+function closeResult() { $('resultModal').classList.add('hidden'); submitted = false; focusInput(); }
+function nextExamLab() { $('resultModal').classList.add('hidden'); exam.idx++; startLab(exam.queue[exam.idx]); }
+function finishExam() {
+  clearInterval(timerInt); closeEditor(); clearSession();
+  const done = exam.results, total = exam.queue.length;
+  const avg = Math.round(exam.queue.reduce((acc, id) => acc + ((done.find(r => r.id === id) || {}).pct || 0), 0) / total);
+  $('resultTitle').textContent = 'Exam simulation result (hands-on part)';
+  $('resultScore').textContent = `${avg}%`; $('resultScore').className = 'score-big ' + (avg >= EXAM_PASS_PCT ? 'pass' : 'fail');
+  $('resultFlags').textContent = 'On the real exam the labs count for 50% of the total score. NVIDIA does not publish the passing score.';
+  $('resultList').innerHTML = exam.queue.map(id => { const r = done.find(x => x.id === id), l = LabEngine.LABS.find(x => x.id === id); return `<li class="${r && r.pct === 100 ? 'ok' : 'ko'}">${escapeHtml(l.title)}: ${r ? r.pct + '%' : 'not submitted (0%)'}</li>`; }).join('');
+  $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="backHome()">Back to labs</button>';
+  exam = null;
+  showResult();
+}
+renderHome();
+</script>
+<script src="assets/js/pwa.js"></script>
+</body>
+</html>
