@@ -96,6 +96,12 @@
   .score-big.fail { color:#c81e10; }
   .result-flags { font-size:0.84rem; color:var(--text2); text-align:center; }
   .hidden { display:none !important; }
+  @supports (height: 100dvh) { .lab-grid { height:calc(100dvh - 150px); } }
+  @media (hover: none) and (pointer: coarse) {
+    .terminal, #termInput, #editorArea { font-size:16px; }
+    .btn { padding:12px 24px; min-height:44px; }
+    .btn-small { padding:8px 16px; min-height:44px; }
+  }
   @media (max-width: 1000px) {
     .lab-grid { grid-template-columns:1fr; height:auto; }
     .terminal { min-height:520px; }
@@ -147,15 +153,15 @@
     </aside>
     <section class="terminal" id="terminal" onclick="focusInput()">
       <div id="termOut"></div>
-      <div class="term-line"><span id="termPrompt" class="prompt"></span><input id="termInput" autocomplete="off" spellcheck="false" autocapitalize="off" aria-label="Terminal input"></div>
+      <div class="term-line"><span id="termPrompt" class="prompt"></span><input id="termInput" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" aria-label="Terminal input"></div>
     </section>
   </div>
 </div>
 
-<div id="editorModal" class="modal hidden">
+<div id="editorModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
   <div class="modal-box">
     <div class="modal-head"><b id="editorTitle"></b><span class="muted">Simplified editor. Ctrl+S saves and quits, Esc quits without saving.</span></div>
-    <textarea id="editorArea" spellcheck="false"></textarea>
+    <textarea id="editorArea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" aria-label="File content"></textarea>
     <div class="modal-actions">
       <button class="btn btn-primary btn-small" onclick="editorSave()">Save &amp; quit (:wq)</button>
       <button class="btn btn-secondary btn-small" onclick="editorQuit()">Quit without saving (:q!)</button>
@@ -163,7 +169,7 @@
   </div>
 </div>
 
-<div id="resultModal" class="modal hidden">
+<div id="resultModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
   <div class="modal-box" style="width:min(640px,100%);">
     <h2 id="resultTitle" style="text-align:center;">Lab result</h2>
     <div class="score-big" id="resultScore">0%</div>
@@ -193,7 +199,6 @@ const age = (t0, t) => { let x = Math.max(0, Math.floor((t - T(t0)) / 1000)); if
 const ago = (t0, t) => { const x = Math.max(0, Math.floor((t - T(t0)) / 1000)); if (x < 60) return `${x}s ago`; if (x < 3600) return `${Math.floor(x / 60)}min ${x % 60}s ago`; return `${Math.floor(x / 3600)}h ${Math.floor((x % 3600) / 60)}min ago`; };
 const center = (v, n) => { v = String(v); if (v.length >= n) return v; const l = Math.floor((n - v.length) / 2); return ' '.repeat(l) + v + ' '.repeat(n - v.length - l); };
 const dots = (name, w = 30) => name + ' ' + '.'.repeat(Math.max(3, w - name.length)) + ' ';
-const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 function table(headers, rows) {
   const w = headers.map((h, i) => Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)));
@@ -225,18 +230,21 @@ function hostlist(names) {
     return `${p}[${rs.join(',')}]`;
   }).join(',');
 }
+const MAX_HOSTS = 4096;
 function expandHosts(spec) {
   const out = [], parts = []; let depth = 0, cur = '';
+  const range = (a, b) => { if (b - a >= MAX_HOSTS) throw Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true }); };
   for (const ch of String(spec || '')) { if (ch === '[') depth++; if (ch === ']') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
   if (cur) parts.push(cur);
   for (const p of parts) {
     let m = p.match(/^([a-z-]*?)(\d+)\.\.([a-z-]*?)(\d+)$/i);
-    if (m) { for (let n = +m[2]; n <= +m[4]; n++) out.push(m[1] + String(n).padStart(m[2].length, '0')); continue; }
+    if (m) { range(+m[2], +m[4]); for (let n = +m[2]; n <= +m[4]; n++) out.push(m[1] + String(n).padStart(m[2].length, '0')); continue; }
     m = p.match(/^(.*)\[(.*)\](.*)$/);
     if (!m) { out.push(p); continue; }
     for (const r of m[2].split(',')) {
       const [a, b] = r.split('-');
       if (b === undefined) { out.push(m[1] + a + m[3]); continue; }
+      range(+a, +b);
       for (let n = +a; n <= +b; n++) out.push(m[1] + String(n).padStart(a.length, '0') + m[3]);
     }
   }
@@ -351,7 +359,7 @@ function tokenize(line, s) {
       const inner = line.slice(i + 2, j);
       return { v: s ? (runPipeline(s, inner).out || '').replace(/\n+$/, '') : '', end: j };
     }
-    if (line[i + 1] === '{') { const j = line.indexOf('}', i); return { v: (s && s.env[line.slice(i + 2, j)]) ?? '', end: j }; }
+    if (line[i + 1] === '{') { const j = line.indexOf('}', i); if (j < 0) throw new Error(`${line.slice(i)}: bad substitution`); return { v: (s && s.env[line.slice(i + 2, j)]) ?? '', end: j }; }
     const m = line.slice(i + 1).match(/^[A-Za-z_][A-Za-z0-9_]*/);
     if (!m) return { v: '$', end: i };
     return { v: (s && s.env[m[0]]) ?? '', end: i + m[0].length };
@@ -442,6 +450,7 @@ function shellLine(s, line) {
     res = s.cmsh ? { out: BCM.exec(s, part) } : runPipeline(s, part);
     if (res.editor || res.clear) return res;
     if (res.out !== '' && res.out != null) outs.push(res.out);
+    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).join(';'); break; }
     if (res.fail && seq.ops[i] === '&&') break;
   }
   return { out: outs.join('\n') };
@@ -449,8 +458,8 @@ function shellLine(s, line) {
 function dispatch(s, toks, raw) {
   const cmd = toks[0];
   if (s.chroot) return wrap(chrootCmd(s, toks));
-  for (const m of mods(s)) if (m.cmds && has(m.cmds, cmd)) return wrap(m.cmds[cmd](s, toks, raw));
-  if (has(COMMON, cmd)) return wrap(COMMON[cmd](s, toks, raw));
+  for (const m of mods(s)) if (m.cmds && Object.hasOwn(m.cmds, cmd)) return wrap(m.cmds[cmd](s, toks, raw));
+  if (Object.hasOwn(COMMON, cmd)) return wrap(COMMON[cmd](s, toks, raw));
   if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(cmd)) { const i = cmd.indexOf('='); s.env[cmd.slice(0, i)] = cmd.slice(i + 1); return { out: '' }; }
   return { out: `${cmd}: command not found`, fail: true };
 }
@@ -1286,7 +1295,9 @@ const K8S = {
         : `failed to pull and unpack image "${img}": failed to resolve reference "${img}": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed` };
   },
   step(s, p) {
-    const k = s.st.k8s, c0 = p.manifest.spec.containers[0], img = c0.image;
+    const k = s.st.k8s, c0 = (p.manifest.spec.containers || [])[0];
+    if (!c0) return;
+    const img = c0.image;
     if (p.phase === 'Pending' && !p.node) {
       const r = K8S.schedule(s, p);
       if (r.node) { p.node = r.node; p.phase = 'ContainerCreating'; K8S.ev(s, p, 'Normal', 'Scheduled', `Successfully assigned ${p.ns}/${p.name} to ${r.node}`, 'default-scheduler'); }
@@ -1382,7 +1393,7 @@ const K8S = {
     if (res === 'deployments') {
       const ds = k.deployments.filter(d => inNs(d) && (!name || d.name === name));
       if (name && !ds.length) return `Error from server (NotFound): deployments.apps "${name}" not found`;
-      if (name && P.out === 'yaml') return toYAML(K8S.depFull(d0(ds)));
+      if (name && P.out === 'yaml') return toYAML(K8S.depFull(ds[0]));
       if (!ds.length) return `No resources found in ${ns} namespace.`;
       return ktable((nsCol ? ['NAMESPACE'] : []).concat(['NAME', 'READY', 'UP-TO-DATE', 'AVAILABLE', 'AGE']), ds.map(d => { const r = K8S.depReady(s, d); return (nsCol ? [d.ns] : []).concat([d.name, `${r}/${d.manifest.spec.replicas ?? 1}`, String(d.manifest.spec.replicas ?? 1), String(r), age(d.t0, s.t)]); }));
     }
@@ -1519,14 +1530,22 @@ const K8S = {
     if (kind === 'Deployment') {
       if (o.apiVersion !== 'apps/v1') return `error: resource mapping not found for name: "${name}" namespace: "${ons}" from "${file}": no matches for kind "Deployment" in version "${o.apiVersion}"`;
       const ex = k.deployments.find(d => d.ns === ons && d.name === name);
-      const tpl = o.spec && o.spec.template;
-      if (!tpl || !tpl.spec || !tpl.spec.containers) return `The Deployment "${name}" is invalid: spec.template.spec.containers: Required value`;
+      const bad = K8S.validateDeployment(name, o); if (bad) return bad;
       if (ex) { const before = JSON.stringify(ex.manifest.spec); ex.manifest = deep(o); return JSON.stringify(ex.manifest.spec) === before ? `deployment.apps/${name} unchanged` : `deployment.apps/${name} configured`; }
       if (mode === 'apply' || mode === 'create') { if (!K8S.nsExists(s, ons)) return `Error from server (NotFound): error when creating "${file}": namespaces "${ons}" not found`; k.deployments.push({ name, ns: ons, manifest: deep(o), t0: s.t }); return `deployment.apps/${name} created`; }
     }
     if (kind === 'ServiceAccount') { if (name !== 'default') return 'Only the default ServiceAccount is simulated.'; k.sa[ons] = (o.imagePullSecrets || []).map(x => x.name); return `serviceaccount/default configured`; }
     return `error: kind ${kind} is not simulated in this lab`;
   },
+  validateDeployment(name, o) {
+    const tpl = o && o.spec && o.spec.template, cs = tpl && tpl.spec && tpl.spec.containers;
+    if (!Array.isArray(cs) || !cs.length) return `The Deployment "${name}" is invalid: spec.template.spec.containers: Required value`;
+    for (let i = 0; i < cs.length; i++) { if (!cs[i] || typeof cs[i] !== 'object' || !cs[i].name) return `The Deployment "${name}" is invalid: spec.template.spec.containers[${i}].name: Required value`; if (!cs[i].image) return `The Deployment "${name}" is invalid: spec.template.spec.containers[${i}].image: Required value`; }
+    const r = o.spec.replicas;
+    if (r !== undefined && (!Number.isInteger(r) || r < 0 || r > K8S.MAX_REPLICAS)) return `The Deployment "${name}" is invalid: spec.replicas: Invalid value: ${JSON.stringify(r)}: must be between 0 and ${K8S.MAX_REPLICAS} in this lab`;
+    return null;
+  },
+  MAX_REPLICAS: 20,
   validatePod(o) {
     const cs = o.spec && o.spec.containers;
     if (!Array.isArray(cs) || !cs.length) return 'spec.containers: Required value';
@@ -1589,7 +1608,9 @@ const K8S = {
     if (res === 'deployments') {
       const d = k.deployments.find(x => x.ns === ns && x.name === name);
       if (!d) return `Error from server (NotFound): deployments.apps "${name}" not found`;
-      const before = JSON.stringify(d.manifest); deepMerge(d.manifest, j);
+      const before = JSON.stringify(d.manifest), next = deepMerge(deep(d.manifest), j);
+      const bad = K8S.validateDeployment(name, next); if (bad) return bad;
+      d.manifest = next;
       return JSON.stringify(d.manifest) === before ? `deployment.apps/${name} patched (no change)` : `deployment.apps/${name} patched`;
     }
     if (res === 'serviceaccounts') {
@@ -1613,7 +1634,7 @@ const K8S = {
     const o = docs[0] || {};
     if (ed.res === 'deployments') {
       const d = s.st.k8s.deployments.find(x => x.ns === ed.ns && x.name === ed.name);
-      if (!o.spec || !o.spec.template || !o.spec.template.spec || !o.spec.template.spec.containers) return 'error: deployments.apps "' + ed.name + '" is invalid: spec.template.spec.containers: Required value';
+      const bad = K8S.validateDeployment(ed.name, o); if (bad) return 'error: ' + bad + '\nYour edit was not applied.';
       const before = JSON.stringify(d.manifest.spec); d.manifest = deep(o);
       return JSON.stringify(d.manifest.spec) === before ? 'Edit cancelled, no changes made.' : `deployment.apps/${ed.name} edited`;
     }
@@ -1640,7 +1661,6 @@ const K8S = {
     return K8S.applyObj(s, m, ns, 'STDIN', 'create');
   }
 };
-const d0 = a => a[0];
 
 const MODULES = { bcm: BCM, slurm: SLURM, k8s: K8S };
 const mods = s => s.lab.modules.map(n => MODULES[n]);
@@ -1656,12 +1676,19 @@ function tick(s) { mods(s).forEach(m => m.tick && m.tick(s)); }
 function exec(s, raw) {
   s.t += 5000 + (s.counter % 5) * 1500; s.counter++;
   const line = String(raw).replace(/\s+$/, '');
-  if (s.pending) { const p = s.pending; s.pending = null; s.hist.push(line); return { out: p.handle(line.trim()) || '' }; }
-  if (line.trim()) s.hist.push(line);
-  tick(s);
-  if (!line.trim()) return { out: '' };
-  try { return shellLine(s, line); }
-  catch (e) { return { out: 'simulator error: ' + e.message }; }
+  try {
+    if (s.pending) {
+      const p = s.pending; s.pending = null; s.hist.push(line);
+      const out = p.handle(line.trim()) || '';
+      if (!p.rest || !p.rest.trim()) return { out };
+      const more = shellLine(s, p.rest);
+      return { ...more, out: [out, more.out].filter(Boolean).join('\n') };
+    }
+    if (line.trim()) s.hist.push(line);
+    tick(s);
+    if (!line.trim()) return { out: '' };
+    return shellLine(s, line);
+  } catch (e) { return { out: e.user ? e.message : 'simulator error: ' + e.message, fail: true }; }
 }
 function prompt(s) {
   if (s.pending) return s.pending.prompt || '';
@@ -1676,7 +1703,7 @@ function save(s, ed, content) {
 }
 function cancelEdit(ed) { return ed.kind === 'k8s' ? 'Edit cancelled, no changes made.' : ''; }
 function evaluate(s) {
-  for (let i = 0; i < 6; i++) tick(s);
+  for (let i = 0; i < 6; i++) { try { tick(s); } catch (e) { break; } }
   return s.lab.objectives.map(o => { let ok = false; try { ok = !!o.check(s.st, s); } catch (e) { ok = false; } return { text: o.text, ok }; });
 }
 
@@ -1715,7 +1742,8 @@ const OPERATOR_PODS = () => [
 ];
 const OPERATOR_DS = () => [{ ns: 'gpu-operator', name: 'gpu-feature-discovery', sel: 'nvidia.com/gpu.deploy.gpu-feature-discovery=true' }, { ns: 'gpu-operator', name: 'nvidia-container-toolkit-daemonset', sel: 'nvidia.com/gpu.deploy.container-toolkit=true' }, { ns: 'gpu-operator', name: 'nvidia-dcgm-exporter', sel: 'nvidia.com/gpu.deploy.dcgm-exporter=true' }, { ns: 'gpu-operator', name: 'nvidia-device-plugin-daemonset', sel: 'nvidia.com/gpu.deploy.device-plugin=true' }, { ns: 'gpu-operator', name: 'nvidia-operator-validator', sel: 'nvidia.com/gpu.deploy.operator-validator=true' }];
 const NS = names => names.map(n => ({ name: n, t0: Date.parse('2026-08-27T08:00:00Z') }));
-const NGC_KEY = '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';
+// Fake key used as lab data only (not a real NVIDIA credential).
+const NGC_KEY = 'nvapi-LAB-EXAMPLE-KEY-not-a-real-credential-0000';
 
 const LABS = [
   {
@@ -1882,26 +1910,40 @@ return { LABS, create, exec, prompt, save, cancelEdit, evaluate, _internal: { pa
 
 // ===================== UI =====================
 const STORE_KEY = 'nvidia-ncp-aio-labs-v1';
+const SESSION_KEY = 'nvidia-ncp-aio-labs-session-v1';
+const EXAM_MINUTES = 60, WARN_SECS = 300, EXAM_PASS_PCT = 75;
 const $ = id => document.getElementById(id);
-let session = null, lab = null, exam = null, timerInt = null, labStart = 0, hintIdx = 0, solutionViewed = false, histPos = -1, editorState = null, submitted = false;
+let session = null, lab = null, exam = null, timerInt = null, labStart = 0, hintIdx = 0, solutionViewed = false, histPos = -1, editorState = null, submitted = false, actions = [], replaying = false;
 
 function loadBest() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; } }
 function saveBest(id, pct) { const b = loadBest(); if (!(id in b) || pct > b[id]) b[id] = pct; try { localStorage.setItem(STORE_KEY, JSON.stringify(b)); } catch (e) {} }
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const areasOf = () => [...new Set(LabEngine.LABS.map(l => l.area))];
+const objectiveItems = res => res.map(r => `<li class="${r.ok ? 'ok' : 'ko'}">${r.ok ? '&#10004;' : '&#10008;'} ${escapeHtml(r.text)}</li>`).join('');
+
+// In-progress lab saved after every command so a reload (or iPad tab discard) can resume it.
+function saveSession() {
+  if (!session || replaying) return;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ labId: lab.id, actions, hintIdx, solutionViewed, labStart, exam })); } catch (e) {}
+}
+function loadSession() { try { const v = JSON.parse(localStorage.getItem(SESSION_KEY)); return v && LabEngine.LABS.some(l => l.id === v.labId) ? v : null; } catch (e) { return null; } }
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
 
 function renderHome() {
-  const best = loadBest(), areas = [...new Set(LabEngine.LABS.map(l => l.area))];
-  $('labList').innerHTML = areas.map(a => `<div class="area"><h3>${escapeHtml(a)} <span class="badge">${LabEngine.LABS.filter(l => l.area === a).length} labs</span></h3><div class="lab-cards">${LabEngine.LABS.filter(l => l.area === a).map(l => `
-    <div class="lab-card"><h4>${escapeHtml(l.title)}</h4><div class="meta"><span>&#9201; ~${l.minutes} min</span><span>${l.objectives.length} objectives</span>${l.id in best ? `<span class="best ${best[l.id] >= 75 ? 'good' : 'bad'}">Best: ${best[l.id]}%</span>` : ''}</div>
+  const best = loadBest(), saved = loadSession();
+  const resume = saved ? `<div class="exam-box" id="resumeBox"><div><b>Resume your ${saved.exam ? 'exam simulation' : 'lab'}?</b><br><span style="color:#535353;font-size:0.9rem;">${escapeHtml(LabEngine.LABS.find(l => l.id === saved.labId).title)} · ${saved.actions.length} commands</span></div><div style="display:flex;gap:8px;"><button class="btn btn-primary" onclick="resumeSession()">Resume</button><button class="btn btn-secondary" onclick="discardSession()">Discard</button></div></div>` : '';
+  $('labList').innerHTML = resume + areasOf().map(a => `<div class="area"><h3>${escapeHtml(a)} <span class="badge">${LabEngine.LABS.filter(l => l.area === a).length} labs</span></h3><div class="lab-cards">${LabEngine.LABS.filter(l => l.area === a).map(l => `
+    <div class="lab-card"><h4>${escapeHtml(l.title)}</h4><div class="meta"><span>&#9201; ~${l.minutes} min</span><span>${l.objectives.length} objectives</span>${l.id in best ? `<span class="best ${best[l.id] === 100 ? 'good' : 'bad'}">Best: ${best[l.id]}%</span>` : ''}</div>
     <div class="desc">${escapeHtml(l.desc)}</div><div><button class="btn btn-primary btn-small" onclick="startLab('${l.id}')">Start lab</button></div></div>`).join('')}</div></div>`).join('');
   $('headerStats').textContent = `${LabEngine.LABS.length} labs · ${Object.keys(best).length} attempted`;
 }
 function show(screen) { $('homeScreen').classList.toggle('hidden', screen !== 'home'); $('labScreen').classList.toggle('hidden', screen !== 'lab'); }
 
-function startLab(id) {
+function startLab(id, restore) {
+  closeEditor();
   lab = LabEngine.LABS.find(l => l.id === id);
   session = LabEngine.create(lab);
-  hintIdx = 0; solutionViewed = false; histPos = -1; submitted = false;
+  hintIdx = 0; solutionViewed = false; histPos = -1; submitted = false; actions = [];
   $('labArea').textContent = lab.area; $('labTitle').textContent = lab.title; $('labBrief').innerHTML = lab.brief;
   $('labObjectives').innerHTML = lab.objectives.map(o => `<li>${escapeHtml(o.text)}</li>`).join('');
   $('hintBox').innerHTML = ''; $('solutionBox').classList.add('hidden'); $('solutionBox').innerHTML = '';
@@ -1909,43 +1951,77 @@ function startLab(id) {
   $('hintBtn').textContent = `Hint (${lab.hints.length})`;
   $('termOut').innerHTML = '';
   termPrint(`NVIDIA NCP-AIO lab simulator · ${lab.title}\nYou are root on the BCM head node. Type "help" to list the commands supported in this lab.\n`, 'sys');
+  labStart = Date.now();
+  if (restore) replay(restore);
   updatePrompt();
-  if (!exam) { labStart = Date.now(); startTimer(); }
+  if (!exam) startTimer();
   show('lab'); focusInput();
+  saveSession();
 }
+function replay(saved) {
+  replaying = true;
+  labStart = saved.labStart || labStart;
+  let ed = null;
+  for (const a of saved.actions) {
+    if ('cmd' in a) { ed = runCommand(a.cmd).editor || null; }
+    else if ('save' in a && ed) { const msg = LabEngine.save(session, ed, a.save); if (msg) termPrint(msg); actions.push(a); ed = null; }
+  }
+  for (let i = 0; i < (saved.hintIdx || 0); i++) nextHint();
+  if (saved.solutionViewed) { solutionViewed = true; showSolution(); }
+  termPrint(`[session restored: ${saved.actions.length} actions replayed]`, 'sys');
+  replaying = false;
+}
+function resumeSession() {
+  const saved = loadSession(); if (!saved) return renderHome();
+  exam = saved.exam || null;
+  if (exam) startTimer();
+  startLab(saved.labId, saved);
+}
+function discardSession() { clearSession(); renderHome(); }
 function startExamMode() {
-  const areas = [...new Set(LabEngine.LABS.map(l => l.area))];
-  const picks = areas.map(a => { const ls = LabEngine.LABS.filter(l => l.area === a); return ls[Math.floor(Math.random() * ls.length)].id; });
-  exam = { queue: picks, idx: 0, results: [], deadline: Date.now() + 60 * 60 * 1000 };
+  const picks = areasOf().map(a => { const ls = LabEngine.LABS.filter(l => l.area === a); return ls[Math.floor(Math.random() * ls.length)].id; });
+  exam = { queue: picks, idx: 0, results: [], deadline: Date.now() + EXAM_MINUTES * 60 * 1000 };
   startTimer(); startLab(picks[0]);
 }
 function startTimer() {
   clearInterval(timerInt);
   const tickT = () => {
     let rem, over = false;
-    if (exam) { rem = Math.round((exam.deadline - Date.now()) / 1000); if (rem <= 0) { rem = 0; clearInterval(timerInt); if (!submitted) submitLab(true); } }
-    else { rem = lab.minutes * 60 - Math.round((Date.now() - labStart) / 1000); if (rem < 0) { over = true; rem = -rem; } }
+    if (exam) {
+      rem = Math.round((exam.deadline - Date.now()) / 1000);
+      if (rem <= 0) {
+        rem = 0; clearInterval(timerInt);
+        if (!submitted) submitLab(true);
+        else { exam.idx = exam.queue.length; $('resultTitle').textContent = 'Time is up'; $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>'; }
+      }
+    } else { rem = lab.minutes * 60 - Math.round((Date.now() - labStart) / 1000); if (rem < 0) { over = true; rem = -rem; } }
     const m = Math.floor(rem / 60), s = rem % 60;
-    $('labTimer').textContent = `${over ? '+' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}${exam ? ` · lab ${exam.idx + 1}/3` : ''}`;
-    $('labTimer').classList.toggle('over', over || (exam && rem < 300));
+    $('labTimer').textContent = `${over ? '+' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}${exam ? ` · lab ${Math.min(exam.idx + 1, exam.queue.length)}/${exam.queue.length}` : ''}`;
+    $('labTimer').classList.toggle('over', over || (!!exam && rem < WARN_SECS));
   };
   tickT(); timerInt = setInterval(tickT, 1000);
 }
 function termPrint(text, cls) { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = text; $('termOut').appendChild(d); $('terminal').scrollTop = $('terminal').scrollHeight; }
 function updatePrompt() { $('termPrompt').textContent = LabEngine.prompt(session); }
 function focusInput() { if (window.getSelection && String(window.getSelection())) return; $('termInput').focus(); }
+function runCommand(v) {
+  termPrint(LabEngine.prompt(session) + v, 'cmdline');
+  actions.push({ cmd: v });
+  const r = LabEngine.exec(session, v);
+  if (r.clear) $('termOut').innerHTML = '';
+  else if (r.out) termPrint(r.out);
+  return r;
+}
 
 $('termInput').addEventListener('keydown', e => {
   if (!session) return;
   const inp = $('termInput');
   if (e.key === 'Enter') {
     const v = inp.value; inp.value = ''; histPos = -1;
-    termPrint(LabEngine.prompt(session) + v, 'cmdline');
-    const r = LabEngine.exec(session, v);
-    if (r.clear) $('termOut').innerHTML = '';
-    else if (r.out) termPrint(r.out);
+    const r = runCommand(v);
     if (r.editor) openEditor(r.editor);
     updatePrompt();
+    saveSession();
     $('terminal').scrollTop = $('terminal').scrollHeight;
   } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     const h = session.hist; if (!h.length) return;
@@ -1959,16 +2035,23 @@ $('termInput').addEventListener('keydown', e => {
 });
 
 function openEditor(ed) { editorState = ed; $('editorTitle').textContent = ed.title; $('editorArea').value = ed.content; $('editorModal').classList.remove('hidden'); $('editorArea').focus(); }
-function closeEditor() { $('editorModal').classList.add('hidden'); editorState = null; focusInput(); }
-function editorSave() { if (!editorState) return; const msg = LabEngine.save(session, editorState, $('editorArea').value); if (msg) termPrint(msg); closeEditor(); updatePrompt(); }
-function editorQuit() { if (!editorState) return; const msg = LabEngine.cancelEdit(editorState); if (msg) termPrint(msg); closeEditor(); }
+function closeEditor() { $('editorModal').classList.add('hidden'); editorState = null; if (session) focusInput(); }
+function editorSave() {
+  if (!editorState || !session) return closeEditor();
+  const content = $('editorArea').value, msg = LabEngine.save(session, editorState, content);
+  actions.push({ save: content });
+  if (msg) termPrint(msg);
+  closeEditor(); updatePrompt(); saveSession();
+}
+function editorQuit() { if (!editorState) return; const msg = LabEngine.cancelEdit(editorState); if (msg && session) termPrint(msg); closeEditor(); }
 $('editorArea').addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); editorSave(); }
   else if (e.key === 'Escape') { e.preventDefault(); editorQuit(); }
   else if (e.key === 'Tab') { e.preventDefault(); const t = e.target, p = t.selectionStart; t.value = t.value.slice(0, p) + '  ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = p + 2; }
 });
+window.addEventListener('beforeunload', e => { if (exam) { e.preventDefault(); e.returnValue = ''; } });
 
-function nextHint() { if (exam || hintIdx >= lab.hints.length) return; const d = document.createElement('div'); d.innerHTML = `<b>Hint ${hintIdx + 1}:</b> ${lab.hints[hintIdx]}`; $('hintBox').appendChild(d); hintIdx++; $('hintBtn').textContent = `Hint (${lab.hints.length - hintIdx})`; if (hintIdx >= lab.hints.length) $('hintBtn').disabled = true; }
+function nextHint() { if (exam || hintIdx >= lab.hints.length) return; const d = document.createElement('div'); d.innerHTML = `<b>Hint ${hintIdx + 1}:</b> ${lab.hints[hintIdx]}`; $('hintBox').appendChild(d); hintIdx++; $('hintBtn').textContent = `Hint (${lab.hints.length - hintIdx})`; if (hintIdx >= lab.hints.length) $('hintBtn').disabled = true; saveSession(); }
 function showSolution() {
   if (exam) return;
   if (!solutionViewed && !confirm('Show the reference solution? Try the lab first, then compare.')) return;
@@ -1976,46 +2059,52 @@ function showSolution() {
   const steps = lab.solution.map(x => typeof x === 'string' ? x : `${x.cmd}\n    # in the editor, make the file:\n${x.save.replace(/^/gm, '    ')}`).join('\n');
   $('solutionBox').innerHTML = `<b>Reference solution</b> (other valid paths also pass):<pre>${escapeHtml(steps)}</pre>`;
   $('solutionBox').classList.remove('hidden');
+  saveSession();
 }
 function resetLab() { if (exam) return; if (confirm('Reset this lab to its initial state?')) startLab(lab.id); }
 function backHome() {
   if (exam && !confirm('Leave the exam simulation? Your progress will be lost.')) return;
-  clearInterval(timerInt); exam = null; session = null; $('resultModal').classList.add('hidden'); renderHome(); show('home');
+  closeEditor();
+  clearInterval(timerInt); exam = null; session = null; clearSession(); $('resultModal').classList.add('hidden'); renderHome(); show('home');
 }
+function showResult() { $('resultModal').classList.remove('hidden'); const b = document.querySelector && document.querySelector('#resultActions button'); if (b) b.focus(); }
 function submitLab(timeUp) {
   if (!session) return;
-  const res = LabEngine.evaluate(session);
+  if (timeUp) closeEditor();
+  let res;
+  try { res = LabEngine.evaluate(session); } catch (e) { res = lab.objectives.map(o => ({ text: o.text, ok: false })); }
   submitted = true;
   const ok = res.filter(r => r.ok).length, pct = Math.round(100 * ok / res.length);
-  $('labObjectives').innerHTML = res.map(r => `<li class="${r.ok ? 'ok' : 'ko'}">${r.ok ? '&#10004;' : '&#10008;'} ${escapeHtml(r.text)}</li>`).join('');
+  $('labObjectives').innerHTML = $('resultList').innerHTML = objectiveItems(res);
   if (!solutionViewed) saveBest(lab.id, pct);
   const mins = Math.round((Date.now() - labStart) / 60000);
   $('resultTitle').textContent = timeUp ? 'Time is up' : lab.title;
   $('resultScore').textContent = `${pct}%`; $('resultScore').className = 'score-big ' + (pct === 100 ? 'pass' : 'fail');
-  $('resultFlags').textContent = exam ? `Exam lab ${exam.idx + 1} of 3` : `${ok}/${res.length} objectives · ${mins} min · hints used: ${hintIdx}${solutionViewed ? ' · solution viewed (score not saved)' : ''}`;
-  $('resultList').innerHTML = res.map(r => `<li class="${r.ok ? 'ok' : 'ko'}">${r.ok ? '&#10004;' : '&#10008;'} ${escapeHtml(r.text)}</li>`).join('');
-  let actions = '';
+  $('resultFlags').textContent = exam ? `Exam lab ${exam.idx + 1} of ${exam.queue.length}` : `${ok}/${res.length} objectives · ${mins} min · hints used: ${hintIdx}${solutionViewed ? ' · solution viewed (score not saved)' : ''}`;
+  let html = '';
   if (exam) {
     exam.results.push({ id: lab.id, title: lab.title, pct });
     const last = timeUp || exam.idx >= exam.queue.length - 1;
-    actions = last ? '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>' : '<button class="btn btn-primary" onclick="nextExamLab()">Next lab</button>';
+    html = last ? '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>' : '<button class="btn btn-primary" onclick="nextExamLab()">Next lab</button>';
     if (timeUp) exam.idx = exam.queue.length;
-  } else actions = '<button class="btn btn-secondary" onclick="closeResult()">Keep working</button><button class="btn btn-primary" onclick="backHome()">Back to labs</button>';
-  $('resultActions').innerHTML = actions;
-  $('resultModal').classList.remove('hidden');
+    saveSession();
+  } else html = '<button class="btn btn-secondary" onclick="closeResult()">Keep working</button><button class="btn btn-primary" onclick="backHome()">Back to labs</button>';
+  $('resultActions').innerHTML = html;
+  showResult();
 }
 function closeResult() { $('resultModal').classList.add('hidden'); submitted = false; focusInput(); }
 function nextExamLab() { $('resultModal').classList.add('hidden'); exam.idx++; startLab(exam.queue[exam.idx]); }
 function finishExam() {
-  clearInterval(timerInt);
+  clearInterval(timerInt); closeEditor(); clearSession();
   const done = exam.results, total = exam.queue.length;
   const avg = Math.round(exam.queue.reduce((acc, id) => acc + ((done.find(r => r.id === id) || {}).pct || 0), 0) / total);
   $('resultTitle').textContent = 'Exam simulation result (hands-on part)';
-  $('resultScore').textContent = `${avg}%`; $('resultScore').className = 'score-big ' + (avg >= 75 ? 'pass' : 'fail');
+  $('resultScore').textContent = `${avg}%`; $('resultScore').className = 'score-big ' + (avg >= EXAM_PASS_PCT ? 'pass' : 'fail');
   $('resultFlags').textContent = 'On the real exam the labs count for 50% of the total score. NVIDIA does not publish the passing score.';
   $('resultList').innerHTML = exam.queue.map(id => { const r = done.find(x => x.id === id), l = LabEngine.LABS.find(x => x.id === id); return `<li class="${r && r.pct === 100 ? 'ok' : 'ko'}">${escapeHtml(l.title)}: ${r ? r.pct + '%' : 'not submitted (0%)'}</li>`; }).join('');
   $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="backHome()">Back to labs</button>';
   exam = null;
+  showResult();
 }
 renderHome();
 </script>

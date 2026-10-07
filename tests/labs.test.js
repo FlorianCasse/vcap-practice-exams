@@ -84,10 +84,13 @@ test('cmsh: imageupdate without -w is a dry run', () => {
   assert.match(last.out, /dry run = yes, no data changes/);
   assert.ok(!s.st.bcm.device.node001.packages.includes('datacenter-gpu-manager-4-cuda12'));
 });
-test('apt: install without -y asks for confirmation; installing on the head node does not touch images', () => {
-  const { s, last } = play('bcm-image', ['apt install datacenter-gpu-manager-4-cuda12', 'n']);
-  assert.strictEqual(last.out, 'Abort.');
-  play('bcm-image', ['apt install -y datacenter-gpu-manager-4-cuda12']);
+test('apt: install without -y asks for confirmation and n aborts', () => {
+  assert.strictEqual(out('bcm-image', ['apt install datacenter-gpu-manager-4-cuda12', 'n']), 'Abort.');
+});
+test('apt: installing on the head node does not touch software images', () => {
+  const { s, last } = play('bcm-image', ['apt install -y datacenter-gpu-manager-4-cuda12']);
+  assert.match(last.out, /newly installed/);
+  assert.ok(s.st.headPkgs.includes('datacenter-gpu-manager-4-cuda12'));
   assert.ok(!s.st.bcm.softwareimage['dgx-h100-image'].packages.includes('datacenter-gpu-manager-4-cuda12'));
 });
 test('ssh: unknown host and a node that is not UP', () => {
@@ -201,6 +204,29 @@ test('k8s: default ServiceAccount imagePullSecrets path also works', () => {
   const create = "kubectl create secret docker-registry ngc-secret --docker-server=nvcr.io --docker-username='$oauthtoken' --docker-password=\"$(cat ~/ngc-api-key.txt)\" -n inference";
   const { s } = play('k8s-ngc-pull', [create, 'kubectl patch serviceaccount default -n inference -p \'{"imagePullSecrets":[{"name":"ngc-secret"}]}\'', 'kubectl rollout restart deployment triton -n inference']);
   assert.ok(E.evaluate(s).every(r => r.ok));
+});
+
+// Robustness: user input must never wedge or freeze the terminal
+test('unterminated ${ is a bad substitution, not an infinite loop', () => {
+  assert.match(out('k8s-gpu-pod', ['echo ${HOME']), /bad substitution/);
+});
+test('huge node ranges are refused', () => {
+  assert.match(out('slurm-drain', ['scontrol update nodename=dgx[1-30000000] state=resume']), /node range too large/);
+});
+test('deployments with no containers or huge replica counts are rejected and the lab keeps working', () => {
+  assert.match(out('k8s-ngc-pull', ['kubectl patch deployment triton -n inference -p \'{"spec":{"template":{"spec":{"containers":[]}}}}\'']), /containers: Required value/);
+  assert.match(out('k8s-ngc-pull', ['kubectl patch deployment triton -n inference -p \'{"spec":{"replicas":3000000}}\'']), /spec.replicas: Invalid value/);
+  const { s, last } = play('k8s-ngc-pull', ['kubectl edit deployment triton -n inference']);
+  assert.match(E.save(s, last.editor, 'apiVersion: apps/v1\nkind: Deployment\nspec:\n  template:\n    spec:\n      containers:\n        name: triton\n'), /containers: Required value/);
+  assert.match(E.exec(s, 'kubectl get pods -n inference').out, /triton-/);
+  assert.strictEqual(E.evaluate(s).length, 4);
+});
+test('two prompting commands on one line: the second runs after the first answer', () => {
+  const { s, last } = play('slurm-pending', ['sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=64 ; sacctmgr modify qos large set Priority=999', 'y']);
+  assert.match(last.out, /Would you like to commit/);
+  assert.strictEqual(s.st.slurm.qos.normal.maxGpuPU, 64);
+  E.exec(s, 'y');
+  assert.strictEqual(s.st.slurm.qos.large.prio, 999);
 });
 
 // Shell, parser and editor plumbing

@@ -23,5 +23,10 @@ for (const p of pages.filter(p => p.startsWith('NVIDIA_'))) {
   check(html.includes('manifest.webmanifest') && html.includes('assets/js/pwa.js'), `PWA tags present: ${p}`);
 }
 
+for (const p of pages.filter(p => /^NVIDIA_.*Practice_Exam\.html$/.test(p))) {
+  const html = fs.readFileSync(path.join(root, p), 'utf8'), bank = html.indexOf('const ALL_QUESTIONS'), persist = html.indexOf('assets/js/persist.js');
+  check(bank > -1 && persist > bank, `persist.js loaded after the question bank: ${p}`);
+}
+
 console.log(failed ? `\n${failed} failed` : '\nall site checks passed');
 process.exit(failed ? 1 : 0);

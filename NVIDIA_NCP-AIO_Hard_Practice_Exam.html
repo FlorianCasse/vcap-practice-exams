@@ -195,8 +195,9 @@
   ::-webkit-scrollbar-thumb{background:#CDE3F7 !important;}
 .option.multi .option-letter { border-radius: 4px; }
 .multi-hint { margin: 8px 0 4px; font-size: 13px; color: var(--accent); font-weight: 600; }
-  pre { background:#0b0f24; color:#e2e8f0; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px; font-weight:400; line-height:1.45; padding:10px 14px; border-radius:8px; overflow-x:auto; margin:10px 0; white-space:pre; }
-  code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.9em; }
+  pre { background:#0b0f24; color:#e2e8f0; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.82rem; font-weight:400; line-height:1.45; padding:10px 14px; border-radius:8px; overflow-x:auto; margin:10px 0; white-space:pre; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:0.9em; background:#EEF4FB; padding:1px 5px; border-radius:4px; }
+  pre code { background:none; padding:0; font-size:inherit; }
 </style>
 </head>
 <body>
@@ -663,6 +664,31 @@ document.addEventListener('keydown', (e) => {
 });
 
 buildSetup();
+</script>
+<script>
+// Keep chained "Lab scenario N (k/M)" questions together and in order after a shuffle.
+(function () {
+  const tag = q => (q.question.match(/^<b>Lab scenario (\d+) \((\d+)\//) || []).slice(1).map(Number);
+  function regroup() {
+    const out = [], seen = new Set();
+    for (const q of examQuestions) {
+      const [g] = tag(q);
+      if (g === undefined) { out.push(q); continue; }
+      if (seen.has(g)) continue;
+      seen.add(g);
+      out.push(...examQuestions.filter(x => tag(x)[0] === g).sort((a, b) => tag(a)[1] - tag(b)[1]));
+    }
+    examQuestions = out;
+  }
+  for (const name of ['startExam', 'retryWrong']) {
+    const orig = window[name];
+    window[name] = function () {
+      const before = examQuestions;
+      orig.apply(this, arguments);
+      if (examQuestions !== before) { regroup(); buildQuestionMap(); renderQuestion(); }
+    };
+  }
+})();
 </script>
 <script src="assets/js/persist.js"></script>
 <script src="assets/js/pwa.js"></script>

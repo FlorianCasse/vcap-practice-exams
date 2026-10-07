@@ -22,7 +22,10 @@ function loadBank(file) {
 const strip = s => s.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, 'x').trim();
 const norm = s => strip(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
+const MAX_LONGEST_CORRECT_PCT = 30, MAX_MULTI = 15, POSITION_SKEW = 0.08;
+
 const code = process.argv[2];
+if (code === '--codes') { console.log(Object.keys(EXPECTED).join(' ')); process.exit(0); }
 if (!EXPECTED[code]) { console.error('code must be one of', Object.keys(EXPECTED)); process.exit(2); }
 const file = process.argv[3] ? path.resolve(process.argv[3]) : path.join(root, `NVIDIA_${code}_Hard_Practice_Exam.html`);
 const qs = loadBank(file);
@@ -30,7 +33,8 @@ const old = loadBank(path.join(root, `NVIDIA_${code}_Practice_Exam.html`));
 const oldStems = new Set(old.map(q => norm(q.question)));
 
 const errors = [], warns = [];
-if (qs.length !== 100) errors.push(`expected 100 questions, got ${qs.length}`);
+const total = Object.values(EXPECTED[code]).reduce((a, n) => a + n, 0);
+if (qs.length !== total) errors.push(`expected ${total} questions, got ${qs.length}`);
 
 const counts = {}, pos = [0, 0, 0, 0];
 let single = 0, longestCorrect = 0, multi = 0, pre = 0;
@@ -56,6 +60,7 @@ qs.forEach((q, i) => {
   if (Array.isArray(q.correct)) {
     multi++;
     if (q.correct.length < 2 || q.correct.some(c => !Number.isInteger(c) || c < 0 || c > 3)) errors.push(`${tag} bad multi correct`);
+    if (new Set(q.correct).size !== q.correct.length) errors.push(`${tag} duplicate indexes in correct`);
     if (!/choose (two|three)/i.test(q.question)) warns.push(`${tag} multi-select without "Choose N"`);
     const want = { two: 2, three: 3 }[(q.question.match(/choose (two|three)/i) || [])[1]?.toLowerCase()];
     if (want && want !== q.correct.length) errors.push(`${tag} "Choose" count != correct length`);
@@ -72,10 +77,11 @@ qs.forEach((q, i) => {
 
 for (const [s, n] of Object.entries(EXPECTED[code]))
   if ((counts[s] || 0) !== n) errors.push(`section "${s}": ${counts[s] || 0} (expected ${n})`);
-const lcPct = Math.round(100 * longestCorrect / single);
-if (lcPct > 30) errors.push(`longest option is correct in ${lcPct}% of single-answer questions (max 30%)`);
-if (pos.some(p => Math.abs(p - single / 4) > single * 0.08)) warns.push(`answer position skew A-D: ${pos.join('/')}`);
-if (multi > 15) errors.push(`${multi} multi-select (max 15)`);
+if (!single) errors.push('no single-answer questions');
+const lcPct = single ? Math.round(100 * longestCorrect / single) : 0;
+if (lcPct > MAX_LONGEST_CORRECT_PCT) errors.push(`longest option is correct in ${lcPct}% of single-answer questions (max ${MAX_LONGEST_CORRECT_PCT}%)`);
+if (pos.some(p => Math.abs(p - single / 4) > single * POSITION_SKEW)) warns.push(`answer position skew A-D: ${pos.join('/')}`);
+if (multi > MAX_MULTI) errors.push(`${multi} multi-select (max ${MAX_MULTI})`);
 
 console.log(`${code}: ${qs.length} Q | multi ${multi} | longest-correct ${lcPct}% | positions A-D ${pos.join('/')} | with <pre> ${pre}`);
 warns.forEach(w => console.log('WARN', w));
