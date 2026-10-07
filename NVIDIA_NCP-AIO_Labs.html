@@ -231,9 +231,9 @@ function hostlist(names) {
   }).join(',');
 }
 const MAX_HOSTS = 4096;
+const tooMany = () => Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true });
 function expandHosts(spec) {
   const out = [], parts = []; let depth = 0, cur = '';
-  const tooMany = () => Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true });
   const range = (a, b) => { if (b - a >= MAX_HOSTS) throw tooMany(); };
   const push = h => { if (out.length >= MAX_HOSTS) throw tooMany(); out.push(h); };
   for (const ch of String(spec || '')) { if (ch === '[') depth++; if (ch === ']') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
@@ -452,7 +452,7 @@ function shellLine(s, line) {
     res = s.cmsh ? { out: BCM.exec(s, part) } : runPipeline(s, part);
     if (res.editor || res.clear) return res;
     if (res.out !== '' && res.out != null) outs.push(res.out);
-    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).join(';'); s.pending.restOp = seq.ops[i]; break; }
+    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).reduce((acc, p, j) => j ? acc + seq.ops[i + j] + p : p, ''); s.pending.restOp = seq.ops[i]; break; }
     if (res.fail && seq.ops[i] === '&&') break;
   }
   return { out: outs.join('\n') };
@@ -895,6 +895,7 @@ const BCM = {
       else if (a[i] === '-c' || a[i] === '--category') { explicit = true; const cat = a[++i]; out.push(...Object.keys(s.st.bcm.device).filter(n => s.st.bcm.device[n].category === cat)); }
       else if (!a[i].startsWith('-')) { explicit = true; out.push(...expandHosts(a[i])); }
     }
+    if (out.length > MAX_HOSTS) throw tooMany();
     if (explicit) return out;
     return cur ? [cur] : null;
   },

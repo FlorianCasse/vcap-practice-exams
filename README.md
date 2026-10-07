@@ -62,3 +62,7 @@ The Home Screen app has its own storage, separate from Safari: check the badge a
 The current session (questions, answers, position, results) is saved in `localStorage`; after a reload, a **Resume** banner lets you pick up where you left off.
 
 **When adding or changing an exam:** add new files to `PRECACHE` in `sw.js` and bump `CACHE_VERSION`, otherwise the new exam is not available offline until it has been opened online once. Question fixes in existing exams reach installed apps on their own (pages are fetched network-first when online); a saved session for an exam whose questions changed is discarded with a notice. Each exam page must also include `assets/js/persist.js` and `assets/js/pwa.js` after its inline script, plus the PWA `<head>` tags (copy from an existing exam).
+
+## Tests
+
+`node tests/run.js` (Node 18+, no dependencies) validates the question banks (format, blueprint domain counts, answer length/position bias) and runs the lab simulator engine, lab UI and offline/link checks.

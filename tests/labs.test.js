@@ -235,6 +235,13 @@ test('a refused prompt stops the rest of an && chain, but not of a ; chain', () 
   const b = play('slurm-pending', ['sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=16 ; scontrol update partitionname=gpu state=up', 'n']);
   assert.strictEqual(b.s.st.slurm.partitions[1].state, 'UP');
 });
+test('&& after an accepted prompt still stops on a failing command', () => {
+  const { s } = play('slurm-pending', ['sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=16 && bogus && scontrol update partitionname=gpu state=up', 'y']);
+  assert.strictEqual(s.st.slurm.partitions[1].state, 'DOWN');
+});
+test('cmsh node lists cannot add up past the node cap', () => {
+  assert.match(out('bcm-image', ['cmsh', `device status ${Array(3).fill('node[1-4000]').join(' ')}`]), /node range too large/);
+});
 test('many ranges cannot add up past the node cap', () => {
   assert.match(out('slurm-drain', [`scontrol show node node[${Array(300).fill('1-4000').join(',')}]`]), /node range too large/);
 });
