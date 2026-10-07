@@ -229,6 +229,16 @@ test('two prompting commands on one line: the second runs after the first answer
   assert.strictEqual(s.st.slurm.qos.large.prio, 999);
 });
 
+test('a refused prompt stops the rest of an && chain, but not of a ; chain', () => {
+  const a = play('slurm-pending', ['sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=16 && scontrol update partitionname=gpu state=up', 'n']);
+  assert.strictEqual(a.s.st.slurm.partitions[1].state, 'DOWN');
+  const b = play('slurm-pending', ['sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=16 ; scontrol update partitionname=gpu state=up', 'n']);
+  assert.strictEqual(b.s.st.slurm.partitions[1].state, 'UP');
+});
+test('many ranges cannot add up past the node cap', () => {
+  assert.match(out('slurm-drain', [`scontrol show node node[${Array(300).fill('1-4000').join(',')}]`]), /node range too large/);
+});
+
 // Shell, parser and editor plumbing
 test('shell builtins: export/echo/ls/cat/history/cd/pwd/unknown command', () => {
   assert.strictEqual(out('k8s-gpu-pod', ['export FOO=bar', 'echo $FOO ${FOO}']), 'bar bar');

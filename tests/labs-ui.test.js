@@ -212,5 +212,31 @@ test('an exam in progress resumes with its deadline after a reload', () => {
   api.backHome();
 });
 
+test('Ctrl+C on a prompt is kept when the lab is resumed', () => {
+  api.startLab('slurm-pending');
+  type('sacctmgr modify qos normal set MaxTRESPerUser=gres/gpu=16');
+  key('c', { ctrlKey: true });
+  type('scontrol update partitionname=gpu state=up');
+  const R = boot(store);
+  R.api.resumeSession();
+  assert.strictEqual(R.api.session.st.slurm.partitions[1].state, 'UP');
+  assert.strictEqual(R.api.session.st.slurm.qos.normal.maxGpuPU, 8);
+  R.api.discardSession();
+  api.backHome();
+});
+test('reloading after submitting an exam lab continues with the next lab', () => {
+  api.startExamMode();
+  const [first, second] = api.exam.queue;
+  api.submitLab();
+  const R = boot(store);
+  R.now = P.now;
+  R.api.resumeSession();
+  assert.strictEqual(R.api.exam.idx, 1);
+  assert.strictEqual(R.$('labTitle').textContent, R.api.LabEngine.LABS.find(l => l.id === second).title);
+  assert.strictEqual(R.api.exam.results.filter(r => r.id === first).length, 1);
+  R.api.discardSession();
+  P.confirm = true; api.backHome();
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -233,19 +233,21 @@ function hostlist(names) {
 const MAX_HOSTS = 4096;
 function expandHosts(spec) {
   const out = [], parts = []; let depth = 0, cur = '';
-  const range = (a, b) => { if (b - a >= MAX_HOSTS) throw Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true }); };
+  const tooMany = () => Object.assign(new Error(`error: node range too large (max ${MAX_HOSTS} nodes)`), { user: true });
+  const range = (a, b) => { if (b - a >= MAX_HOSTS) throw tooMany(); };
+  const push = h => { if (out.length >= MAX_HOSTS) throw tooMany(); out.push(h); };
   for (const ch of String(spec || '')) { if (ch === '[') depth++; if (ch === ']') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; }
   if (cur) parts.push(cur);
   for (const p of parts) {
     let m = p.match(/^([a-z-]*?)(\d+)\.\.([a-z-]*?)(\d+)$/i);
-    if (m) { range(+m[2], +m[4]); for (let n = +m[2]; n <= +m[4]; n++) out.push(m[1] + String(n).padStart(m[2].length, '0')); continue; }
+    if (m) { range(+m[2], +m[4]); for (let n = +m[2]; n <= +m[4]; n++) push(m[1] + String(n).padStart(m[2].length, '0')); continue; }
     m = p.match(/^(.*)\[(.*)\](.*)$/);
-    if (!m) { out.push(p); continue; }
+    if (!m) { push(p); continue; }
     for (const r of m[2].split(',')) {
       const [a, b] = r.split('-');
-      if (b === undefined) { out.push(m[1] + a + m[3]); continue; }
+      if (b === undefined) { push(m[1] + a + m[3]); continue; }
       range(+a, +b);
-      for (let n = +a; n <= +b; n++) out.push(m[1] + String(n).padStart(a.length, '0') + m[3]);
+      for (let n = +a; n <= +b; n++) push(m[1] + String(n).padStart(a.length, '0') + m[3]);
     }
   }
   return out;
@@ -450,7 +452,7 @@ function shellLine(s, line) {
     res = s.cmsh ? { out: BCM.exec(s, part) } : runPipeline(s, part);
     if (res.editor || res.clear) return res;
     if (res.out !== '' && res.out != null) outs.push(res.out);
-    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).join(';'); break; }
+    if (s.pending) { s.pending.rest = seq.parts.slice(i + 1).join(';'); s.pending.restOp = seq.ops[i]; break; }
     if (res.fail && seq.ops[i] === '&&') break;
   }
   return { out: outs.join('\n') };
@@ -552,7 +554,8 @@ function aptCmd(s, t, list, where) {
     const doIt = () => { todo.forEach(p => list.push(p)); return todo.map(p => `Unpacking ${p} (${PKGS[p].v}) ...\nSetting up ${p} (${PKGS[p].v}) ...`).join('\n') + (where ? `\n[simulator] installed on: ${where}` : ''); };
     const head = `Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed:\n  ${todo.join(' ')}\n0 upgraded, ${todo.length} newly installed, 0 to remove and 0 not upgraded.`;
     if (t.some(x => /^-[a-z]*y[a-z]*$/.test(x) || x === '--yes' || x === '--assume-yes')) return head + '\n' + doIt();
-    s.pending = { prompt: 'Do you want to continue? [Y/n] ', handle: ans => /^(y|yes|)$/i.test(ans) ? doIt() : 'Abort.' };
+    const yes = ans => /^(y|yes|)$/i.test(ans);
+    s.pending = { prompt: 'Do you want to continue? [Y/n] ', accepts: yes, handle: ans => yes(ans) ? doIt() : 'Abort.' };
     return head + '\nAfter this operation, 1,284 MB of additional disk space will be used.';
   }
   if (sub === 'remove' || sub === 'purge') {
@@ -1113,7 +1116,8 @@ const SLURM = {
         const apply = () => { Object.assign(q, ch); return ''; };
         const msg = ` Modified qos...\n  ${name}`;
         if (imm) { apply(); return msg; }
-        s.pending = { prompt: '(N/y): ', handle: ans => /^y(es)?$/i.test(ans) ? apply() : ' Changes Discarded' };
+        const yes = ans => /^y(es)?$/i.test(ans);
+        s.pending = { prompt: '(N/y): ', accepts: yes, handle: ans => yes(ans) ? apply() : ' Changes Discarded' };
         return msg + '\nWould you like to commit changes? (You have 30 seconds to decide)';
       }
       return 'sacctmgr: error: this simulator supports: show|list qos|assoc, modify qos';
@@ -1680,7 +1684,8 @@ function exec(s, raw) {
     if (s.pending) {
       const p = s.pending; s.pending = null; s.hist.push(line);
       const out = p.handle(line.trim()) || '';
-      if (!p.rest || !p.rest.trim()) return { out };
+      const accepted = p.accepts ? p.accepts(line.trim()) : true;
+      if (!p.rest || !p.rest.trim() || (!accepted && p.restOp === '&&')) return { out };
       const more = shellLine(s, p.rest);
       return { ...more, out: [out, more.out].filter(Boolean).join('\n') };
     }
@@ -1965,6 +1970,7 @@ function replay(saved) {
   for (const a of saved.actions) {
     if ('cmd' in a) { ed = runCommand(a.cmd).editor || null; }
     else if ('save' in a && ed) { const msg = LabEngine.save(session, ed, a.save); if (msg) termPrint(msg); actions.push(a); ed = null; }
+    else if ('cancel' in a) { session.pending = null; actions.push(a); }
   }
   for (let i = 0; i < (saved.hintIdx || 0); i++) nextHint();
   if (saved.solutionViewed) { solutionViewed = true; showSolution(); }
@@ -1974,6 +1980,11 @@ function replay(saved) {
 function resumeSession() {
   const saved = loadSession(); if (!saved) return renderHome();
   exam = saved.exam || null;
+  if (exam && exam.results.some(r => r.id === saved.labId)) {
+    // The lab was already submitted: continue with the next one instead of reopening it.
+    if (exam.idx >= exam.queue.length - 1) { show('lab'); return finishExam(); }
+    exam.idx++; startTimer(); return startLab(exam.queue[exam.idx]);
+  }
   if (exam) startTimer();
   startLab(saved.labId, saved);
 }
@@ -1992,7 +2003,7 @@ function startTimer() {
       if (rem <= 0) {
         rem = 0; clearInterval(timerInt);
         if (!submitted) submitLab(true);
-        else { exam.idx = exam.queue.length; $('resultTitle').textContent = 'Time is up'; $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>'; }
+        else { exam.idx = exam.queue.length; saveSession(); $('resultTitle').textContent = 'Time is up'; $('resultActions').innerHTML = '<button class="btn btn-primary" onclick="finishExam()">See exam result</button>'; }
       }
     } else { rem = lab.minutes * 60 - Math.round((Date.now() - labStart) / 1000); if (rem < 0) { over = true; rem = -rem; } }
     const m = Math.floor(rem / 60), s = rem % 60;
@@ -2031,7 +2042,7 @@ $('termInput').addEventListener('keydown', e => {
     if (histPos >= h.length) histPos = -1;
     inp.value = histPos < 0 ? '' : h[histPos];
   } else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); $('termOut').innerHTML = ''; }
-  else if (e.key === 'c' && e.ctrlKey && !String(window.getSelection())) { e.preventDefault(); termPrint(LabEngine.prompt(session) + inp.value + '^C', 'cmdline'); inp.value = ''; session.pending = null; updatePrompt(); }
+  else if (e.key === 'c' && e.ctrlKey && !String(window.getSelection())) { e.preventDefault(); termPrint(LabEngine.prompt(session) + inp.value + '^C', 'cmdline'); inp.value = ''; if (session.pending) { session.pending = null; actions.push({ cancel: true }); saveSession(); } updatePrompt(); }
 });
 
 function openEditor(ed) { editorState = ed; $('editorTitle').textContent = ed.title; $('editorArea').value = ed.content; $('editorModal').classList.remove('hidden'); $('editorArea').focus(); }
