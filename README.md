@@ -39,10 +39,26 @@ Some exams include customized versions with priority/strength tagging per sectio
 - Responsive design: works on desktop, tablet (iPad), and mobile
 - Touch-optimized: 44px minimum tap targets on touch devices
 - Dark theme UI
+- Works offline: installable as a Home Screen app (PWA), every exam cached on first visit
+- Session resume: an in-progress exam survives a reload or app restart
 
 ## Usage
 
 - **Online (recommended):** open https://floriancasse.github.io/vcap-practice-exams/ and choose an exam from the home page.
-- **Local:** clone the repo and open `index.html` in any browser — it is the same landing page that lists all exams. You can also open any individual `VCAP_*.html` file directly.
+- **Local:** clone the repo and open `index.html` in any browser — it is the same landing page that lists all exams. You can also open any individual exam `.html` file directly. Offline mode needs the site served over HTTPS or `localhost`; pages opened as local files skip the service worker.
 
 The site is hosted on GitHub Pages from this repository. No build step or dependencies required — everything is self-contained HTML/CSS/JS.
+
+## Offline mode (iPad / airplane)
+
+The site is a Progressive Web App: a service worker (`sw.js`) caches every exam, font and logo on first visit.
+
+1. While online, open the live site in Safari on the iPad, then Share → **Add to Home Screen**.
+2. Launch the app from the Home Screen while still online and wait for the **✔ Available offline** badge on its home page.
+3. In airplane mode, open the app from the Home Screen — all exams work.
+
+The Home Screen app has its own storage, separate from Safari: check the badge and study inside the app, not in a Safari tab. Home Screen apps are not subject to Safari's 7-day storage eviction, so the cache stays available.
+
+The current session (questions, answers, position, results) is saved in `localStorage`; after a reload, a **Resume** banner lets you pick up where you left off.
+
+**When adding or changing an exam:** add new files to `PRECACHE` in `sw.js` and bump `CACHE_VERSION`, otherwise the new exam is not available offline until it has been opened online once. Question fixes in existing exams reach installed apps on their own (pages are fetched network-first when online); a saved session for an exam whose questions changed is discarded with a notice. Each exam page must also include `assets/js/persist.js` and `assets/js/pwa.js` after its inline script, plus the PWA `<head>` tags (copy from an existing exam).
