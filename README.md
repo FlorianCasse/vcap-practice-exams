@@ -37,11 +37,13 @@ Some exams include customized versions with priority/strength tagging per sectio
 - Responsive design: works on desktop, tablet (iPad), and mobile
 - Touch-optimized: 44px minimum tap targets on touch devices
 - Dark theme UI
+- Works offline: installable as a Home Screen app (PWA), every exam cached on first visit
+- Session resume: an in-progress exam survives a reload or app restart
 
 ## Usage
 
 - **Online (recommended):** open https://floriancasse.github.io/vcap-practice-exams/ and choose an exam from the home page.
-- **Local:** clone the repo and open `index.html` in any browser — it is the same landing page that lists all exams. You can also open any individual `VCAP_*.html` file directly.
+- **Local:** clone the repo and open `index.html` in any browser — it is the same landing page that lists all exams. You can also open any individual exam `.html` file directly. Offline mode needs the site served over HTTPS or `localhost`; pages opened as local files skip the service worker.
 
 The site is hosted on GitHub Pages from this repository. No build step or dependencies required — everything is self-contained HTML/CSS/JS.
 
