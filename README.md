@@ -24,6 +24,8 @@ The repository is published via GitHub Pages. The landing page (`index.html`) li
 - **AI Infrastructure and Operations** (NCA-AIIO) - NVIDIA-Certified Associate
 - **AI Infrastructure** (NCP-AII) - NVIDIA-Certified Professional
 - **AI Operations** (NCP-AIO) - NVIDIA-Certified Professional
+- **Hard** versions of the three exams above: scenario-based questions with plausible distractors, weighted on the official blueprints
+- **AI Operations Hands-on Labs** (NCP-AIO): terminal simulator of the exam's lab section (BCM, Slurm, Kubernetes)
 
 Some exams include customized versions with priority/strength tagging per section.
 
