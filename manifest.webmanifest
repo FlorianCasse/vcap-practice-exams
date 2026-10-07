@@ -1,0 +1,15 @@
+{
+  "name": "ITQ Practice Exams",
+  "short_name": "Practice Exams",
+  "description": "Interactive practice exams for VMware and NVIDIA certifications. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E6EBEB",
+  "theme_color": "#040559",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
